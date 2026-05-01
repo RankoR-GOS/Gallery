@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.ApplicationBuildType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileInputStream
 import java.util.Properties
@@ -30,12 +31,16 @@ apkVersioning {
     variables.put("suffix", if (includeMaps) "" else "-nomaps")
 }
 
+val baseApplicationId = providers
+    .gradleProperty("baseApplicationId")
+    .get()
+
 android {
     namespace = "com.dot.gallery"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.dot.gallery"
+        applicationId = baseApplicationId
         minSdk = 29
         targetSdk = 37
         versionCode = 42101
@@ -61,23 +66,22 @@ android {
     }
 
     buildTypes {
+        fun ApplicationBuildType.configureProvider() {
+            val authority = "$baseApplicationId${applicationIdSuffix.orEmpty()}.media_provider"
+            manifestPlaceholders["appProvider"] = authority
+            buildConfigField("String", "CONTENT_AUTHORITY", "\"$authority\"")
+        }
+
         getByName("debug") {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            manifestPlaceholders["appProvider"] = "com.dot.gallery.debug.media_provider"
+            configureProvider()
             buildConfigField("Boolean", "ALLOW_ALL_FILES_ACCESS", "$allowAllFilesAccess")
             buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
-            buildConfigField(
-                "String",
-                "CONTENT_AUTHORITY",
-                "\"com.dot.gallery.debug.media_provider\""
-            )
             buildConfigField("Boolean", "ENABLE_INDEXING", "false")
         }
         getByName("release") {
-            manifestPlaceholders += mapOf(
-                "appProvider" to "com.dot.gallery.media_provider"
-            )
+            configureProvider()
             isMinifyEnabled = true
             isShrinkResources = true
             setProguardFiles(
@@ -89,7 +93,6 @@ android {
             signingConfig = signingConfigs.getByName("release")
             buildConfigField("Boolean", "ALLOW_ALL_FILES_ACCESS", "$allowAllFilesAccess")
             buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
-            buildConfigField("String", "CONTENT_AUTHORITY", "\"com.dot.gallery.media_provider\"")
             buildConfigField("Boolean", "ENABLE_INDEXING", "true")
         }
         create("staging") {
@@ -99,12 +102,7 @@ android {
             isShrinkResources = false
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
-            manifestPlaceholders["appProvider"] = "com.dot.staging.debug.media_provider"
-            buildConfigField(
-                "String",
-                "CONTENT_AUTHORITY",
-                "\"com.dot.staging.debug.media_provider\""
-            )
+            configureProvider()
             buildConfigField("Boolean", "ENABLE_INDEXING", "true")
             buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
         }

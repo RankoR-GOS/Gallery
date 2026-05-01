@@ -36,7 +36,7 @@ class BaselineProfileGenerator {
     @Test
     fun generate() {
         rule.collect(
-            packageName = "com.dot.gallery",
+            packageName = BuildConfig.TARGET_APPLICATION_ID,
             includeInStartupProfile = true
         ) {
             // This block defines the app's critical user journey. Here we are interested in

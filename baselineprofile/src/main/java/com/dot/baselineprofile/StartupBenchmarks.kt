@@ -47,7 +47,7 @@ class StartupBenchmarks {
 
     private fun benchmark(compilationMode: CompilationMode) {
         rule.measureRepeated(
-            packageName = "com.dot.gallery",
+            packageName = BuildConfig.TARGET_APPLICATION_ID,
             metrics = listOf(StartupTimingMetric()),
             compilationMode = compilationMode,
             startupMode = StartupMode.COLD,

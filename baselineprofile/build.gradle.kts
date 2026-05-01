@@ -5,7 +5,15 @@ plugins {
     id("androidx.baselineprofile")
 }
 
+val baseApplicationId = providers
+    .gradleProperty("baseApplicationId")
+    .get()
+
 android {
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
         create("staging") {
         }
@@ -46,6 +54,7 @@ android {
         targetSdk = 36
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "TARGET_APPLICATION_ID", "\"$baseApplicationId\"")
     }
 
     targetProjectPath = ":app"
