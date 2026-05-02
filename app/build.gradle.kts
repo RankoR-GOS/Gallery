@@ -141,6 +141,10 @@ android {
                 kotlin.srcDir("src/nomaps/kotlin")
             }
         }
+
+        buildTypes.configureEach {
+            getByName(name).res.directories += "src/gos/res"
+        }
     }
 
     splits {
