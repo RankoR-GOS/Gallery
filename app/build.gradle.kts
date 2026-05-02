@@ -106,6 +106,18 @@ android {
             buildConfigField("Boolean", "ENABLE_INDEXING", "true")
             buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
         }
+
+        // Use to manually check performance with release config, but debug signing
+        create("perf") {
+            initWith(getByName("release"))
+            matchingFallbacks += "release"
+            applicationIdSuffix = ".perf"
+            versionNameSuffix = "-perf"
+            signingConfig = signingConfigs.getByName("debug")
+            configureProvider()
+            buildConfigField("Boolean", "ENABLE_INDEXING", "true")
+            buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
+        }
     }
 
     compileOptions {
