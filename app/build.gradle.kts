@@ -12,23 +12,6 @@ plugins {
     alias(libs.plugins.kotlin.compose.compiler)
     id("kotlin-parcelize")
     alias(libs.plugins.kotlinSerialization)
-    id("apk-versioning")
-}
-
-val abiVersionCodes = mapOf(
-    "arm64-v8a" to 4,
-    "armeabi-v7a" to 3,
-    "x86_64" to 2,
-    "x86" to 1,
-    "universal" to 0
-)
-
-apkVersioning {
-    flavorVersionCodes.set(abiVersionCodes)
-    versionCodeMultiplier.set(10)
-    outputFileName.set("{appName}-{versionName}-{versionCode}{suffix}-{flavorName}-{buildType}")
-    variables.put("appName", "ReFra")
-    variables.put("suffix", if (includeMaps) "" else "-nomaps")
 }
 
 val baseApplicationId = providers
@@ -50,6 +33,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField("Boolean", "ML_MODELS_BUNDLED", "true")
         val mapsPrefix = if (includeMaps) "" else "-nomaps"
         base.archivesName.set("ReFra-${versionName}-$versionCode$mapsPrefix")
     }
@@ -143,6 +127,13 @@ android {
 
     sourceSets {
         getByName("main") {
+            // For APK builds, include ML assets directly since asset packs are AAB-only
+            val isBundleBuild = gradle.startParameter.taskNames.any {
+                it.contains("bundle", ignoreCase = true)
+            }
+            if (!isBundleBuild) {
+                assets.srcDirs("src/main/assets", "../ml-models/src/main/assets")
+            }
             // Conditional maps/nomaps source set
             if (includeMaps) {
                 kotlin.srcDir("src/maps/kotlin")
@@ -150,37 +141,14 @@ android {
                 kotlin.srcDir("src/nomaps/kotlin")
             }
         }
-        // For withML APK builds, include ML model assets directly
-        // (asset packs are AAB-only, so for APK builds we inline them)
-        val isBundleBuild = gradle.startParameter.taskNames.any {
-            it.contains("bundle", ignoreCase = true)
-        }
-        if (!isBundleBuild) {
-            maybeCreate("withML").apply {
-                assets.srcDirs("../ml-models/src/main/assets")
-            }
-        }
     }
 
-    flavorDimensions += listOf("abi", "ml")
-    productFlavors {
-        abiVersionCodes.forEach { (abi, _) ->
-            create(abi) {
-                dimension = "abi"
-                if (abi == "universal") {
-                    ndk.abiFilters.addAll(listOf("x86", "x86_64", "armeabi-v7a", "arm64-v8a"))
-                } else {
-                    ndk.abiFilters.add(abi)
-                }
-            }
-        }
-        create("withML") {
-            dimension = "ml"
-            buildConfigField("Boolean", "ML_MODELS_BUNDLED", "true")
-        }
-        create("noML") {
-            dimension = "ml"
-            buildConfigField("Boolean", "ML_MODELS_BUNDLED", "false")
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "x86_64")
+            isUniversalApk = false
         }
     }
 
