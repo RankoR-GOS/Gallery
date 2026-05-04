@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Галерея</string>
+    <string name="manage_media_title">Разрешите Галерее управлять вашими медиафайлами</string>
+    <string name="blacklist_summary">Игнорировать альбомы из галереи</string>
+    <string name="add_to_ignored_summary">Убрать альбом из отображения в Галерее</string>
+    <string name="restore_vault_summary">Текущий сейф и его содержимое будет расшифровано и восстановлено.\nЭто действие снова сделает ваш контент доступным в Галерее.</string>
 </resources>

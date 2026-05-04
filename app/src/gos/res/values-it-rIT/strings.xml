@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Galleria</string>
+    <string name="manage_media_title">Autorizza l\'app Galleria a gestire i contenuti multimediali</string>
+    <string name="blacklist_summary">Ignora album dalla galleria</string>
+    <string name="add_to_ignored_summary">Rimuovi la visualizzazione di un album nella galleria</string>
+    <string name="restore_vault_summary">Il presente archivio protetto e il suo contenuto saranno decodificati e ripristinati.\nQuesta azione renderà i tuoi contenuti nuovamente accessibili nella Galleria.</string>
 </resources>

@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Галерея</string>
+    <string name="manage_media_title">Allow Gallery to Manage your Media</string>
+    <string name="blacklist_summary">Ignore albums from Gallery</string>
+    <string name="add_to_ignored_summary">Remove an album from showing inside the Gallery</string>
+    <string name="restore_vault_summary">The current vault and its content will be decrypted and restored.\nThis action will make your content accessible again in the Gallery.</string>
 </resources>

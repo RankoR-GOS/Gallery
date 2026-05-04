@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Galleri</string>
+    <string name="manage_media_title">Tillåt att Gallery hanterar dina medier</string>
+    <string name="blacklist_summary">Ignorera album från galleriet</string>
+    <string name="add_to_ignored_summary">Ta bort ett album från att visas inne i galleriet</string>
+    <string name="restore_vault_summary">The current vault and its content will be decrypted and restored.\nThis action will make your content accessible again in the Gallery.</string>
 </resources>

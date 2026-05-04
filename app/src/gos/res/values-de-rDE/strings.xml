@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Galerie</string>
+    <string name="manage_media_title">Der Galerie erlauben, Medien zu verwalten</string>
+    <string name="blacklist_summary">Alben in der Galerie verstecken</string>
+    <string name="add_to_ignored_summary">Ein Album nicht mehr in der Galerie anzeigen</string>
+    <string name="restore_vault_summary">Der aktuelle Tresor und sein Inhalt werden entschlüsselt und wiederhergestellt.\nDurch diese Aktion werden deine Inhalte in der Galerie wieder zugänglich.</string>
 </resources>

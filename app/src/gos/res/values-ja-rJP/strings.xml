@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">ギャラリー</string>
+    <string name="manage_media_title">Galleryにメディアの管理を許可する</string>
+    <string name="blacklist_summary">ギャラリーからアルバムを非表示にする</string>
+    <string name="add_to_ignored_summary">ギャラリー内に表示されているアルバムを削除する</string>
+    <string name="restore_vault_summary">現在のデータ保管庫とそのコンテンツは復号され、復元されます。\nこの操作により、ギャラリーのコンテンツに再びアクセスできるようになります。</string>
 </resources>

@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Galería</string>
+    <string name="manage_media_title">Permita que la Galería gestione los archivos multimedia</string>
+    <string name="blacklist_summary">Ignorar álbumes de la Galería</string>
+    <string name="add_to_ignored_summary">Dejar de mostrar álbum en la galería</string>
+    <string name="restore_vault_summary">La bóveda actual y su contenido se descifrarán y restaurarán.\nEsta acción hará que tu contenido vuelva a ser accesible en la Galería.</string>
 </resources>

@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Galeria</string>
+    <string name="manage_media_title">Zezwól galerii na zarządzanie multimediami</string>
+    <string name="blacklist_summary">Wyklucz albumy z Galerii</string>
+    <string name="add_to_ignored_summary">Nie pokazuj tego albumu w Galerii</string>
+    <string name="restore_vault_summary">Obecny sejf i jego zawartość będzie odszyfrowana i odzyskana.\nTa akcja spowoduje, że twoje multimedia znowu będą dostępne poza aplikacją.</string>
 </resources>

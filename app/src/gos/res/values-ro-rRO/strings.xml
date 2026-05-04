@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Galerie</string>
+    <string name="manage_media_title">Permite Galeriei să gestioneze fișierele media</string>
+    <string name="blacklist_summary">Ignoră albumele din Galerie</string>
+    <string name="add_to_ignored_summary">Elimină un album din afișarea în interiorul Galeriei</string>
+    <string name="restore_vault_summary">The current vault and its content will be decrypted and restored.\nThis action will make your content accessible again in the Gallery.</string>
 </resources>

@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Galerija</string>
+    <string name="manage_media_title">Leisti Galerijai redaguoti jūsų medijos failus</string>
+    <string name="blacklist_summary">Paslėpti albumus iš Galerijos</string>
+    <string name="add_to_ignored_summary">Neberodyti šio albumo Galerijoje</string>
+    <string name="restore_vault_summary">Dabartinė saugykla ir jos turinys bus iššifruotas ir atkurtas atgal.\nAtlikus šį veiksmą jūsų turinys vėl bus prieinamas Galerijoje.</string>
 </resources>

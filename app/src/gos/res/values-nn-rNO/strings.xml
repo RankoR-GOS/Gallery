@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Galleri</string>
+    <string name="manage_media_title">Gje Gallery løyve til å handsame medium</string>
+    <string name="blacklist_summary">Ignore albums from Gallery</string>
+    <string name="add_to_ignored_summary">Remove an album from showing inside the Gallery</string>
+    <string name="restore_vault_summary">Det gjeldande kvelvet og innhaldet i det vert dekryptert og gjenoppretta.\nInnhaldet vert på nytt tilgjengeleg i Gallery.</string>
 </resources>

@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Galeri</string>
+    <string name="manage_media_title">Izinkan Galeri untuk Mengelola Media Anda</string>
+    <string name="blacklist_summary">Abaikan album dari Galeri</string>
+    <string name="add_to_ignored_summary">Hapus album agar tidak ditampilkan di Galeri</string>
+    <string name="restore_vault_summary">The current vault and its content will be decrypted and restored.\nThis action will make your content accessible again in the Gallery.</string>
 </resources>
