@@ -34,8 +34,7 @@ android {
             useSupportLibrary = true
         }
         buildConfigField("Boolean", "ML_MODELS_BUNDLED", "true")
-        val mapsPrefix = if (includeMaps) "" else "-nomaps"
-        base.archivesName.set("ReFra-${versionName}-$versionCode$mapsPrefix")
+        base.archivesName.set("Gallery")
     }
 
     lint.baseline = file("lint-baseline.xml")
