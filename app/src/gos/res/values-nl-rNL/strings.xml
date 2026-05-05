@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Galerij</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="manage_media_title">Galerij toestaan om je media te beheren</string>
     <string name="blacklist_summary">Albums negeren uit Galerij</string>
     <string name="add_to_ignored_summary">Een album verwijderen uit de Galerij</string>

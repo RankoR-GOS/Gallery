@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Galerie</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="manage_media_title">Permettre à Gallerie de gérer vos médias</string>
     <string name="blacklist_summary">Ignorer des albums de la galerie</string>
     <string name="add_to_ignored_summary">Supprimer l\'affichage d\'un album dans la galerie</string>

@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Galerie</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="manage_media_title">Der Galerie erlauben, Medien zu verwalten</string>
     <string name="blacklist_summary">Alben in der Galerie verstecken</string>
     <string name="add_to_ignored_summary">Ein Album nicht mehr in der Galerie anzeigen</string>
