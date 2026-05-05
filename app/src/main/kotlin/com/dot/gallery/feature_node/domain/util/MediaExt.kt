@@ -72,7 +72,7 @@ val Media.volume: String
  */
 val Media.readUriOnly: Boolean get() = albumID == -99L && albumLabel == "" && instanceOf(Media.UriMedia::class)
 
-val Media.isVideo: Boolean get() = mimeType.startsWith("video/") && duration != null
+val Media.isVideo: Boolean get() = mimeType.startsWith("video/") && (duration != null || readUriOnly)
 
 val Media.isImage: Boolean get() = mimeType.startsWith("image/")
 
