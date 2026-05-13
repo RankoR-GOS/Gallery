@@ -15,3 +15,4 @@ api.properties
 **/.kotlin
 
 /app.properties
+*.jks
