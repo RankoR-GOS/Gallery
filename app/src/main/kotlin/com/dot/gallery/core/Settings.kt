@@ -241,6 +241,29 @@ object Settings {
 
     }
 
+    object Security {
+        const val METADATA_ISOLATION_SHARED = "shared"
+        const val METADATA_ISOLATION_HYBRID = "hybrid"
+        const val METADATA_ISOLATION_PER_FILE = "per_file"
+        const val DEFAULT_METADATA_ISOLATION_MODE = METADATA_ISOLATION_HYBRID
+
+        private val METADATA_ISOLATION_MODE = stringPreferencesKey("metadata_isolation_mode")
+
+        @Composable
+        fun rememberMetadataIsolationMode(): MutableState<String> {
+            return rememberPreference(
+                key = METADATA_ISOLATION_MODE,
+                defaultValue = DEFAULT_METADATA_ISOLATION_MODE
+            )
+        }
+
+        fun getMetadataIsolationMode(context: Context): Flow<String> {
+            return context.dataStore.data.map {
+                it[METADATA_ISOLATION_MODE] ?: DEFAULT_METADATA_ISOLATION_MODE
+            }
+        }
+    }
+
     object Misc {
         private val USER_CHOICE_MEDIA_MANAGER = booleanPreferencesKey("use_media_manager")
 

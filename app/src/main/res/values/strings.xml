@@ -562,6 +562,16 @@
     <string name="settings_media_viewer_summary">Viewing experience, editor, video playback</string>
     <string name="settings_navigation">Navigation</string>
     <string name="settings_navigation_summary">Launch screen, bars, interface behavior</string>
+    <string name="settings_security">Security</string>
+    <string name="settings_security_summary">Sandboxing and isolated file processing</string>
+    <string name="security_metadata_isolation">Metadata isolation mode</string>
+    <string name="security_metadata_isolation_summary">Controls how metadata parsing is isolated between files. All modes run in a separate process with no permissions; the difference is how often that process is recycled.\n\nShared process - All files are parsed through a single long-lived isolated process. Fastest option with minimal overhead for library scanning. If a malformed file crashes the parser, the process is restarted automatically.\n\nHybrid - Files you open in the viewer get a fresh isolated process; background indexing reuses a shared one. Actively viewed files are fully isolated from each other, while batch operations stay fast.\n\nPer-file - Every single file gets its own isolated process, destroyed immediately after parsing. Strongest isolation, but significantly slower for large libraries and uses more battery during scanning.</string>
+    <string name="security_metadata_isolation_shared">Shared process</string>
+    <string name="security_metadata_isolation_shared_summary">Single reused isolated process for all files</string>
+    <string name="security_metadata_isolation_hybrid">Hybrid</string>
+    <string name="security_metadata_isolation_hybrid_summary">Fresh process for opened files, shared for batch indexing</string>
+    <string name="security_metadata_isolation_per_file">Per-file</string>
+    <string name="security_metadata_isolation_per_file_summary">Every file gets its own isolated process</string>
 
     <!-- Settings Overhaul: Extended Descriptions -->
     <string name="monthly_timeline_description">Groups all your photos and videos by month instead of by individual date. This gives a more compact overview when browsing large libraries, but you lose the per-day separation.\n\nChanging this setting will restart the app.</string>

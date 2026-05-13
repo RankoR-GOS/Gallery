@@ -108,6 +108,7 @@ import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsTi
 import com.dot.gallery.feature_node.presentation.settings.subsettings.EditBackupsViewerScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.AIModelsManagerScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSmartFeaturesScreen
+import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSecurityScreen
 import com.dot.gallery.feature_node.presentation.setup.SetupScreen
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
 import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
@@ -1039,6 +1040,9 @@ fun NavigationComp(
             }
             composable(Screen.SettingsSmartFeaturesScreen()) {
                 SettingsSmartFeaturesScreen()
+            }
+            composable(Screen.SettingsSecurityScreen()) {
+                SettingsSecurityScreen()
             }
             composable(Screen.AIModelsManagerScreen()) {
                 AIModelsManagerScreen()

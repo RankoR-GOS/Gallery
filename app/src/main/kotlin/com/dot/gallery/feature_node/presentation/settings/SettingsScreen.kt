@@ -11,6 +11,7 @@ import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Fullscreen
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.SettingsSuggest
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -92,6 +93,15 @@ fun SettingsScreen() {
             },
             screenPosition = Position.Middle
         )
+        val securityPref = rememberPreference(
+            icon = Icons.Outlined.Security,
+            title = stringResource(R.string.settings_security),
+            summary = stringResource(R.string.settings_security_summary),
+            onClick = {
+                eventHandler.navigate(Screen.SettingsSecurityScreen())
+            },
+            screenPosition = Position.Middle
+        )
         val helpPref = rememberPreference(
             icon = Icons.AutoMirrored.Outlined.HelpOutline,
             title = stringResource(R.string.help_title),
@@ -103,11 +113,11 @@ fun SettingsScreen() {
         )
         return remember(
             appearancePref, timelineAlbumsPref, mediaViewerPref,
-            navigationPref, generalPref, smartPref, helpPref
+            navigationPref, generalPref, smartPref, securityPref, helpPref
         ) {
             mutableStateListOf(
                 appearancePref, timelineAlbumsPref, mediaViewerPref,
-                navigationPref, generalPref, smartPref, helpPref
+                navigationPref, generalPref, smartPref, securityPref, helpPref
             )
         }
     }
@@ -117,15 +127,28 @@ fun SettingsScreen() {
     val tertiaryColor = MaterialTheme.colorScheme.tertiary
     val errorColor = MaterialTheme.colorScheme.error
     val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer
+    val secondaryContainerColor = MaterialTheme.colorScheme.secondaryContainer
     val tertiaryContainerColor = MaterialTheme.colorScheme.tertiaryContainer
     val surfaceVariantColor = MaterialTheme.colorScheme.surfaceVariant
     val backgroundColors = remember(
-        primaryColor, secondaryColor, tertiaryColor,
-        errorColor, primaryContainerColor, tertiaryContainerColor, surfaceVariantColor
+        primaryColor,
+        secondaryColor,
+        tertiaryColor,
+        errorColor,
+        primaryContainerColor,
+        secondaryContainerColor,
+        tertiaryContainerColor,
+        surfaceVariantColor,
     ) {
         listOf(
-            primaryColor, secondaryColor, tertiaryColor,
-            errorColor, primaryContainerColor, tertiaryContainerColor, surfaceVariantColor
+            primaryColor,
+            secondaryColor,
+            tertiaryColor,
+            errorColor,
+            primaryContainerColor,
+            secondaryContainerColor,
+            tertiaryContainerColor,
+            surfaceVariantColor,
         )
     }
     val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
@@ -133,15 +156,28 @@ fun SettingsScreen() {
     val onTertiaryColor = MaterialTheme.colorScheme.onTertiary
     val onErrorColor = MaterialTheme.colorScheme.onError
     val onPrimaryContainerColor = MaterialTheme.colorScheme.onPrimaryContainer
+    val onSecondaryContainerColor = MaterialTheme.colorScheme.onSecondaryContainer
     val onTertiaryContainerColor = MaterialTheme.colorScheme.onTertiaryContainer
     val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
     val onBackgroundColors = remember(
-        onPrimaryColor, onSecondaryColor, onTertiaryColor,
-        onErrorColor, onPrimaryContainerColor, onTertiaryContainerColor, onSurfaceVariantColor
+        onPrimaryColor,
+        onSecondaryColor,
+        onTertiaryColor,
+        onErrorColor,
+        onPrimaryContainerColor,
+        onSecondaryContainerColor,
+        onTertiaryContainerColor,
+        onSurfaceVariantColor,
     ) {
         listOf(
-            onPrimaryColor, onSecondaryColor, onTertiaryColor,
-            onErrorColor, onPrimaryContainerColor, onTertiaryContainerColor, onSurfaceVariantColor
+            onPrimaryColor,
+            onSecondaryColor,
+            onTertiaryColor,
+            onErrorColor,
+            onPrimaryContainerColor,
+            onSecondaryContainerColor,
+            onTertiaryContainerColor,
+            onSurfaceVariantColor,
         )
     }
     BaseSettingsScreen(
@@ -154,12 +190,13 @@ fun SettingsScreen() {
             SettingsItem(
                 item = setting,
                 customIcon = { icon, iconUri, iconRes ->
+                    val colorIndex = index % backgroundColors.size
                     CustomCircleIcon(
                         iconVector = icon,
                         iconUri = iconUri,
                         iconRes = iconRes,
-                        containerColor = backgroundColors[index],
-                        contentColor = onBackgroundColors[index]
+                        containerColor = backgroundColors[colorIndex],
+                        contentColor = onBackgroundColors[colorIndex]
                     )
                 }
             )
