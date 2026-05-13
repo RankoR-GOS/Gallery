@@ -13,9 +13,11 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.ml.ModelManager
-import com.dot.gallery.core.decoder.supportHeifDecoder
-import com.dot.gallery.core.decoder.supportJxlDecoder
+import com.dot.gallery.core.decoder.supportSandboxedHeifDecoder
+import com.dot.gallery.core.decoder.supportSandboxedJxlDecoder
 import com.dot.gallery.core.decoder.supportVideoFrame2
+import com.dot.gallery.core.sandbox.IsolatedImageDecoder
+import com.dot.gallery.core.sandbox.SandboxedDecoderHolder
 import com.dot.gallery.core.workers.MetadataCollectionWorker
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.github.panpf.sketch.PlatformContext
@@ -51,8 +53,8 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
             supportVideoFrame2()
             supportAnimatedWebp()
             supportAnimatedHeif()
-            supportHeifDecoder()
-            supportJxlDecoder()
+            supportSandboxedHeifDecoder()
+            supportSandboxedJxlDecoder()
         }
         val diskCache = DiskCache.Builder(context, FileSystem.SYSTEM)
             .directory(context.appCacheDirectory())
@@ -98,6 +100,9 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
     @Inject
     lateinit var modelManager: ModelManager
 
+    @Inject
+    lateinit var isolatedImageDecoder: IsolatedImageDecoder
+
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
@@ -106,6 +111,8 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
         if (getProcessName() != packageName) return
 
         super.onCreate()
+
+        SandboxedDecoderHolder.init(isolatedImageDecoder)
 
         workManager.enqueueUniqueWork(
             uniqueWorkName = "MetadataCollection",

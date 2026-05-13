@@ -8,10 +8,11 @@ import com.bumptech.glide.Registry
 import com.bumptech.glide.annotation.GlideModule
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
 import com.bumptech.glide.module.AppGlideModule
-import com.dot.gallery.core.decoder.glide.HeifMimeInputStreamDecoder
-import com.dot.gallery.core.decoder.glide.JxlBitmapDecoder
 import com.dot.gallery.core.decoder.glide.MimeInputStream
 import com.dot.gallery.core.decoder.glide.MimeInputStreamModelLoader
+import com.dot.gallery.core.decoder.glide.SandboxedHeifBitmapDecoder
+import com.dot.gallery.core.decoder.glide.SandboxedHeifMimeDecoder
+import com.dot.gallery.core.decoder.glide.SandboxedJxlBitmapDecoder
 import java.io.InputStream
 
 @GlideModule
@@ -23,17 +24,22 @@ class GlideModule: AppGlideModule() {
         registry.prepend(
             Uri::class.java,
             MimeInputStream::class.java,
-            MimeInputStreamModelLoader.Factory(context)
+            MimeInputStreamModelLoader.Factory(context = context)
         )
         registry.prepend(
             MimeInputStream::class.java,
             Bitmap::class.java,
-            HeifMimeInputStreamDecoder(pool)
+            SandboxedHeifMimeDecoder(context = context, bitmapPool = pool)
         )
         registry.prepend(
             InputStream::class.java,
             Bitmap::class.java,
-            JxlBitmapDecoder(pool)
+            SandboxedHeifBitmapDecoder(context = context, bitmapPool = pool)
+        )
+        registry.prepend(
+            InputStream::class.java,
+            Bitmap::class.java,
+            SandboxedJxlBitmapDecoder(context = context, bitmapPool = pool)
         )
     }
 

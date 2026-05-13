@@ -260,6 +260,12 @@
             android:exported="false"
             android:isolatedProcess="true" />
 
+        <!-- Isolated-process service for sandboxed HEIF/AVIF/JXL image decoding. -->
+        <service
+            android:name=".core.sandbox.IsolatedDecoderService"
+            android:exported="false"
+            android:isolatedProcess="true" />
+
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:exported="false"
