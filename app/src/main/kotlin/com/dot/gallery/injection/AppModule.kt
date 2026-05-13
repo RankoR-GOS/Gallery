@@ -67,8 +67,15 @@ object AppModule {
         @ApplicationContext context: Context,
         workManager: WorkManager,
         repository: MediaRepository,
-        eventHandler: EventHandler
-    ): MediaDistributor = MediaDistributorImpl(context, repository, eventHandler, workManager)
+        eventHandler: EventHandler,
+        database: InternalDatabase,
+    ): MediaDistributor = MediaDistributorImpl(
+        context = context,
+        repository = repository,
+        eventHandler = eventHandler,
+        workManager = workManager,
+        scannedMediaDao = database.getScannedMediaDao(),
+    )
 
     @Provides
     @Singleton

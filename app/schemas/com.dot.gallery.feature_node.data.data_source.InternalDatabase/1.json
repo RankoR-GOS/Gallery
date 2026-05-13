@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "3c383b6ffd6f710b62cfe0abc3347159",
+    "identityHash": "980e54bf3ba9fba7a835d123ed1fa2b8",
     "entities": [
       {
         "tableName": "pinned_table",
@@ -1089,11 +1089,29 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "scanned_media",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3c383b6ffd6f710b62cfe0abc3347159')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '980e54bf3ba9fba7a835d123ed1fa2b8')"
     ]
   }
 }
