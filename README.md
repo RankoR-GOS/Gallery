@@ -19,6 +19,12 @@ ALL_FILES_ACCESS=false
 INCLUDE_MAPS=false
 ```
 
+## Running CTS tests
+
+```shell
+atest --test-mapping external/Gallery:all
+```
+
 ## License
 
 This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE).
