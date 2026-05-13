@@ -142,6 +142,7 @@ android {
         }
 
         buildTypes.configureEach {
+            getByName(name).manifest.srcFile("src/gos/AndroidManifest.xml")
             getByName(name).res.directories += "src/gos/res"
         }
     }

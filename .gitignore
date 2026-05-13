@@ -13,3 +13,5 @@ api.properties
 /.vscode
 **/build
 **/.kotlin
+
+/app.properties
