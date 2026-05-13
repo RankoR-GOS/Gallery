@@ -19,6 +19,7 @@ import com.dot.gallery.core.util.SdkCompat
 import androidx.datastore.preferences.core.Preferences
 import androidx.work.WorkManager
 import com.dot.gallery.core.Resource
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.dataStore
 import com.dot.gallery.core.util.MediaStoreBuckets
 import com.dot.gallery.core.util.ext.deleteGpsMetadata
@@ -75,6 +76,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -90,6 +92,15 @@ class MediaRepositoryImpl(
 ) : MediaRepository {
 
     private val contentResolver = context.contentResolver
+
+    /**
+     * On-demand metadata operations use per-file isolation in both hybrid and per-file modes.
+     */
+    private suspend fun shouldUsePerFileIsolation(): Boolean {
+        val mode = Settings.Security.getMetadataIsolationMode(context)
+            .firstOrNull() ?: Settings.Security.DEFAULT_METADATA_ISOLATION_MODE
+        return mode != Settings.Security.METADATA_ISOLATION_SHARED
+    }
 
     private var updateDatabaseMutex = Mutex()
     override suspend fun updateInternalDatabase() {
@@ -345,7 +356,12 @@ class MediaRepositoryImpl(
             media = media,
             action = { deleteGpsMetadata() },
             postAction = {
-                context.retrieveExtraMediaMetadata(isolatedParser, geocoder, it)?.let { metadata ->
+                context.retrieveExtraMediaMetadata(
+                    isolatedParser = isolatedParser,
+                    geocoder = geocoder,
+                    media = it,
+                    usePerFileIsolation = shouldUsePerFileIsolation(),
+                )?.let { metadata ->
                     database.getMetadataDao().addMetadata(metadata)
                 }
             }
@@ -356,7 +372,12 @@ class MediaRepositoryImpl(
             media = media,
             action = { deleteMetadata() },
             postAction = {
-                context.retrieveExtraMediaMetadata(isolatedParser, geocoder, it)?.let { metadata ->
+                context.retrieveExtraMediaMetadata(
+                    isolatedParser = isolatedParser,
+                    geocoder = geocoder,
+                    media = it,
+                    usePerFileIsolation = shouldUsePerFileIsolation(),
+                )?.let { metadata ->
                     database.getMetadataDao().addMetadata(metadata)
                 }
             }
@@ -389,7 +410,12 @@ class MediaRepositoryImpl(
                 media = media,
                 action = { updateImageDescription(description) },
                 postAction = {
-                    context.retrieveExtraMediaMetadata(isolatedParser, geocoder, it)?.let { metadata ->
+                    context.retrieveExtraMediaMetadata(
+                        isolatedParser = isolatedParser,
+                        geocoder = geocoder,
+                        media = it,
+                        usePerFileIsolation = shouldUsePerFileIsolation(),
+                    )?.let { metadata ->
                         database.getMetadataDao().addMetadata(metadata)
                     }
                 }
@@ -575,7 +601,12 @@ class MediaRepositoryImpl(
         database.getAlbumThumbnailDao().getAlbumThumbnailsFlow()
 
     override suspend fun collectMetadataFor(media: Media) {
-        context.retrieveExtraMediaMetadata(isolatedParser, geocoder, media)?.let { metadata ->
+        context.retrieveExtraMediaMetadata(
+            isolatedParser = isolatedParser,
+            geocoder = geocoder,
+            media = media,
+            usePerFileIsolation = shouldUsePerFileIsolation(),
+        )?.let { metadata ->
             database.getMetadataDao().addMetadata(metadata)
         }
     }

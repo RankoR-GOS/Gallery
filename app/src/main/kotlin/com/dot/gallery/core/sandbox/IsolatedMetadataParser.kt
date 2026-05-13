@@ -35,6 +35,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 
 /**
@@ -96,6 +97,201 @@ class IsolatedMetadataParser(private val context: Context) {
             runCatching { context.unbindService(connection) }
             bound = false
             serviceMessenger = null
+        }
+    }
+
+    // ── Per-file isolation (API 29+) ──────────────────────────────────────
+
+    private val perFileExecutor = Executors.newSingleThreadExecutor()
+
+    /**
+     * Bind a fresh isolated instance for a single media item.
+     * Call [unbindPerFile] after the parse operation completes.
+     */
+    suspend fun bindPerFile(mediaId: Long): PerFileConnection? {
+        val instanceName = "metadata_$mediaId"
+        val intent = Intent(context, IsolatedMetadataService::class.java)
+        var perFileMessenger: Messenger? = null
+
+        val perFileConnection = object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
+                perFileMessenger = Messenger(binder)
+                printDebug("IsolatedMetadataParser: per-file service connected ($instanceName)")
+            }
+
+            override fun onServiceDisconnected(name: ComponentName?) {
+                perFileMessenger = null
+                printWarning("IsolatedMetadataParser: per-file service disconnected ($instanceName)")
+            }
+        }
+
+        val bindResult = withContext(Dispatchers.Main) {
+            runCatching {
+                context.bindIsolatedService(
+                    intent,
+                    Context.BIND_AUTO_CREATE,
+                    instanceName,
+                    perFileExecutor,
+                    perFileConnection,
+                )
+            }.getOrElse { exception ->
+                printWarning("IsolatedMetadataParser: bindIsolatedService failed: ${exception.message}")
+                false
+            }
+        }
+
+        if (!bindResult) {
+            return null
+        }
+
+        var attempts = 0
+        while (perFileMessenger == null && attempts < 50) {
+            kotlinx.coroutines.delay(100)
+            attempts++
+        }
+
+        val messenger = perFileMessenger
+        if (messenger == null) {
+            printWarning("IsolatedMetadataParser: per-file bind timed out ($instanceName)")
+            runCatching {
+                context.unbindService(perFileConnection)
+            }
+            return null
+        }
+
+        return PerFileConnection(
+            serviceConnection = perFileConnection,
+            messenger = messenger,
+            instanceName = instanceName,
+        )
+    }
+
+    fun unbindPerFile(connection: PerFileConnection) {
+        runCatching {
+            context.unbindService(connection.serviceConnection)
+        }
+        printDebug("IsolatedMetadataParser: per-file service unbound (${connection.instanceName})")
+    }
+
+    // ── Per-file public API ───────────────────────────────────────────────
+
+    /**
+     * Parse image metadata using a per-file isolated instance.
+     * Falls back to the shared isolated instance if the per-file bind fails.
+     */
+    suspend fun parseImageMetadataPerFile(
+        uri: Uri,
+        label: String,
+        mediaId: Long,
+    ): Bundle? {
+        return withContext(Dispatchers.IO) {
+            val startNs = System.nanoTime()
+            val connection = bindPerFile(mediaId)
+            if (connection == null) {
+                printWarning("IsolatedMetadataParser: per-file bind failed, falling back to shared")
+                return@withContext parseImageMetadata(uri, label)
+            }
+            try {
+                val pfd = runCatching {
+                    context.contentResolver.openFileDescriptor(uri, "r")
+                }.getOrNull() ?: return@withContext null
+
+                val result = sendAndReceive(
+                    messenger = connection.messenger,
+                    what = MSG_PARSE_IMAGE,
+                    data = Bundle().apply {
+                        putParcelable(KEY_PFD, pfd)
+                        putString(KEY_LABEL, label)
+                    },
+                )
+                val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
+                printDebug(
+                    "IsolatedMetadataParser: image parse took ${elapsedMs}ms " +
+                            "(per-file: ${connection.instanceName})"
+                )
+                result
+            } finally {
+                unbindPerFile(connection)
+            }
+        }
+    }
+
+    /**
+     * Parse video metadata using a per-file isolated instance.
+     * Falls back to the shared isolated instance if the per-file bind fails.
+     */
+    suspend fun parseVideoMetadataPerFile(uri: Uri, mediaId: Long): Bundle? {
+        return withContext(Dispatchers.IO) {
+            val startNs = System.nanoTime()
+            val connection = bindPerFile(mediaId)
+            if (connection == null) {
+                printWarning("IsolatedMetadataParser: per-file bind failed, falling back to shared")
+                return@withContext parseVideoMetadata(uri)
+            }
+            try {
+                val pfd = runCatching {
+                    context.contentResolver.openFileDescriptor(uri, "r")
+                }.getOrNull() ?: return@withContext null
+
+                val result = sendAndReceive(
+                    messenger = connection.messenger,
+                    what = MSG_PARSE_VIDEO,
+                    data = Bundle().apply {
+                        putParcelable(KEY_PFD, pfd)
+                    },
+                )
+                val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
+                printDebug(
+                    "IsolatedMetadataParser: video parse took ${elapsedMs}ms " +
+                            "(per-file: ${connection.instanceName})"
+                )
+                result
+            } finally {
+                unbindPerFile(connection)
+            }
+        }
+    }
+
+    /**
+     * Parse raw metadata using a per-file isolated instance.
+     * Falls back to the shared isolated instance if the per-file bind fails.
+     */
+    suspend fun parseRawMetadataPerFile(
+        uri: Uri,
+        isVideo: Boolean,
+        mediaId: Long,
+    ): List<MetadataDirectory> {
+        return withContext(Dispatchers.IO) {
+            val startNs = System.nanoTime()
+            val connection = bindPerFile(mediaId)
+            if (connection == null) {
+                printWarning("IsolatedMetadataParser: per-file bind failed, falling back to shared")
+                return@withContext parseRawMetadata(uri, isVideo)
+            }
+            try {
+                val pfd = runCatching {
+                    context.contentResolver.openFileDescriptor(uri, "r")
+                }.getOrNull() ?: return@withContext emptyList()
+
+                val bundle = sendAndReceive(
+                    messenger = connection.messenger,
+                    what = MSG_PARSE_RAW_METADATA,
+                    data = Bundle().apply {
+                        putParcelable(KEY_PFD, pfd)
+                        putBoolean(KEY_IS_VIDEO, isVideo)
+                    },
+                ) ?: return@withContext emptyList()
+
+                val result = unbundleRawMetadata(bundle)
+                val elapsedMs = (System.nanoTime() - startNs) / 1_000_000
+                printDebug(
+                    "IsolatedMetadataParser: raw metadata parse took ${elapsedMs}ms " +
+                            "(per-file: ${connection.instanceName})"
+                )
+                result
+            } finally {
+                unbindPerFile(connection)
+            }
         }
     }
 
@@ -172,7 +368,10 @@ class IsolatedMetadataParser(private val context: Context) {
 
     private suspend fun sendAndReceive(what: Int, data: Bundle): Bundle? {
         val messenger = serviceMessenger ?: return null
+        return sendAndReceive(messenger, what, data)
+    }
 
+    private suspend fun sendAndReceive(messenger: Messenger, what: Int, data: Bundle): Bundle? {
         return withTimeoutOrNull(SERVICE_TIMEOUT_MS) {
             suspendCancellableCoroutine { cont ->
                 val replyHandler = Handler(Looper.getMainLooper()) { msg ->
