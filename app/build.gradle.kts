@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.baselineProfilePlugin)
     alias(libs.plugins.kotlin.compose.compiler)
+    id("gos-string-overrides")
     id("kotlin-parcelize")
     alias(libs.plugins.kotlinSerialization)
 }

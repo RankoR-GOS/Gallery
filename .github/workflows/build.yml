@@ -16,5 +16,9 @@ jobs:
           distribution: 'temurin'
           java-version: 21
           cache: gradle
+
+      - name: Check GOS locale overrides
+        run: ./gradlew :app:checkGosStringOverrides --no-daemon
+
       - name: Build with Gradle
         run: ./gradlew :app:assembleDebug --no-daemon
