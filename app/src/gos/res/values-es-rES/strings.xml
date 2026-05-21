@@ -5,4 +5,6 @@
     <string name="blacklist_summary">Ignorar álbumes de la Galería</string>
     <string name="add_to_ignored_summary">Dejar de mostrar álbum en la galería</string>
     <string name="restore_vault_summary">La bóveda actual y su contenido se descifrarán y restaurarán.\nEsta acción hará que tu contenido vuelva a ser accesible en la Galería.</string>
+    <string name="donate">Donate to ReFra</string>
+    <string name="support_the_project">Support ReFra</string>
 </resources>

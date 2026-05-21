@@ -5,4 +5,6 @@
     <string name="blacklist_summary">在相片庫中隱藏相簿</string>
     <string name="add_to_ignored_summary">不要在相片庫中顯示特定相簿</string>
     <string name="restore_vault_summary">目前私密空間及其內容將被解密並還原。\n此動作將使您的內容在相簿中再次可用。</string>
+    <string name="donate">Donate to ReFra</string>
+    <string name="support_the_project">Support ReFra</string>
 </resources>

@@ -5,4 +5,6 @@
     <string name="blacklist_summary">Piilota albumeja Gallerialta</string>
     <string name="add_to_ignored_summary">Poista albumi näkymästä Galleriassa</string>
     <string name="restore_vault_summary">The current vault and its content will be decrypted and restored.\nThis action will make your content accessible again in the Gallery.</string>
+    <string name="donate">Donate to ReFra</string>
+    <string name="support_the_project">Support ReFra</string>
 </resources>

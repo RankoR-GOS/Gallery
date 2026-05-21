@@ -5,4 +5,6 @@
     <string name="blacklist_summary">Ignorovat alba z galerie</string>
     <string name="add_to_ignored_summary">Přestat zobrazovat album v galerii</string>
     <string name="restore_vault_summary">Aktuální trezor a jeho obsah budou dešifrovány a obnoveny.\nDíky této akci bude váš obsah v galerii opět přístupný.</string>
+    <string name="donate">Donate to ReFra</string>
+    <string name="support_the_project">Support ReFra</string>
 </resources>
