@@ -1,11 +1,8 @@
 package com.dot.gallery.feature_node.presentation.settings.subsettings
 
 import androidx.activity.compose.BackHandler
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,20 +13,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -37,17 +30,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings
-import com.dot.gallery.core.Settings.Misc.rememberAppNameAlias
 import com.dot.gallery.core.Settings.Misc.rememberTrashConfirmationEnabled
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.util.SdkCompat
@@ -57,30 +45,21 @@ import com.dot.gallery.feature_node.presentation.settings.components.PreferenceO
 import com.dot.gallery.feature_node.presentation.settings.components.SwitchPreferenceDetailScreen
 import com.dot.gallery.feature_node.presentation.settings.components.rememberPreference
 import com.dot.gallery.feature_node.presentation.settings.components.rememberSwitchPreference
-import com.dot.gallery.feature_node.presentation.util.changeAppAlias
-import com.dot.gallery.feature_node.presentation.util.restartApplication
-import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 private const val DETAIL_TRASH = "trash"
 private const val DETAIL_TRASH_CONFIRM = "trash_confirm"
 private const val DETAIL_SECURE = "secure"
 private const val DETAIL_VIBRATIONS = "vibrations"
-private const val DETAIL_APP_NAME = "app_name"
 private const val DETAIL_VAULT_ENCRYPT = "vault_encrypt"
 
 @Composable
 fun SettingsGeneralScreen() {
     var detailKey by rememberSaveable { mutableStateOf<String?>(null) }
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     var trashCanEnabled by Settings.Misc.rememberTrashEnabled()
     var trashConfirmationEnabled by rememberTrashConfirmationEnabled()
     var secureMode by Settings.Misc.rememberSecureMode()
     var allowVibrations by Settings.Misc.rememberAllowVibrations()
-    var appNameAlias by rememberAppNameAlias()
     var vaultEncryptBehavior by Settings.Vault.rememberVaultEncryptBehavior()
 
     when (detailKey) {
@@ -121,26 +100,6 @@ fun SettingsGeneralScreen() {
                 description = stringResource(R.string.allow_vibrations_description),
             )
         }
-        DETAIL_APP_NAME -> {
-            BackHandler { detailKey = null }
-            ChooserPreferenceDetailScreen(
-                title = stringResource(R.string.change_app_name),
-                description = stringResource(R.string.app_name_description),
-                preview = { AppNamePreview(appNameAlias) },
-                options = listOf(
-                    PreferenceOption(Settings.Misc.ALIAS_REFRA, Settings.Misc.ALIAS_REFRA, appNameAlias == Settings.Misc.ALIAS_REFRA),
-                    PreferenceOption(Settings.Misc.ALIAS_GALLERY, Settings.Misc.ALIAS_GALLERY, appNameAlias == Settings.Misc.ALIAS_GALLERY),
-                ),
-                onOptionSelected = {
-                    appNameAlias = it
-                    context.changeAppAlias(it)
-                    scope.launch {
-                        delay(300)
-                        context.restartApplication()
-                    }
-                },
-            )
-        }
         DETAIL_VAULT_ENCRYPT -> {
             BackHandler { detailKey = null }
             ChooserPreferenceDetailScreen(
@@ -164,7 +123,6 @@ fun SettingsGeneralScreen() {
                 onSecureChange = { secureMode = it },
                 allowVibrations = allowVibrations,
                 onVibrationsChange = { allowVibrations = it },
-                appNameAlias = appNameAlias,
                 vaultEncryptBehavior = vaultEncryptBehavior,
                 onDetailClick = { detailKey = it },
             )
@@ -182,7 +140,6 @@ private fun GeneralListScreen(
     onSecureChange: (Boolean) -> Unit,
     allowVibrations: Boolean,
     onVibrationsChange: (Boolean) -> Unit,
-    appNameAlias: String,
     vaultEncryptBehavior: String,
     onDetailClick: (String) -> Unit,
 ) {
@@ -235,14 +192,6 @@ private fun GeneralListScreen(
             isChecked = allowVibrations,
             onCheck = onVibrationsChange,
             onClick = { onDetailClick(DETAIL_VIBRATIONS) },
-            screenPosition = Position.Middle
-        )
-
-        val appNamePref = rememberPreference(
-            appNameAlias,
-            title = stringResource(R.string.change_app_name),
-            summary = stringResource(R.string.change_app_name_summary),
-            onClick = { onDetailClick(DETAIL_APP_NAME) },
             screenPosition = Position.Bottom
         )
 
@@ -265,7 +214,7 @@ private fun GeneralListScreen(
 
         return remember(
             trashCanEnabledPref, trashConfirmationEnabledPref,
-            secureModePref, allowVibrationsPref, appNamePref,
+            secureModePref, allowVibrationsPref,
             vaultEncryptPref
         ) {
             mutableStateListOf<SettingsEntity>().apply {
@@ -277,7 +226,6 @@ private fun GeneralListScreen(
                 add(otherSectionPref)
                 add(secureModePref)
                 add(allowVibrationsPref)
-                add(appNamePref)
                 add(vaultSectionPref)
                 add(vaultEncryptPref)
             }
@@ -335,58 +283,6 @@ private fun SecureModePreview(isChecked: Boolean) {
                     contentDescription = null,
                     modifier = Modifier.size(40.dp),
                     tint = MaterialTheme.colorScheme.primary.copy(alpha = overlayAlpha)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun AppNamePreview(currentAlias: String) {
-    val context = LocalContext.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(24.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        listOf(Settings.Misc.ALIAS_REFRA, Settings.Misc.ALIAS_GALLERY).forEach { alias ->
-            val selected = currentAlias == alias
-            val borderColor = if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.outlineVariant
-            val containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            else Color.Transparent
-
-            Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .border(width = 2.dp, color = borderColor, shape = RoundedCornerShape(16.dp))
-                    .background(containerColor)
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Image(
-                    painter = rememberDrawablePainter(
-                        drawable = AppCompatResources.getDrawable(context, R.mipmap.ic_launcher_round)
-                    ),
-                    contentDescription = alias,
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                )
-                Text(
-                    text = alias,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center
-                )
-                Icon(
-                    imageVector = Icons.Filled.CheckCircle,
-                    contentDescription = null,
-                    tint = if (selected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.outlineVariant,
-                    modifier = Modifier.size(24.dp)
                 )
             }
         }

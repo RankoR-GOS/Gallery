@@ -1,10 +1,5 @@
 <resources>
     <string name="app_name">ReFra</string>
-    <string name="app_name_gallery">Gallery</string>
-    <string name="change_app_name">App name</string>
-    <string name="change_app_name_summary">Change the app name shown on your launcher</string>
-    <string name="choose_app_name">Choose app name</string>
-    <string name="change_app_name_info">You may need to re-add the app to your home screen after changing the name</string>
     <string name="favorite_icon_on_thumbnails">Favorite icon on thumbnails</string>
     <string name="favorite_icon_on_thumbnails_summary">Choose the position of the heart icon on media thumbnails</string>
     <string name="choose_favorite_icon_position">Choose position</string>
@@ -707,7 +702,6 @@
     <string name="favorite_icon_description">Choose where the favorite heart icon appears on thumbnails in the grid, or hide it entirely.</string>
     <string name="default_editor_description">Choose which app opens when you tap the edit button. You can use the built-in editor or any compatible external photo editor installed on your device.</string>
     <string name="launch_screen_description">Choose which screen appears when you open the app. You can pick a specific screen or let the app remember the last one you used.</string>
-    <string name="app_name_description">Change the name and icon displayed on your home screen launcher. The app will restart to apply the change.</string>
 
     <!-- Settings Overhaul: Metadata worker feedback -->
     <string name="metadata_collecting">Collecting metadata…</string>

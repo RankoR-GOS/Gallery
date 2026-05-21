@@ -605,14 +605,6 @@ object Settings {
                 defaultValue = SelectionSheetConfig()
             )
 
-        const val ALIAS_REFRA = "ReFra"
-        const val ALIAS_GALLERY = "Gallery"
-        private val APP_NAME_ALIAS = stringPreferencesKey("app_name_alias")
-
-        @Composable
-        fun rememberAppNameAlias() =
-            rememberPreference(key = APP_NAME_ALIAS, defaultValue = ALIAS_REFRA)
-
         const val FAV_ICON_DISABLED = "disabled"
         const val FAV_ICON_BOTTOM_END = "bottom_end"
         const val FAV_ICON_BOTTOM_START = "bottom_start"

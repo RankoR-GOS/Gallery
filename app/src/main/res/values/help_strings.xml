@@ -147,14 +147,6 @@
     <string name="help_tip_personalize_shared_elements_p1_s1">Go to Settings > Appearance</string>
     <string name="help_tip_personalize_shared_elements_p1_s2">Toggle \'Shared element transitions\'</string>
     <string name="help_tip_personalize_shared_elements_p1_s3">Tap any photo to see the effect</string>
-    <string name="help_tip_personalize_app_name_title">Change the app name</string>
-    <string name="help_tip_personalize_app_name_subtitle">Display as \'Gallery\' or \'Refra\' on your home screen</string>
-    <string name="help_tip_personalize_app_name_p1_title">App name</string>
-    <string name="help_tip_personalize_app_name_p1_desc">Choose whether the app shows as \'Gallery\' or \'Refra\' on your home screen and in the app drawer. \'Refra\' is the app\'s alternative name. This changes the icon label only — the app itself stays the same. You may need to restart your launcher or wait a moment for the change to appear on your home screen.</string>
-    <string name="help_tip_personalize_app_name_p1_s1">Go to Settings > General</string>
-    <string name="help_tip_personalize_app_name_p1_s2">Tap \'App name\'</string>
-    <string name="help_tip_personalize_app_name_p1_s3">Choose Gallery or Refra</string>
-    <string name="help_tip_personalize_app_name_p1_s4">The home screen icon label will update</string>
 
     <!-- TIMELINE &amp; ALBUMS -->
     <string name="help_tip_timeline_group_month_title">Group media by month</string>
