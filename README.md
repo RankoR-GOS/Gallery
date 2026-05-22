@@ -12,12 +12,7 @@ media details, search, editing, trash, favorites, widgets, and other media-manag
 
 ## Building
 
-GrapheneOS Gallery is built without all files access and maps. Before building it, create `app.properties`:
-
-```properties
-ALL_FILES_ACCESS=false
-INCLUDE_MAPS=false
-```
+GrapheneOS Gallery is built without all files access and maps, but with ML models.
 
 ## Running CTS tests
 
