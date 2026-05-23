@@ -146,14 +146,20 @@ suspend fun ContentResolver.overrideImage(
     bitmap: Bitmap,
     format: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG
 ): Boolean = withContext(Dispatchers.IO) {
+    var originalDates: MediaDateColumns? = null
     runCatching {
+        originalDates = queryDateColumns(uri)
+
         update(uri, ContentValues(), null)
         openOutputStream(uri)?.use { out ->
             if (!bitmap.compress(format, 100, out)) throw IOException("Compression failed")
         } ?: throw IOException("Stream open failed")
         update(
             uri,
-            ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) },
+            ContentValues().apply {
+                put(MediaStore.MediaColumns.IS_PENDING, 0)
+                originalDates?.addTo(this)
+            },
             null
         ) > 0
     }.getOrElse {
@@ -392,7 +398,10 @@ suspend fun ContentResolver.overrideImage(
     sizeLimitBytes: Long? = null,
     onSizeLimitExceeded: ((Long) -> Unit)? = null
 ): Boolean = withContext(Dispatchers.IO) {
+    var originalDates: MediaDateColumns? = null
     runCatching {
+        originalDates = queryDateColumns(uri)
+
         // 1. Resolve mime + format
         val resolvedMime = mimeType
             ?: getType(uri)
@@ -432,7 +441,7 @@ suspend fun ContentResolver.overrideImage(
         sizeLimitBytes?.let { limit ->
             if (encoded.size.toLong() > limit) {
                 onSizeLimitExceeded?.invoke(encoded.size.toLong())
-                if (canPending) clearPendingQuiet(uri)
+                if (canPending) clearPendingQuiet(uri, originalDates)
                 return@runCatching false
             }
         }
@@ -483,20 +492,58 @@ suspend fun ContentResolver.overrideImage(
 
         if (recycleSource) runCatching { bitmap.recycle() }
 
-        // 8. Clear pending
-        if (canPending) clearPendingQuiet(uri)
+        // 8. Clear pending and restore original dates
+        if (canPending) clearPendingQuiet(uri, originalDates)
 
         true
     }.getOrElse {
-        clearPendingQuiet(uri)
+        clearPendingQuiet(uri, originalDates)
         false
     }
 }
 
-private fun ContentResolver.clearPendingQuiet(uri: Uri) {
+private data class MediaDateColumns(
+    val dateTaken: Long?,
+    val dateAdded: Long?,
+)
+
+private fun ContentResolver.queryDateColumns(uri: Uri): MediaDateColumns? {
+    return runCatching {
+        query(
+            uri,
+            arrayOf(
+                MediaStore.MediaColumns.DATE_TAKEN,
+                MediaStore.MediaColumns.DATE_ADDED,
+            ),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                MediaDateColumns(
+                    dateTaken = if (cursor.isNull(0)) null else cursor.getLong(0),
+                    dateAdded = if (cursor.isNull(1)) null else cursor.getLong(1),
+                )
+            } else {
+                null
+            }
+        }
+    }.getOrNull()
+}
+
+private fun MediaDateColumns.addTo(contentValues: ContentValues) {
+    dateTaken?.let { contentValues.put(MediaStore.MediaColumns.DATE_TAKEN, it) }
+    dateAdded?.let { contentValues.put(MediaStore.MediaColumns.DATE_ADDED, it) }
+}
+
+private fun ContentResolver.clearPendingQuiet(
+    uri: Uri,
+    originalDates: MediaDateColumns? = null,
+) {
     runCatching {
         update(uri, ContentValues().apply {
             put(MediaStore.MediaColumns.IS_PENDING, 0)
+            originalDates?.addTo(this)
         }, null, null)
     }
 }
