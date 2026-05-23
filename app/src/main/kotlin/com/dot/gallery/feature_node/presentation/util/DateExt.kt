@@ -18,6 +18,8 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 import androidx.compose.ui.text.intl.Locale as ComposeLocale
 
+private val FILENAME_DATE_REGEX = Regex("""(\d{4})(\d{2})(\d{2})[_-](\d{2})(\d{2})(\d{2})""")
+
 fun Long.getDateExt(): DateExt {
     val mediaDate = Calendar.getInstance(ComposeLocale.getCurrentAndroid())
     mediaDate.timeInMillis = this * 1000L
@@ -161,6 +163,27 @@ fun String?.formatMinSec(): String {
         null -> ""
         else -> value.formatMinSec()
     }
+}
+
+fun String.parseTimestampFromFilename(): Long? {
+    val match = FILENAME_DATE_REGEX.find(this) ?: return null
+    val (year, month, day, hour, minute, second) = match.destructured
+    val yearValue = year.toIntOrNull() ?: return null
+    val monthValue = month.toIntOrNull() ?: return null
+    val dayValue = day.toIntOrNull() ?: return null
+    val hourValue = hour.toIntOrNull() ?: return null
+    val minuteValue = minute.toIntOrNull() ?: return null
+    val secondValue = second.toIntOrNull() ?: return null
+
+    if (yearValue !in 1970..2100) return null
+
+    return runCatching {
+        Calendar.getInstance().apply {
+            isLenient = false
+            set(yearValue, monthValue - 1, dayValue, hourValue, minuteValue, secondValue)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }.getOrNull()
 }
 
 @Parcelize
