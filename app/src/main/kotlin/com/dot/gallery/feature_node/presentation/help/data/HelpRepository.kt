@@ -17,7 +17,6 @@ import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Panorama
 import androidx.compose.material.icons.outlined.SettingsBackupRestore
@@ -41,7 +40,7 @@ object HelpRepository {
         HelpCategory.AI_FEATURES, HelpCategory.ALBUMS, HelpCategory.VAULT
     )
     fun getExploreMoreCategories() = listOf(
-        HelpCategory.FAVORITES_TRASH, HelpCategory.LOCATIONS, HelpCategory.METADATA,
+        HelpCategory.FAVORITES_TRASH, HelpCategory.METADATA,
         HelpCategory.SETTINGS_APPEARANCE, HelpCategory.SETTINGS_GENERAL, HelpCategory.SETTINGS_NAVIGATION,
         HelpCategory.SETTINGS_SMART, HelpCategory.GESTURES, HelpCategory.SELECTION_ACTIONS,
         HelpCategory.ACCESSIBILITY
@@ -541,20 +540,6 @@ object HelpRepository {
     )
     // endregion
 
-    // region Locations
-    private val LOCATION_TIPS = listOf(
-        HelpTip(id = "location_browse", title = R.string.help_tip_location_browse_title, subtitle = R.string.help_tip_location_browse_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.LocationOn), category = HelpCategory.LOCATIONS,
-            pages = listOf(
-                TutorialPage(title = R.string.help_tip_location_browse_p1_title, description = R.string.help_tip_location_browse_p1_desc, previewType = PreviewType.LOCATION_MAP),
-                TutorialPage(title = R.string.help_tip_location_browse_p2_title, description = R.string.help_tip_location_browse_p2_desc, previewType = PreviewType.LOCATION_MAP)
-            )),
-        HelpTip(id = "location_viewer", title = R.string.help_tip_location_viewer_title, subtitle = R.string.help_tip_location_viewer_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.LocationOn), category = HelpCategory.LOCATIONS,
-            pages = listOf(TutorialPage(title = R.string.help_tip_location_viewer_p1_title, description = R.string.help_tip_location_viewer_p1_desc)))
-    )
-    // endregion
-
     // region Metadata
     private val METADATA_TIPS = listOf(
         HelpTip(id = "exif_view", title = R.string.help_tip_exif_view_title, subtitle = R.string.help_tip_exif_view_subtitle,
@@ -717,7 +702,7 @@ object HelpRepository {
     private val ALL_TIPS: List<HelpTip> = BASICS_TIPS + NAVIGATION_TIPS + PERSONALIZATION_TIPS +
         TIMELINE_ALBUM_TIPS + VIEWING_TIPS + VIEWER_ACTION_TIPS + VIEWER_SETTINGS_TIPS +
         EDITING_TIPS + SEARCH_TIPS + AI_TIPS + ALBUM_TIPS + VAULT_TIPS +
-        FAV_TRASH_TIPS + LOCATION_TIPS + METADATA_TIPS +
+        FAV_TRASH_TIPS + METADATA_TIPS +
         SETTINGS_APPEARANCE_TIPS + SETTINGS_GENERAL_TIPS + SETTINGS_NAV_TIPS + SETTINGS_SMART_TIPS +
         GESTURE_TIPS + SELECTION_TIPS + ACCESSIBILITY_TIPS
 

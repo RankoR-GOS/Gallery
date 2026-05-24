@@ -16,7 +16,6 @@ import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
-import com.dot.gallery.feature_node.domain.model.LocationMedia
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
@@ -195,17 +194,6 @@ object HelpMockData {
             isPinned = true, createdAt = 1735689600000L, updatedAt = 1735689600000L,
             mediaCount = 8, thumbnailMediaId = 9L
         ),
-    )
-
-    val MOCK_LOCATIONS: List<LocationMedia> = listOf(
-        LocationMedia(media = MOCK_PHOTOS[0], location = "Bucharest, Romania"),
-        LocationMedia(media = MOCK_PHOTOS[1], location = "Bucharest, Romania"),
-        LocationMedia(media = MOCK_PHOTOS[2], location = "Paris, France"),
-        LocationMedia(media = MOCK_PHOTOS[3], location = "Paris, France"),
-        LocationMedia(media = MOCK_PHOTOS[4], location = "Paris, France"),
-        LocationMedia(media = MOCK_PHOTOS[5], location = "New York, United States"),
-        LocationMedia(media = MOCK_PHOTOS[6], location = "Tokyo, Japan"),
-        LocationMedia(media = MOCK_PHOTOS[7], location = "Tokyo, Japan"),
     )
 
     val MOCK_METADATA_VIEW_STATE = MetadataViewState(

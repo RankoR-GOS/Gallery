@@ -22,7 +22,6 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Navigation
 import androidx.compose.material.icons.outlined.Palette
@@ -84,7 +83,6 @@ enum class PreviewType {
     TRASH_GRID,
     THEME_PICKER,
     COLOR_PALETTE,
-    LOCATION_MAP,
     EXIF_VIEWER,
     PINCH_ZOOM_GRID,
     COLLECTION_VIEW,
@@ -107,7 +105,6 @@ enum class HelpCategory {
     ALBUMS,
     VAULT,
     FAVORITES_TRASH,
-    LOCATIONS,
     METADATA,
     SETTINGS_APPEARANCE,
     SETTINGS_GENERAL,
@@ -133,7 +130,6 @@ fun HelpCategory.displayTitle(): String = when (this) {
     HelpCategory.ALBUMS -> stringResource(R.string.help_cat_albums)
     HelpCategory.VAULT -> stringResource(R.string.help_cat_vault)
     HelpCategory.FAVORITES_TRASH -> stringResource(R.string.help_cat_fav_trash)
-    HelpCategory.LOCATIONS -> stringResource(R.string.help_cat_locations)
     HelpCategory.METADATA -> stringResource(R.string.help_cat_metadata)
     HelpCategory.SETTINGS_APPEARANCE -> stringResource(R.string.help_cat_settings_appearance)
     HelpCategory.SETTINGS_GENERAL -> stringResource(R.string.help_cat_settings_general)
@@ -158,7 +154,6 @@ fun HelpCategory.icon(): ImageVector = when (this) {
     HelpCategory.ALBUMS -> Icons.Outlined.Collections
     HelpCategory.VAULT -> Icons.Outlined.Lock
     HelpCategory.FAVORITES_TRASH -> Icons.Outlined.FavoriteBorder
-    HelpCategory.LOCATIONS -> Icons.Outlined.LocationOn
     HelpCategory.METADATA -> Icons.Outlined.Info
     HelpCategory.SETTINGS_APPEARANCE -> Icons.Outlined.Colorize
     HelpCategory.SETTINGS_GENERAL -> Icons.Outlined.Settings

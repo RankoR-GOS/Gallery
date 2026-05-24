@@ -67,7 +67,6 @@ import com.dot.gallery.feature_node.presentation.vault.VaultDisplay
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.help.data.HelpMockData
 import com.dot.gallery.feature_node.presentation.help.data.PreviewType
-import com.dot.gallery.feature_node.presentation.location.ListLocationsContent
 import com.dot.gallery.feature_node.presentation.settings.SettingsScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.ColorPaletteScreen
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
@@ -109,7 +108,6 @@ fun HelpPreview(
         PreviewType.THEME_PICKER -> ThemePickerPreviewMini(modifier)
         PreviewType.COLOR_PALETTE -> ColorPalettePreviewMini(modifier)
         PreviewType.PINCH_ZOOM_GRID -> PinchZoomPreviewMini(modifier)
-        PreviewType.LOCATION_MAP -> LocationMapPreviewMini(modifier)
         PreviewType.NAV_BAR_PREVIEW -> NavBarPreviewMini(modifier)
         PreviewType.SETTINGS_GENERAL -> SettingsPreviewMini(modifier)
         PreviewType.COLLECTION_VIEW -> AlbumGridPreviewMini(modifier)
@@ -530,29 +528,6 @@ private fun ColorPalettePreviewMini(modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-private fun LocationMapPreviewMini(modifier: Modifier = Modifier) {
-    val animation = rememberPreviewAnimation(stepCount = 2)
-    PreviewFrame(modifier, applyPadding = false) {
-        AutoScrollBox(
-            scrollProgress = animation.stepProgress,
-            modifier = Modifier.matchParentSize()
-        ) {
-            PreviewScreenProvider { _, _ ->
-                ListLocationsContent(
-                    metadataState = remember { mutableStateOf(HelpMockData.MOCK_METADATA_STATE) },
-                    locations = remember { HelpMockData.MOCK_LOCATIONS },
-                )
-            }
-        }
-        SwipeGestureOverlay(
-            modifier = Modifier.matchParentSize(),
-            progress = animation.stepProgress,
-            direction = SwipeDirection.UP
-        )
-    }
-}
-
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun NavBarPreviewMini(modifier: Modifier = Modifier) {
@@ -663,5 +638,4 @@ private fun PreviewFrame(
         content()
     }
 }
-
 

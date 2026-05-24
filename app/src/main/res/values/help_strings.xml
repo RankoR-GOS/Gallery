@@ -618,18 +618,6 @@
     <string name="help_tip_trash_enable_p1_s3">When off: deletions are immediate and permanent</string>
     <string name="help_tip_trash_enable_p1_s4">When on: deleted items go to trash for 30 days</string>
 
-    <!-- LOCATIONS -->
-    <string name="help_tip_location_browse_title">Browse by location</string>
-    <string name="help_tip_location_browse_subtitle">See your photos on a map</string>
-    <string name="help_tip_location_browse_p1_title">Location browsing</string>
-    <string name="help_tip_location_browse_p1_desc">View your photos organized by the places where they were taken. Gallery reads GPS coordinates from your photo metadata and groups them by city, neighborhood, or landmark. This is a wonderful way to revisit trips, explore where you\'ve been, and discover photo clusters you might have forgotten about.</string>
-    <string name="help_tip_location_browse_p2_title">Location timeline</string>
-    <string name="help_tip_location_browse_p2_desc">Tap any location to see all the photos taken there, displayed in a timeline view. If you have Mapbox maps enabled, you can also see an interactive map with pins showing exactly where each photo was captured. Note: location data depends on your camera saving GPS info — most phone cameras do this by default.</string>
-    <string name="help_tip_location_viewer_title">View location from photo</string>
-    <string name="help_tip_location_viewer_subtitle">See where a photo was taken from the info sheet</string>
-    <string name="help_tip_location_viewer_p1_title">Photo location</string>
-    <string name="help_tip_location_viewer_p1_desc">Swipe up on any photo in the viewer to reveal the info sheet. If the photo contains GPS metadata, you\'ll see the location displayed with an address. Tap it to open a map showing exactly where the photo was taken. You can also edit or delete the location data for privacy (see the Metadata section for details).</string>
-
     <!-- METADATA -->
     <string name="help_tip_exif_view_title">View photo metadata</string>
     <string name="help_tip_exif_view_subtitle">See camera, date, resolution, and location info</string>
