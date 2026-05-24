@@ -8,11 +8,9 @@ package com.dot.gallery.feature_node.presentation.help
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,7 +35,6 @@ import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.NavigationBackButton
-import com.dot.gallery.feature_node.presentation.help.components.WhatsNewHeroCard
 import com.dot.gallery.feature_node.presentation.help.data.HelpCategory
 import com.dot.gallery.feature_node.presentation.help.data.HelpRepository
 import com.dot.gallery.feature_node.presentation.help.data.displayTitle
@@ -52,7 +49,6 @@ fun HelpScreen() {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val eventHandler = LocalEventHandler.current
 
-    val currentRelease = remember { HelpRepository.getCurrentRelease() }
     val getStartedCategories = remember { HelpRepository.getGetStartedCategories() }
     val makeMostCategories = remember { HelpRepository.getMakeMostCategories() }
     val exploreMoreCategories = remember { HelpRepository.getExploreMoreCategories() }
@@ -79,16 +75,6 @@ fun HelpScreen() {
                 bottom = padding.calculateBottomPadding() + 16.dp
             ),
         ) {
-            // What's New Hero Card
-            item {
-                WhatsNewHeroCard(
-                    versionName = currentRelease.versionName,
-                    onClick = { eventHandler.navigate(Screen.WhatsNewScreen()) },
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                Spacer(Modifier.height(16.dp))
-            }
-
             // Get Started Section
             item {
                 val headerTitle = stringResource(R.string.help_get_started)

@@ -179,7 +179,5 @@ sealed class Screen(val route: String) {
         fun tipId(id: String) = "$route?tipId=$id"
     }
 
-    data object WhatsNewScreen : Screen("whats_new_screen")
-
     operator fun invoke() = route
 }

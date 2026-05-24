@@ -274,12 +274,6 @@ object Settings {
         fun rememberLastScreen() =
             rememberPreference(key = LAST_SCREEN, defaultValue = Screen.TimelineScreen())
 
-        private val LAST_SEEN_VERSION = stringPreferencesKey("last_seen_version")
-
-        @Composable
-        fun rememberLastSeenVersion() =
-            rememberPreference(key = LAST_SEEN_VERSION, defaultValue = "")
-
         private val FORCED_LAST_SCREEN = booleanPreferencesKey("forced_last_screen")
 
         @Composable

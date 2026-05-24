@@ -58,11 +58,9 @@ import com.dot.gallery.core.Constants.cellsList
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.core.LocalMediaSelector
-import com.dot.gallery.BuildConfig
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideSearchBar
 import com.dot.gallery.core.Settings.Misc.rememberGridSize
-import com.dot.gallery.core.Settings.Misc.rememberLastSeenVersion
 import com.dot.gallery.core.Settings.Misc.rememberMosaicGridSize
 import com.dot.gallery.core.Settings.Misc.rememberTimelineLayoutType
 import com.dot.gallery.core.navigate
@@ -81,7 +79,6 @@ import com.dot.gallery.feature_node.presentation.common.components.StickyHeaderG
 import com.dot.gallery.feature_node.presentation.common.components.TimelineScroller
 import com.dot.gallery.feature_node.presentation.common.components.rememberMosaicPinchZoomState
 import com.dot.gallery.feature_node.presentation.common.components.rememberStickyHeaderItem
-import com.dot.gallery.feature_node.presentation.help.components.WhatsNewHeroCard
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.timeline.components.TimelineNavActions
@@ -114,26 +111,6 @@ fun TimelineScreen(
     val distributor = LocalMediaDistributor.current
     val isRefreshing by distributor.isRefreshing.collectAsStateWithLifecycle()
     val refreshScope = rememberCoroutineScope()
-    var lastSeenVersion by rememberLastSeenVersion()
-    val showWhatsNew = remember(lastSeenVersion) { lastSeenVersion != BuildConfig.VERSION_NAME }
-    val whatsNewContent: @Composable (() -> Unit)? = if (showWhatsNew) {
-        {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                WhatsNewHeroCard(
-                    versionName = BuildConfig.VERSION_NAME,
-                    onClick = {
-                        lastSeenVersion = BuildConfig.VERSION_NAME
-                        eventHandler.navigate(Screen.WhatsNewScreen())
-                    }
-                )
-            }
-        }
-    } else null
     val selector = LocalMediaSelector.current
     val selectionState = selector.isSelectionActive.collectAsStateWithLifecycle()
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
@@ -298,7 +275,7 @@ fun TimelineScreen(
                             allowSelection = true,
                             canScroll = !mosaicPinchState.isZooming,
                             allowHeaders = true,
-                            aboveGridContent = whatsNewContent,
+                            aboveGridContent = null,
                             isScrolling = isScrolling,
                             emptyContent = { EmptyMedia() },
                             sharedTransitionScope = sharedTransitionScope,
@@ -333,7 +310,6 @@ fun TimelineScreen(
                         canScroll = canScroll,
                         enableStickyHeaders = true,
                         showMonthlyHeader = true,
-                        aboveGridContent = whatsNewContent,
                         isScrolling = isScrolling,
                         emptyContent = { EmptyMedia() },
                         sharedTransitionScope = sharedTransitionScope,

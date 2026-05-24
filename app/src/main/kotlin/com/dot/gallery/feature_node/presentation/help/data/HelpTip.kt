@@ -25,7 +25,6 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Navigation
-import androidx.compose.material.icons.outlined.NewReleases
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.PlayCircleOutline
@@ -41,21 +40,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 @Immutable
 data class HelpTip(
     val id: String,
-    @StringRes val title: Int,
-    @StringRes val subtitle: Int,
+    @param:StringRes val title: Int,
+    @param:StringRes val subtitle: Int,
     val icon: HelpIcon,
     val category: HelpCategory,
     val pages: List<TutorialPage>,
     val deepLink: String? = null,
-    val sinceVersion: String? = null
 )
 
 @Immutable
 data class TutorialPage(
-    @StringRes val title: Int,
-    @StringRes val description: Int,
+    @param:StringRes val title: Int,
+    @param:StringRes val description: Int,
     val steps: List<Int> = emptyList(),
-    @StringRes val actionLabel: Int = 0,
+    @param:StringRes val actionLabel: Int = 0,
     val actionRoute: String? = null,
     val previewType: PreviewType = PreviewType.NONE
 )
@@ -63,7 +61,7 @@ data class TutorialPage(
 @Immutable
 data class HelpIcon(
     val vector: ImageVector? = null,
-    @DrawableRes val drawableRes: Int? = null
+    @param:DrawableRes val drawableRes: Int? = null
 ) {
     companion object {
         fun ofVector(vector: ImageVector) = HelpIcon(vector = vector)
@@ -96,7 +94,6 @@ enum class PreviewType {
 }
 
 enum class HelpCategory {
-    WHATS_NEW,
     GET_STARTED_BASICS,
     GET_STARTED_NAVIGATION,
     GET_STARTED_PERSONALIZATION,
@@ -123,7 +120,6 @@ enum class HelpCategory {
 
 @Composable
 fun HelpCategory.displayTitle(): String = when (this) {
-    HelpCategory.WHATS_NEW -> stringResource(R.string.help_whats_new)
     HelpCategory.GET_STARTED_BASICS -> stringResource(R.string.help_cat_basics)
     HelpCategory.GET_STARTED_NAVIGATION -> stringResource(R.string.help_cat_navigation)
     HelpCategory.GET_STARTED_PERSONALIZATION -> stringResource(R.string.help_cat_personalization)
@@ -149,7 +145,6 @@ fun HelpCategory.displayTitle(): String = when (this) {
 }
 
 fun HelpCategory.icon(): ImageVector = when (this) {
-    HelpCategory.WHATS_NEW -> Icons.Outlined.NewReleases
     HelpCategory.GET_STARTED_BASICS -> Icons.AutoMirrored.Outlined.HelpOutline
     HelpCategory.GET_STARTED_NAVIGATION -> Icons.Outlined.Navigation
     HelpCategory.GET_STARTED_PERSONALIZATION -> Icons.Outlined.Palette

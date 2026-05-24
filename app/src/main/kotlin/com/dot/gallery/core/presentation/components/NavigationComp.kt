@@ -92,7 +92,6 @@ import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.help.HelpScreen
 import com.dot.gallery.feature_node.presentation.help.TutorialCategoryScreen
 import com.dot.gallery.feature_node.presentation.help.TutorialDetailScreen
-import com.dot.gallery.feature_node.presentation.help.WhatsNewScreen
 import com.dot.gallery.feature_node.presentation.ignored.IgnoredScreen
 import com.dot.gallery.feature_node.presentation.library.LibraryScreen
 import com.dot.gallery.feature_node.presentation.location.LocationTimelineScreen
@@ -1155,10 +1154,6 @@ fun NavigationComp(
                     backStackEntry.arguments?.getString("tipId", "") ?: ""
                 }
                 TutorialDetailScreen(tipId = tipId)
-            }
-
-            composable(Screen.WhatsNewScreen()) {
-                WhatsNewScreen()
             }
 
             composable(Screen.LocationTimelineScreen.location()) { backStackEntry ->
