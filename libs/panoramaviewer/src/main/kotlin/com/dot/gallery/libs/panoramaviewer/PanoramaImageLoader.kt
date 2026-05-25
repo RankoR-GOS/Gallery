@@ -12,8 +12,7 @@ import java.io.Closeable
  * Abstraction for loading panoramic image data into the [PanoramaViewer].
  *
  * Implement this interface to provide custom image loading logic — for example,
- * to load encrypted vault media, images from a network source, or images stored
- * in a custom format.
+ * to load images from a network source or images stored in a custom format.
  *
  * ## Lifecycle
  *

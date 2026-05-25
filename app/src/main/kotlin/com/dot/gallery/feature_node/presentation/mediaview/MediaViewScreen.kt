@@ -99,8 +99,6 @@ import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.domain.util.isVideo
@@ -182,10 +180,6 @@ fun <T : Media> MediaViewScreenRoute(
     mediaState: State<MediaState<out T>>,
     metadataState: State<MediaMetadataState>,
     albumsState: State<AlbumState>,
-    vaultState: State<VaultState>,
-    restoreMedia: ((Vault, T, () -> Unit) -> Unit)? = null,
-    deleteMedia: ((Vault, T, () -> Unit) -> Unit)? = null,
-    currentVault: Vault? = null,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
 ) {
@@ -199,10 +193,6 @@ fun <T : Media> MediaViewScreenRoute(
         mediaState = mediaState,
         metadataState = metadataState,
         albumsState = albumsState,
-        vaultState = vaultState,
-        restoreMedia = restoreMedia,
-        deleteMedia = deleteMedia,
-        currentVault = currentVault,
         sharedTransitionScope = sharedTransitionScope,
         animatedContentScope = animatedContentScope,
         ensureMetadataAvailable = viewModel::ensureMetadataAvailable,
@@ -228,10 +218,6 @@ fun <T : Media> MediaViewScreen(
     mediaState: State<MediaState<out T>>,
     metadataState: State<MediaMetadataState>,
     albumsState: State<AlbumState>,
-    vaultState: State<VaultState>,
-    restoreMedia: ((Vault, T, () -> Unit) -> Unit)? = null,
-    deleteMedia: ((Vault, T, () -> Unit) -> Unit)? = null,
-    currentVault: Vault? = null,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     ensureMetadataAvailable: (Media?, MediaMetadataState) -> Unit = { _, _ -> },
@@ -708,7 +694,6 @@ fun <T : Media> MediaViewScreen(
                                 isPhotosphere = mediaMetadata?.isPhotosphere == true,
                                 isMotionPhoto = mediaMetadata?.isMotionPhoto == true,
                                 motionPhotoState = motionPhotoState,
-                                currentVault = currentVault,
                                 rotationDisabled = isLocked,
                                 onImageRotated = { newRotation ->
                                     showRotationHelper.value =
@@ -1171,9 +1156,6 @@ fun <T : Media> MediaViewScreen(
                                     currentMedia = currentMedia,
                                     showDeleteButton = !isReadOnly,
                                     enabled = showUI,
-                                    deleteMedia = deleteMedia,
-                                    restoreMedia = restoreMedia,
-                                    currentVault = currentVault,
                                     isImageDark = isBottomDark,
                                     autoContrast = autoContrast
                                 )
@@ -1183,11 +1165,8 @@ fun <T : Media> MediaViewScreen(
 
                     MediaViewSheetDetails(
                         albumsState = albumsState,
-                        vaultState = vaultState,
                         metadataState = metadataState,
                         currentMedia = currentMedia,
-                        restoreMedia = restoreMedia,
-                        currentVault = currentVault,
                         motionPhotoState = motionPhotoState,
                     )
                 }

@@ -4,7 +4,6 @@
     <string name="manage_media_title">Galerinin Medyanızı Yönetmesine İzin Ver</string>
     <string name="blacklist_summary">Galeriden albümleri yoksay</string>
     <string name="add_to_ignored_summary">Bir albümü Galeride gösterilmekten kaldır</string>
-    <string name="restore_vault_summary">Mevcut kasa ve içeriği çözülecek ve geri yüklenecektir.\nBu işlem, içeriğinizi Galeride tekrar erişilebilir hale getirecektir.</string>
     <string name="donate">Donate to ReFra</string>
     <string name="support_the_project">Support ReFra</string>
 </resources>

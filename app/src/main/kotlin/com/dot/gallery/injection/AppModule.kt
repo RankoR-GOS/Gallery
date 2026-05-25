@@ -21,20 +21,14 @@ import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaHandlerImpl
 import com.dot.gallery.core.MediaSelector
 import com.dot.gallery.core.MediaSelectorImpl
+import com.dot.gallery.core.memory.ByteArrayPool
+import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
-import com.dot.gallery.feature_node.data.data_source.KeychainHolder
-import com.dot.gallery.feature_node.data.data_source.migration.MIGRATION_12_13
 import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.EventHandler
-import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.feature_node.presentation.search.SearchHelper
 import com.dot.gallery.feature_node.presentation.search.SearchHelperImpl
-import com.dot.gallery.core.decryption.DecryptManager
-import com.dot.gallery.core.decryption.MediaMetadataSidecarCache
-import com.dot.gallery.core.memory.AdaptiveDecryptConfig
-import com.dot.gallery.core.metrics.MetricsCollector
-import com.dot.gallery.core.memory.ByteArrayPool
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -54,15 +48,9 @@ object AppModule {
     @Singleton
     fun provideDatabase(app: Application): InternalDatabase =
         Room.databaseBuilder(app, InternalDatabase::class.java, InternalDatabase.NAME)
-            .addMigrations(MIGRATION_12_13)
             .fallbackToDestructiveMigrationOnDowngrade(true)
             .fallbackToDestructiveMigration(false)
             .build()
-
-    @Provides
-    @Singleton
-    fun provideKeychainHolder(@ApplicationContext context: Context): KeychainHolder =
-        KeychainHolder(context)
 
     @Provides
     @Singleton
@@ -105,10 +93,9 @@ object AppModule {
         @ApplicationContext context: Context,
         workManager: WorkManager,
         database: InternalDatabase,
-        keychainHolder: KeychainHolder,
         geocoder: Geocoder?,
         isolatedParser: IsolatedMetadataParser,
-    ): MediaRepository = MediaRepositoryImpl(context, workManager, database, keychainHolder, geocoder, isolatedParser)
+    ): MediaRepository = MediaRepositoryImpl(context, workManager, database, geocoder, isolatedParser)
 
     @Provides
     @Singleton
@@ -122,22 +109,6 @@ object AppModule {
     @Singleton
     fun provideGeocoder(@ApplicationContext context: Context): Geocoder? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && Geocoder.isPresent()) Geocoder(context) else null
-
-    @Provides
-    @Singleton
-    fun provideDecryptManager(@ApplicationContext context: Context, metrics: MetricsCollector): DecryptManager = DecryptManager(context, metrics)
-
-    @Provides
-    @Singleton
-    fun provideMediaMetadataSidecarCache(@ApplicationContext context: Context): MediaMetadataSidecarCache = MediaMetadataSidecarCache(context)
-
-    @Provides
-    @Singleton
-    fun provideAdaptiveDecryptConfig(app: Application): AdaptiveDecryptConfig = AdaptiveDecryptConfig(app)
-
-    @Provides
-    @Singleton
-    fun provideMetricsCollector(): MetricsCollector = MetricsCollector()
 
     @Provides
     @Singleton

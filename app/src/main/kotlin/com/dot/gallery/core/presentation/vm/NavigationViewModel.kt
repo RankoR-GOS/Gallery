@@ -6,7 +6,6 @@ import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.model.VaultState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
@@ -41,10 +40,6 @@ class NavigationViewModel @Inject constructor(
 
     val metadataState = distributor.metadataFlow.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), MediaMetadataState()
-    )
-
-    val vaultState = distributor.vaultsMediaFlow.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(), VaultState()
     )
 
     fun updateGroupByMonth(value: Boolean) {

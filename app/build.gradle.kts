@@ -292,7 +292,6 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
 
     // Jetpack Security
-    implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.biometric)
 
     // Composables - Core

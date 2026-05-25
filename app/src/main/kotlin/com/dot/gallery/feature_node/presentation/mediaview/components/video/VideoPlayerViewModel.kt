@@ -14,12 +14,9 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
-import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.presentation.util.printDebug
-import com.dot.gallery.feature_node.presentation.util.printWarning
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -33,8 +30,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -62,8 +57,6 @@ class VideoPlayerViewModel @AssistedInject constructor(
     }
 
     data class PlaybackState(
-        val isDecrypting: Boolean = false,
-        val decryptFailed: Boolean = false,
         val ready: Boolean = false,
         val durationMs: Long = 0L,
         val positionMs: Long = 0L,
@@ -72,15 +65,11 @@ class VideoPlayerViewModel @AssistedInject constructor(
         val isPlaying: Boolean = false
     )
 
-    private val keychainHolder = KeychainHolder(appContext)
-
-    private var decryptedFile: File? = null
     private var initialSeekApplied = false
     private var progressJob: Job? = null
 
     // Public immutable flow
-    private val _state =
-        MutableStateFlow(PlaybackState(isDecrypting = media.isEncrypted))
+    private val _state = MutableStateFlow(PlaybackState())
     val state: StateFlow<PlaybackState> = _state
 
     // Owned player — exposed as StateFlow so Compose recomposes on player recreation
@@ -138,33 +127,8 @@ class VideoPlayerViewModel @AssistedInject constructor(
     }
 
     private fun prepareMedia() {
-        if (media.isEncrypted) {
-            decryptAndPrepare()
-        } else {
-            setAndPrepare(media.getUri(), media.mimeType)
-            retrieveFrameRate(encrypted = false)
-        }
-    }
-
-    private fun decryptAndPrepare() {
-        viewModelScope.launch {
-            _state.update { it.copy(isDecrypting = true, decryptFailed = false) }
-            decryptedFile = withContext(Dispatchers.IO) {
-                try {
-                    createDecryptedVideoFile(keychainHolder, media)
-                } catch (t: Throwable) {
-                    printWarning("Decrypt failed: ${t.message}")
-                    null
-                }
-            }
-            if (decryptedFile == null) {
-                _state.update { it.copy(isDecrypting = false, decryptFailed = true) }
-                return@launch
-            }
-            _state.update { it.copy(isDecrypting = false, decryptFailed = false) }
-            setAndPrepare(Uri.fromFile(decryptedFile!!), media.mimeType)
-            retrieveFrameRate(encrypted = true)
-        }
+        setAndPrepare(media.getUri(), media.mimeType)
+        retrieveFrameRate()
     }
 
     private fun setAndPrepare(uri: Uri, mime: String?) {
@@ -223,15 +187,11 @@ class VideoPlayerViewModel @AssistedInject constructor(
         }
     }
 
-    private fun retrieveFrameRate(encrypted: Boolean) {
+    private fun retrieveFrameRate() {
         viewModelScope.launch(Dispatchers.IO) {
             val fps = try {
                 MediaMetadataRetriever().use { r ->
-                    if (encrypted) {
-                        decryptedFile?.inputStream()?.use { r.setDataSource(it.fd) }
-                    } else {
-                        r.setDataSource(appContext, media.getUri())
-                    }
+                    r.setDataSource(appContext, media.getUri())
                     r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)
                         ?.toFloat()
                         ?: 60f
@@ -269,11 +229,6 @@ class VideoPlayerViewModel @AssistedInject constructor(
             .setContentType(contentType)
             .build()
         player.setAudioAttributes(attrs, /* handleAudioFocus = */ wantsFocus)
-    }
-
-    fun retryDecryption() {
-        if (!_state.value.decryptFailed) return
-        decryptAndPrepare()
     }
 
     @OptIn(UnstableApi::class)
@@ -324,8 +279,6 @@ class VideoPlayerViewModel @AssistedInject constructor(
             }
         } catch (_: Throwable) {
         }
-        decryptedFile?.delete()
-        decryptedFile = null
         super.onCleared()
     }
 

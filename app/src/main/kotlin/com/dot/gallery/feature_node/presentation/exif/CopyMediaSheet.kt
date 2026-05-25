@@ -59,7 +59,7 @@ import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponen
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
-import com.dot.gallery.feature_node.presentation.vault.utils.rememberBiometricState
+import com.dot.gallery.feature_node.presentation.security.rememberBiometricState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex

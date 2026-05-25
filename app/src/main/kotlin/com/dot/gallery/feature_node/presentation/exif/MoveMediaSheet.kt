@@ -59,7 +59,7 @@ import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.toastError
 import com.dot.gallery.feature_node.presentation.util.writeRequest
-import com.dot.gallery.feature_node.presentation.vault.utils.rememberBiometricState
+import com.dot.gallery.feature_node.presentation.security.rememberBiometricState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -355,4 +355,3 @@ fun <T: Media> MoveMediaSheet(
         }
     )
 }
-

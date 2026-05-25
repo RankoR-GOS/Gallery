@@ -71,8 +71,6 @@ sealed class Screen(val route: String) {
 
     data object SetupScreen: Screen("setup_screen")
 
-    data object VaultScreen : Screen("vault_screen")
-
     data object LibraryScreen : Screen("library_screen")
 
     data object CategoriesScreen : Screen("categories_screen")

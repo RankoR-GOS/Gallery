@@ -4,7 +4,6 @@
     <string name="manage_media_title">Tillad Galleri at administrere dine medier</string>
     <string name="blacklist_summary">Ignorer albummer fra Galleri</string>
     <string name="add_to_ignored_summary">Fjern et album fra at blive vist i galleriet</string>
-    <string name="restore_vault_summary">Den aktuelle boks og dens indhold bliver dekrypteret og gendannet.\nDenne handling vil gøre dit indhold tilgængeligt igen i galleriet.</string>
     <string name="donate">Donate to ReFra</string>
     <string name="support_the_project">Support ReFra</string>
 </resources>

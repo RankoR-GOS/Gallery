@@ -165,7 +165,7 @@ internal class PanoramaGLSurfaceView(
      * Sets a custom [PanoramaImageLoader] as the image source.
      *
      * Use this instead of [setImageSource] when you need custom loading logic,
-     * such as decrypting vault media or loading from a network source.
+     * such as loading from a network source or custom archive.
      *
      * The loader's [PanoramaImageLoader.initialize], [PanoramaImageLoader.loadBase],
      * and [PanoramaImageLoader.loadRegion] methods will be called on a background

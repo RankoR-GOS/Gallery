@@ -39,7 +39,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -242,30 +241,10 @@ fun <T : Media> VideoPlayer(
         )
     }
 
-    // Loading & decrypt states
-    if (!playback.ready && !playback.decryptFailed) {
+    // Loading state
+    if (!playback.ready) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
-            if (playback.isDecrypting) {
-                Text(
-                    text = "…",
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-        }
-    }
-
-    if (playback.decryptFailed) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                text = stringResource(R.string.decrypt_failed_tap_to_retry),
-                modifier = Modifier
-                    .combinedClickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { vm.retryDecryption() }
-                    )
-            )
         }
     }
 }

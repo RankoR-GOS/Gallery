@@ -28,8 +28,6 @@ import com.dot.gallery.feature_node.domain.model.MergedSubfolderAlbum
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
 import com.dot.gallery.feature_node.domain.model.UIEvent
-import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.model.shouldIgnore
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.EventHandler
@@ -612,29 +610,6 @@ class MediaDistributorImpl @Inject constructor(
 
     override val geoMediaFlow: Flow<List<GeoMedia>> =
         locationsAndGeoMediaFlow.map { it.second }
-
-    /**
-     * Vault
-     */
-    override val vaultsMediaFlow: StateFlow<VaultState> = repository.getVaults()
-        .map { VaultState(it.data ?: emptyList(), isLoading = false) }
-        .stateIn(appScope, started = sharingMethod, VaultState())
-
-    override fun vaultMediaFlow(vault: Vault?): StateFlow<MediaState<Media.UriMedia>> = combine(
-        repository.getEncryptedMedia(vault),
-        settingsFlow,
-        dateFormatsFlow
-    ) { result, settings, (defaultDateFormat, extendedDateFormat, weeklyDateFormat) ->
-        mapMediaToItem(
-            data = result.data ?: emptyList(),
-            error = result.message ?: "",
-            albumId = -1L,
-            groupByMonth = settings?.groupTimelineByMonth == true,
-            defaultDateFormat = defaultDateFormat,
-            extendedDateFormat = extendedDateFormat,
-            weeklyDateFormat = weeklyDateFormat
-        )
-    }.stateIn(appScope, sharingMethod, MediaState())
 
     /**
      * Collections

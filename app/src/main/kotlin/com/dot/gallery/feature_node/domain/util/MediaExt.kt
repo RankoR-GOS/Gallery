@@ -3,7 +3,6 @@ package com.dot.gallery.feature_node.domain.util
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
-import com.dot.gallery.BuildConfig
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.Media
@@ -13,7 +12,6 @@ import com.github.panpf.zoomimage.subsampling.ContentImageSource
 import com.github.panpf.zoomimage.subsampling.SubsamplingImage
 import io.ktor.util.reflect.instanceOf
 import kotlinx.serialization.json.Json
-import java.util.UUID
 
 /**
  * Determine if the current media is a raw format
@@ -92,14 +90,10 @@ val Media.isTrashed: Boolean get() = trashed == 1
 
 val Media.isFavorite: Boolean get() = favorite == 1
 
-val Media.isEncrypted: Boolean
-    get() = instanceOf(Media.UriMedia::class) && getUri().toString()
-        .contains(BuildConfig.APPLICATION_ID)
-
 val Media.isLocalContent: Boolean
     get() = instanceOf(Media.UriMedia::class) && getUri().toString().startsWith("content://media")
 
-val Media.canMakeActions: Boolean get() = !isEncrypted && isLocalContent && !instanceOf(Media.ClassifiedMedia::class) && !readUriOnly
+val Media.canMakeActions: Boolean get() = isLocalContent && !instanceOf(Media.ClassifiedMedia::class) && !readUriOnly
 
 val Media.isClassified: Boolean get() = instanceOf(Media.ClassifiedMedia::class)
 
@@ -124,61 +118,6 @@ inline fun <reified T> fromKotlinByteArray(byteArray: ByteArray): T =
     Json.decodeFromString(String(byteArray, Charsets.UTF_8))
 
 inline fun <reified T> T.toKotlinByteArray() = Json.encodeToString(this).toByteArray(Charsets.UTF_8)
-
-fun Media.EncryptedMedia.migrate(uuid: UUID): Media.EncryptedMedia2 = Media.EncryptedMedia2(
-    id = id,
-    label = label,
-    uuid = uuid,
-    path = path,
-    timestamp = timestamp,
-    mimeType = mimeType,
-    duration = duration,
-    trashed = trashed,
-    favorite = favorite,
-    albumID = albumID,
-    albumLabel = albumLabel,
-    relativePath = relativePath,
-    fullDate = fullDate,
-    size = size,
-)
-
-fun <T : Media> T.toEncryptedMedia(bytes: ByteArray): Media.EncryptedMedia {
-    return Media.EncryptedMedia(
-        id = id,
-        label = label,
-        bytes = bytes,
-        path = path,
-        timestamp = timestamp,
-        mimeType = mimeType,
-        duration = duration,
-        trashed = trashed,
-        favorite = favorite,
-        albumID = albumID,
-        albumLabel = albumLabel,
-        relativePath = relativePath,
-        fullDate = fullDate,
-        size = size,
-    )
-}
-
-fun <T : Media> T.toEncryptedMedia2(uuid: UUID): Media.EncryptedMedia2 {
-    return Media.EncryptedMedia2(
-        id = id,
-        label = label,
-        uuid = uuid,
-        path = path,
-        timestamp = timestamp,
-        mimeType = mimeType,
-        duration = duration,
-        trashed = trashed,
-        favorite = favorite,
-        albumID = albumID,
-        albumLabel = albumLabel,
-        relativePath = relativePath,
-        fullDate = fullDate,
-        size = size,
-    )
-}
 
 fun <T : Media> T.asSubsamplingImage(context: Context): SubsamplingImage {
     return SubsamplingImage(imageSource = ContentImageSource(context, getUri()))
@@ -223,7 +162,6 @@ fun <T : Media> T.getUri(): Uri {
     return when (this) {
         is Media.UriMedia -> uri
         is Media.ClassifiedMedia -> uri
-        else -> throw IllegalArgumentException("Media type ${this.javaClass.simpleName} not supported")
     }
 }
 

@@ -29,7 +29,7 @@
     <string name="help_tip_basics_select_media_p1_s3">Or drag across photos for quick multi-select</string>
     <string name="help_tip_basics_select_media_p1_s4">Use the action bar to share, delete, or manage</string>
     <string name="help_tip_basics_select_media_p2_title">Batch actions</string>
-    <string name="help_tip_basics_select_media_p2_desc">Once you\'ve selected items, a bottom action sheet slides up with all available actions: Share, Delete, Copy to album, Move to album, Hide in vault, and more. You can customize which actions appear and their order in Settings > Navigation > Customize selection actions. Tip: to select all photos in a date group, tap the date header.</string>
+    <string name="help_tip_basics_select_media_p2_desc">Once you\'ve selected items, a bottom action sheet slides up with all available actions: Share, Delete, Copy to album, Move to album, Favorite, and more. You can customize which actions appear and their order in Settings > Navigation > Customize selection actions. Tip: to select all photos in a date group, tap the date header.</string>
     <string name="help_tip_basics_share_title">Share photos and videos</string>
     <string name="help_tip_basics_share_subtitle">Share media with other apps and people</string>
     <string name="help_tip_basics_share_p1_title">Share your media</string>
@@ -53,7 +53,7 @@
     <string name="help_tip_nav_bottom_bar_p1_title">The navigation bar</string>
     <string name="help_tip_nav_bottom_bar_p1_desc">The bottom navigation bar is your main way to move around Gallery. It\'s always visible at the bottom of the screen (unless you enable auto-hide in settings). Each tab remembers where you left off, so switching between sections won\'t lose your scroll position.</string>
     <string name="help_tip_nav_bottom_bar_p2_title">Three main sections</string>
-    <string name="help_tip_nav_bottom_bar_p2_desc">Timeline shows all your media sorted by date — great for finding recent photos. Albums organizes photos by the folder they\'re stored in (Camera, Screenshots, Downloads, etc.) — perfect for browsing by source. Library is your hub for Favorites, Trash, Vault, Locations, and AI Categories — quick access to everything special.</string>
+    <string name="help_tip_nav_bottom_bar_p2_desc">Timeline shows all your media sorted by date — great for finding recent photos. Albums organizes photos by the folder they\'re stored in (Camera, Screenshots, Downloads, etc.) — perfect for browsing by source. Library is your hub for Favorites, Trash, Locations, and AI Categories — quick access to everything special.</string>
     <string name="help_tip_nav_albums_title">Browse by albums</string>
     <string name="help_tip_nav_albums_subtitle">See photos organized by folder</string>
     <string name="help_tip_nav_albums_p1_title">Album view</string>
@@ -77,9 +77,9 @@
     <string name="help_tip_nav_old_navbar_p1_s1">Go to Settings > Navigation</string>
     <string name="help_tip_nav_old_navbar_p1_s2">Toggle \'Old navigation bar style\'</string>
     <string name="help_tip_nav_library_title">Use the library</string>
-    <string name="help_tip_nav_library_subtitle">Quick access to favorites, trash, vault, and more</string>
+    <string name="help_tip_nav_library_subtitle">Quick access to favorites, trash, locations, and more</string>
     <string name="help_tip_nav_library_p1_title">The Library</string>
-    <string name="help_tip_nav_library_p1_desc">The Library is your hub for everything beyond the main timeline and albums. From here you can access: Favorites (your starred photos), Trash (recently deleted items, recoverable for 30 days), Vault (encrypted private photos), Locations (photos organized by where they were taken), and Categories (AI-sorted photo groups). Think of it as your gallery\'s control center.</string>
+    <string name="help_tip_nav_library_p1_desc">The Library is your hub for everything beyond the main timeline and albums. From here you can access: Favorites (your starred photos), Trash (recently deleted items, recoverable for 30 days), Locations (photos organized by where they were taken), and Categories (AI-sorted photo groups). Think of it as your gallery\'s control center.</string>
     <string name="help_tip_nav_launch_screen_title">Set your default launch screen</string>
     <string name="help_tip_nav_launch_screen_subtitle">Choose which screen appears when you open Gallery</string>
     <string name="help_tip_nav_launch_screen_p1_title">Default launch screen</string>
@@ -284,16 +284,6 @@
     <string name="help_tip_action_edit_p1_s2">Tap the edit icon in the bottom bar</string>
     <string name="help_tip_action_edit_p1_s3">Choose the built-in editor or an external app</string>
     <string name="help_tip_action_edit_p1_s4">Original is automatically backed up before editing</string>
-    <string name="help_tip_action_hide_vault_title">Hide media in vault</string>
-    <string name="help_tip_action_hide_vault_subtitle">Move photos to encrypted vault storage</string>
-    <string name="help_tip_action_hide_vault_p1_title">Hide in vault</string>
-    <string name="help_tip_action_hide_vault_p1_desc">Move a photo to the vault to encrypt it and hide it from your regular gallery. The original file is deleted from your device\'s storage and replaced with an encrypted copy inside the vault. Only you can see it — vault access requires biometric authentication (fingerprint or face) or your device PIN.</string>
-    <string name="help_tip_action_hide_vault_p2_title">How to hide</string>
-    <string name="help_tip_action_hide_vault_p2_desc">You can hide individual photos from the viewer, or select multiple photos in the grid and hide them all at once through the selection action sheet. If you have multiple vaults, you\'ll be asked to choose which one to use.</string>
-    <string name="help_tip_action_hide_vault_p2_s1">Open a photo</string>
-    <string name="help_tip_action_hide_vault_p2_s2">Tap the three-dot menu</string>
-    <string name="help_tip_action_hide_vault_p2_s3">Select \'Hide in vault\'</string>
-    <string name="help_tip_action_hide_vault_p2_s4">Choose a vault if you have more than one</string>
     <string name="help_tip_action_copy_to_album_title">Copy to album</string>
     <string name="help_tip_action_copy_to_album_subtitle">Copy media to another album</string>
     <string name="help_tip_action_copy_to_album_p1_title">Copy to album</string>
@@ -558,38 +548,6 @@
     <string name="help_tip_albums_thumbnails_p2_s3">Long press it</string>
     <string name="help_tip_albums_thumbnails_p2_s4">Tap \'Set as album thumbnail\'</string>
 
-    <!-- VAULT -->
-    <string name="help_tip_vault_setup_title">Set up the vault</string>
-    <string name="help_tip_vault_setup_subtitle">Encrypt and protect your private photos</string>
-    <string name="help_tip_vault_setup_p1_title">Your private vault</string>
-    <string name="help_tip_vault_setup_p1_desc">The vault is a secure, encrypted space for photos and videos you want to keep private. Files in the vault are encrypted using strong cryptography and can only be accessed after biometric authentication (fingerprint or face) or your device PIN. They\'re completely hidden from your regular gallery and won\'t appear in the timeline, albums, or any other app.</string>
-    <string name="help_tip_vault_setup_p2_title">Set up encryption</string>
-    <string name="help_tip_vault_setup_p2_desc">Setting up the vault is quick — just tap Library > Vault and follow the prompts. You can create multiple vaults for different purposes (e.g., \'Personal\' and \'Documents\'). Each vault requires authentication every time you access it.</string>
-    <string name="help_tip_vault_setup_p2_s1">Tap Library > Vault</string>
-    <string name="help_tip_vault_setup_p2_s2">Follow the setup prompts</string>
-    <string name="help_tip_vault_setup_p2_s3">Verify with your fingerprint, face, or PIN</string>
-    <string name="help_tip_vault_setup_p2_s4">You can create multiple vaults</string>
-    <string name="help_tip_vault_setup_p3_title">Add media to vault</string>
-    <string name="help_tip_vault_setup_p3_desc">Move photos to the vault from the viewer (three-dot menu > Hide in vault) or by selecting multiple photos and using the selection action sheet. When you move a photo to the vault, the original is deleted from your gallery and replaced with an encrypted copy. Only vault access can reveal it.</string>
-    <string name="help_tip_vault_add_title">Move photos to vault</string>
-    <string name="help_tip_vault_add_subtitle">Hide photos by moving them to encrypted storage</string>
-    <string name="help_tip_vault_add_p1_title">Hide photos</string>
-    <string name="help_tip_vault_add_p1_desc">Moving a photo to the vault encrypts it and removes it from your visible gallery. The encrypted file is stored in the app\'s secure storage, inaccessible to other apps or file managers. This is the safest way to keep private photos on your device.</string>
-    <string name="help_tip_vault_add_p2_title">How to hide</string>
-    <string name="help_tip_vault_add_p2_desc">From the viewer: tap the three-dot menu and select \'Hide in vault\'. From the grid: select one or more photos, then use the \'Hide in vault\' action in the selection sheet. You can hide photos, videos, or a mix of both. If you have multiple vaults, you\'ll be asked which one to use.</string>
-    <string name="help_tip_vault_add_p2_s1">Open a photo, or select multiple in the grid</string>
-    <string name="help_tip_vault_add_p2_s2">Tap the menu or selection action</string>
-    <string name="help_tip_vault_add_p2_s3">Select \'Hide in vault\'</string>
-    <string name="help_tip_vault_add_p2_s4">Choose a vault if you have more than one</string>
-    <string name="help_tip_vault_restore_title">Restore from vault</string>
-    <string name="help_tip_vault_restore_subtitle">Move photos back to your regular gallery</string>
-    <string name="help_tip_vault_restore_p1_title">Restore media</string>
-    <string name="help_tip_vault_restore_p1_desc">To bring photos back from the vault to your regular gallery, open the vault, select the photos you want to restore, and tap the restore action. The files are decrypted and placed back in their original location (or a default folder if the original no longer exists). Once restored, the photos reappear in your timeline and albums as if they were never hidden.</string>
-    <string name="help_tip_vault_video_streaming_title">Streaming vault videos</string>
-    <string name="help_tip_vault_video_streaming_subtitle">Watch encrypted videos without full decryption</string>
-    <string name="help_tip_vault_video_streaming_p1_title">Streaming decryption</string>
-    <string name="help_tip_vault_video_streaming_p1_desc">Videos stored in the vault play using streaming decryption, meaning they start playing almost immediately without needing to decrypt the entire file first. This is especially important for long or large video files that would otherwise take a long time to prepare. The decryption happens on-the-fly as the video plays, with no temporary unencrypted files created on disk.</string>
-
     <!-- FAVORITES &amp; TRASH -->
     <string name="help_tip_fav_add_title">Add to favorites</string>
     <string name="help_tip_fav_add_subtitle">Mark your best photos for quick access</string>
@@ -696,7 +654,7 @@
     <string name="help_tip_settings_secure_mode_title">Secure mode</string>
     <string name="help_tip_settings_secure_mode_subtitle">Hide from recents and block screenshots</string>
     <string name="help_tip_settings_secure_mode_p1_title">Secure mode</string>
-    <string name="help_tip_settings_secure_mode_p1_desc">When activated, Gallery is hidden from the recent apps screen (the task switcher shows a blank preview) and screenshots within the app are blocked. This is an extra privacy measure if you don\'t want others to see what you were browsing when they glance at your recent apps. Ideal when combined with the vault for maximum privacy.</string>
+    <string name="help_tip_settings_secure_mode_p1_desc">When activated, Gallery is hidden from the recent apps screen (the task switcher shows a blank preview) and screenshots within the app are blocked. This is an extra privacy measure if you don\'t want others to see what you were browsing when they glance at your recent apps.</string>
     <string name="help_tip_settings_secure_mode_p1_s1">Go to Settings > General</string>
     <string name="help_tip_settings_secure_mode_p1_s2">Toggle \'Secure mode\'</string>
     <string name="help_tip_settings_secure_mode_p1_s3">Gallery disappears from recent apps</string>
@@ -713,7 +671,7 @@
     <string name="help_tip_settings_launch_screen_title">Default launch screen</string>
     <string name="help_tip_settings_launch_screen_subtitle">Choose Auto, Timeline, Albums, or Library</string>
     <string name="help_tip_settings_launch_screen_p1_title">Launch screen</string>
-    <string name="help_tip_settings_launch_screen_p1_desc">Choose which screen greets you when you open Gallery. Auto remembers the last screen you used. Timeline is great for browsing recent photos. Albums is ideal if you organize by folder. Library works well if you primarily access favorites, vault, or categories.</string>
+    <string name="help_tip_settings_launch_screen_p1_desc">Choose which screen greets you when you open Gallery. Auto remembers the last screen you used. Timeline is great for browsing recent photos. Albums is ideal if you organize by folder. Library works well if you primarily access favorites, trash, locations, or categories.</string>
     <string name="help_tip_settings_launch_screen_p1_s1">Go to Settings > Navigation</string>
     <string name="help_tip_settings_launch_screen_p1_s2">Tap \'Default launch screen\'</string>
     <string name="help_tip_settings_launch_screen_p1_s3">Choose Auto, Timeline, Albums, or Library</string>
@@ -735,7 +693,7 @@
     <string name="help_tip_settings_selection_actions_title">Customize selection actions</string>
     <string name="help_tip_settings_selection_actions_subtitle">Reorder and customize the selection action sheet</string>
     <string name="help_tip_settings_selection_actions_p1_title">Selection actions</string>
-    <string name="help_tip_settings_selection_actions_p1_desc">The selection action sheet appears whenever you select photos. By default it shows Share, Delete, Copy, Move, Hide in vault, and more. You can customize which actions appear and their order to match your most common workflows.</string>
+    <string name="help_tip_settings_selection_actions_p1_desc">The selection action sheet appears whenever you select photos. By default it shows Share, Delete, Copy, Move, Favorite, and more. You can customize which actions appear and their order to match your most common workflows.</string>
     <string name="help_tip_settings_selection_actions_p2_title">Customize</string>
     <string name="help_tip_settings_selection_actions_p2_desc">Drag actions up or down to reorder them — put your most-used actions at the top for quick access. Toggle actions on or off to show or hide them. For example, if you never use \'Copy to album\', hide it to reduce clutter. Your customization is saved automatically.</string>
     <string name="help_tip_settings_selection_actions_p2_s1">Go to Settings > Navigation</string>
@@ -787,7 +745,7 @@
     <string name="help_tip_selection_sheet_title">Selection action sheet</string>
     <string name="help_tip_selection_sheet_subtitle">Actions available for selected media</string>
     <string name="help_tip_selection_sheet_p1_title">Action sheet</string>
-    <string name="help_tip_selection_sheet_p1_desc">When you select one or more photos, a bottom action sheet slides up showing all available actions: Share, Delete, Copy to album, Move to album, Hide in vault, Favorite, and more. The number of selected items is displayed at the top. Tap any action to apply it to all selected items at once.</string>
+    <string name="help_tip_selection_sheet_p1_desc">When you select one or more photos, a bottom action sheet slides up showing all available actions: Share, Delete, Copy to album, Move to album, Favorite, and more. The number of selected items is displayed at the top. Tap any action to apply it to all selected items at once.</string>
     <string name="help_tip_selection_sheet_p2_title">Customize actions</string>
     <string name="help_tip_selection_sheet_p2_desc">The action sheet is fully customizable. Reorder actions to put your most-used ones first, and hide actions you never use. This makes the sheet cleaner and faster to use. Your customization is saved permanently.</string>
     <string name="help_tip_selection_sheet_p2_s1">Go to Settings > Navigation</string>
@@ -841,7 +799,7 @@
     <string name="help_tip_viewer_cast_title">Cast videos to your TV</string>
     <string name="help_tip_viewer_cast_subtitle">Stream media to FCast-compatible devices on your network</string>
     <string name="help_tip_viewer_cast_p1_title">Cast to a device</string>
-    <string name="help_tip_viewer_cast_p1_desc">Cast videos and images to any FCast-compatible device on your local network. Gallery discovers devices automatically using mDNS, sets up a local streaming server, and plays your media on the big screen — all without any cloud services. Encrypted vault media can also be cast securely via temporary decryption.</string>
+    <string name="help_tip_viewer_cast_p1_desc">Cast videos and images to any FCast-compatible device on your local network. Gallery discovers devices automatically using mDNS, sets up a local streaming server, and plays your media on the big screen — all without any cloud services.</string>
     <string name="help_tip_viewer_cast_p2_title">Control playback</string>
     <string name="help_tip_viewer_cast_p2_desc">While casting, a mini controller appears in the viewer showing cast status. Use the remote controls to play, pause, seek, adjust volume, and change playback speed — all from your phone. Tap the cast button again to stop casting or switch devices.</string>
     <string name="help_tip_viewer_cast_p2_s1">Open a video in the viewer</string>
@@ -866,19 +824,5 @@
     <string name="help_tip_selection_right_align_p1_s1">Go to Settings > Navigation > Selection actions</string>
     <string name="help_tip_selection_right_align_p1_s2">Toggle \'Right-align top actions\'</string>
     <string name="help_tip_selection_right_align_p1_s3">Select items to see the new layout</string>
-
-    <!-- VAULT: Overhaul -->
-    <string name="help_tip_vault_overhaul_title">Redesigned vault security</string>
-    <string name="help_tip_vault_overhaul_subtitle">Gate authentication, custom passwords, and a streamlined vault flow</string>
-    <string name="help_tip_vault_overhaul_p1_title">Gate authentication</string>
-    <string name="help_tip_vault_overhaul_p1_desc">Add an extra layer of security before the vault selector screen. Choose between no gate, device security (biometrics or screen lock), or a custom password. When active, you must authenticate before you can even see the list of available vaults — preventing others from knowing which vaults exist on your device.</string>
-    <string name="help_tip_vault_overhaul_p1_s1">Open the Vault from the Library</string>
-    <string name="help_tip_vault_overhaul_p1_s2">Tap the security settings button</string>
-    <string name="help_tip_vault_overhaul_p1_s3">Choose None, Device Security, or Custom Password</string>
-    <string name="help_tip_vault_overhaul_p2_title">Custom passwords &amp; per-vault security</string>
-    <string name="help_tip_vault_overhaul_p2_desc">Each vault now supports its own authentication — biometrics, PIN, or a custom password — so you can have different security levels for different vaults. The vault creation flow has been streamlined: create a vault, set its password, then configure the global gate. Vault deletion now returns you to the selector with re-authentication required, and the last vault deletion exits to the library.</string>
-    <string name="help_tip_vault_overhaul_p2_s1">Create or open a vault</string>
-    <string name="help_tip_vault_overhaul_p2_s2">Set a custom password or use device security</string>
-    <string name="help_tip_vault_overhaul_p2_s3">Each vault can have its own independent security</string>
 
 </resources>

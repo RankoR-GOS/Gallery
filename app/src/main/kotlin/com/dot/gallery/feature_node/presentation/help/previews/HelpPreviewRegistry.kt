@@ -52,9 +52,6 @@ import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.FilterKind
 import com.dot.gallery.core.presentation.components.FilterOption
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.domain.model.VaultState
-import kotlinx.coroutines.flow.MutableStateFlow
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
 import com.dot.gallery.feature_node.presentation.classifier.CategoriesScreen
 import com.dot.gallery.feature_node.presentation.exif.MetadataViewScreen
@@ -63,7 +60,6 @@ import com.dot.gallery.feature_node.domain.model.editor.DrawMode
 import com.dot.gallery.feature_node.domain.model.editor.DrawType
 import com.dot.gallery.feature_node.domain.model.editor.PathProperties
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreen
-import com.dot.gallery.feature_node.presentation.vault.VaultDisplay
 import com.dot.gallery.feature_node.presentation.favorites.FavoriteScreen
 import com.dot.gallery.feature_node.presentation.help.data.HelpMockData
 import com.dot.gallery.feature_node.presentation.help.data.PreviewType
@@ -84,7 +80,7 @@ import com.dot.gallery.ui.core.icons.Albums
  * [SharedTransitionScope] + [AnimatedContentScope].
  *
  * Tier 2/3 previews use simplified mockups for components that are
- * too heavy to render in a help screen context (editor, vault, etc.).
+ * too heavy to render in a help screen context (editor, etc.).
  */
 @Composable
 fun HelpPreview(
@@ -104,7 +100,6 @@ fun HelpPreview(
         PreviewType.PHOTO_EDITOR_CROP -> EditorCropPreviewMini(modifier)
         PreviewType.PHOTO_EDITOR_FILTERS -> EditorFiltersPreviewMini(modifier)
         PreviewType.PHOTO_EDITOR_MARKUP -> EditorMarkupPreviewMini(modifier)
-        PreviewType.VAULT_LOCK -> VaultPreviewMini(modifier)
         PreviewType.THEME_PICKER -> ThemePickerPreviewMini(modifier)
         PreviewType.COLOR_PALETTE -> ColorPalettePreviewMini(modifier)
         PreviewType.PINCH_ZOOM_GRID -> PinchZoomPreviewMini(modifier)
@@ -335,7 +330,6 @@ private fun ViewerPreviewMini(modifier: Modifier = Modifier) {
                     mediaState = remember { mutableStateOf(HelpMockData.MOCK_MEDIA_STATE) },
                     metadataState = remember { mutableStateOf(HelpMockData.MOCK_METADATA_STATE) },
                     albumsState = remember { mutableStateOf(HelpMockData.MOCK_ALBUM_STATE) },
-                    vaultState = remember { mutableStateOf(VaultState()) },
                     sharedTransitionScope = sharedScope,
                     animatedContentScope = animScope,
                 )
@@ -444,48 +438,6 @@ private fun EditorFiltersPreviewMini(modifier: Modifier = Modifier) {
 @Composable
 private fun EditorMarkupPreviewMini(modifier: Modifier = Modifier) {
     EditorPreviewMini(modifier)
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-@Composable
-private fun VaultPreviewMini(modifier: Modifier = Modifier) {
-    val mockVault = remember { Vault(name = "My Vault") }
-    val mockVaultState = remember {
-        mutableStateOf(VaultState(vaults = listOf(mockVault), isLoading = false))
-    }
-    val mockCurrentVault = remember { MutableStateFlow<Vault?>(mockVault) }
-    val mockMediaStateFlow = remember { MutableStateFlow(HelpMockData.MOCK_MEDIA_STATE) }
-    val animation = rememberPreviewAnimation(stepCount = 2)
-    PreviewFrame(modifier, applyPadding = false) {
-        AutoScrollBox(
-            scrollProgress = animation.stepProgress,
-            modifier = Modifier.matchParentSize()
-        ) {
-            PreviewScreenProvider { sharedScope, animScope ->
-                VaultDisplay(
-                    globalNavigateUp = {},
-                    vaultState = mockVaultState,
-                    currentVault = mockCurrentVault,
-                    createMediaState = { mockMediaStateFlow },
-                    onCreateVaultClick = {},
-                    deleteLeftovers = { _, _ -> },
-                    setVault = {},
-                    deleteVault = {},
-                    restoreVault = {},
-                    workerProgress = remember { MutableStateFlow(0f) },
-                    workerIsRunning = remember { MutableStateFlow(false) },
-                    sharedTransitionScope = sharedScope,
-                    animatedContentScope = animScope,
-                    metadataState = remember { mutableStateOf(HelpMockData.MOCK_METADATA_STATE) },
-                )
-            }
-        }
-        SwipeGestureOverlay(
-            modifier = Modifier.matchParentSize(),
-            progress = animation.stepProgress,
-            direction = SwipeDirection.UP
-        )
-    }
 }
 
 @Composable
@@ -638,4 +590,3 @@ private fun PreviewFrame(
         content()
     }
 }
-

@@ -88,7 +88,6 @@ import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumImage
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreenRoute
@@ -98,9 +97,9 @@ import com.dot.gallery.feature_node.presentation.picker.PickerViewModel
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
+import com.dot.gallery.feature_node.presentation.security.rememberBiometricState
 import com.dot.gallery.feature_node.presentation.util.selectedMedia
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
-import com.dot.gallery.feature_node.presentation.vault.utils.rememberBiometricState
 import com.dot.gallery.ui.theme.Dimens
 import kotlinx.coroutines.launch
 
@@ -427,7 +426,6 @@ fun PickerScreen(
                         )
                     }
                     val emptyAlbumState = remember { mutableStateOf(AlbumState()) }
-                    val emptyVaultState = remember { mutableStateOf(VaultState(isLoading = false)) }
 
                     val previousNavigateUp = remember { eventHandler.navigateUpAction }
                     val previousLightStatusBars = remember { windowInsetsController.isAppearanceLightStatusBars }
@@ -448,7 +446,6 @@ fun PickerScreen(
                             mediaState = previewMediaState,
                             metadataState = metadataState,
                             albumsState = emptyAlbumState,
-                            vaultState = emptyVaultState,
                             sharedTransitionScope = this@SharedTransitionLayout,
                             animatedContentScope = this@AnimatedContent
                         )

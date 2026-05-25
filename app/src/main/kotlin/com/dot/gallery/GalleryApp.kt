@@ -15,10 +15,8 @@ import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.decoder.supportHeifDecoder
 import com.dot.gallery.core.decoder.supportJxlDecoder
-import com.dot.gallery.core.decoder.supportVaultDecoder
 import com.dot.gallery.core.decoder.supportVideoFrame2
 import com.dot.gallery.core.workers.MetadataCollectionWorker
-import com.dot.gallery.core.workers.TempVaultCleanupWorker
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.github.panpf.sketch.PlatformContext
 import com.github.panpf.sketch.SingletonSketch
@@ -55,7 +53,6 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
             supportAnimatedHeif()
             supportHeifDecoder()
             supportJxlDecoder()
-            supportVaultDecoder()
         }
         val diskCache = DiskCache.Builder(context, FileSystem.SYSTEM)
             .directory(context.appCacheDirectory())
@@ -116,9 +113,6 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
             request = OneTimeWorkRequestBuilder<MetadataCollectionWorker>()
                 .build()
         )
-
-        // Schedule periodic cleanup of stale decrypted temp files.
-        TempVaultCleanupWorker.schedule(workManager)
 
         // Initialize ML models (copies from assets on withML, checks presence on noML)
         appScope.launch {

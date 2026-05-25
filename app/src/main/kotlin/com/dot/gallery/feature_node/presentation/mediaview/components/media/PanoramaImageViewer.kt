@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview.components.media
 
-import android.net.Uri
 import android.view.View
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -29,19 +28,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toFile
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
-import com.dot.gallery.core.decoder.EncryptedPanoramaImageLoader
-import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.rememberSurfaceCapture
 import com.dot.gallery.libs.panoramaviewer.CameraState
-import com.dot.gallery.libs.panoramaviewer.PanoramaImageLoader
 import com.dot.gallery.libs.panoramaviewer.PanoramaViewer
 import com.dot.gallery.libs.panoramaviewer.ProjectionType
 import dev.chrisbanes.haze.hazeSource
@@ -53,24 +46,8 @@ fun <T : Media> PanoramaImageViewer(
     isPhotosphere: Boolean,
     modifier: Modifier = Modifier,
     onItemClick: () -> Unit = {},
-    currentVault: Vault? = null
 ) {
     val projectionType = if (isPhotosphere) ProjectionType.SPHERE else ProjectionType.CYLINDER
-
-    val context = LocalContext.current
-
-    // Build an encrypted loader when viewing vault media
-    val imageLoader: PanoramaImageLoader? = remember(media.id, currentVault) {
-        if (currentVault != null) {
-            val keychainHolder = KeychainHolder(context)
-            val encryptedFile = media.getUri().toFile()
-            EncryptedPanoramaImageLoader(keychainHolder, encryptedFile)
-        } else null
-    }
-
-    val imageUri: Uri = remember(media.id, currentVault) {
-        if (currentVault != null) Uri.EMPTY else media.getUri()
-    }
 
     var cameraState by remember { mutableStateOf(CameraState()) }
     var glViewRef by remember { mutableStateOf<View?>(null) }
@@ -98,10 +75,10 @@ fun <T : Media> PanoramaImageViewer(
         }
 
         PanoramaViewer(
-            imageUri = imageUri,
+            imageUri = media.getUri(),
             projectionType = projectionType,
             gyroscopeEnabled = isPhotosphere,
-            imageLoader = imageLoader,
+            imageLoader = null,
             onTap = onItemClick,
             onCameraChanged = { cameraState = it },
             onViewCreated = { glViewRef = it },

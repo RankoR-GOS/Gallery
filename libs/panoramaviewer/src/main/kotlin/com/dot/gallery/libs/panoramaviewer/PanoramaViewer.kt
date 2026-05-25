@@ -58,10 +58,10 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
  * )
  * ```
  *
- * ## Custom loader usage (e.g. encrypted vault)
+ * ## Custom loader usage
  *
  * ```kotlin
- * val loader = remember(media) { MyEncryptedLoader(keychainHolder, file) }
+ * val loader = remember(media) { MyCustomLoader(file) }
  * PanoramaViewer(
  *     imageUri       = Uri.EMPTY,   // ignored when imageLoader is set
  *     projectionType = ProjectionType.SPHERE,
@@ -78,8 +78,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
  *                         (recommended for photospheres).
  * @param imageLoader     Optional custom [PanoramaImageLoader] for loading image data.
  *                         When provided, this is used instead of the default
- *                         `ContentResolver`-based loader. Useful for encrypted vault
- *                         media, network images, or custom formats.
+ *                         `ContentResolver`-based loader. Useful for network
+ *                         images or custom formats.
  * @param onTap           Optional callback invoked on a single-tap gesture
  *                         (e.g. to toggle surrounding UI chrome).
  * @param onCameraChanged Optional callback invoked whenever the camera state changes

@@ -639,17 +639,6 @@ object Settings {
 
     }
 
-    object Vault {
-        const val ENCRYPT_ASK = "ask"
-        const val ENCRYPT_DELETE = "delete"
-        const val ENCRYPT_KEEP = "keep"
-
-        private val VAULT_ENCRYPT_BEHAVIOR = stringPreferencesKey("vault_encrypt_behavior")
-
-        @Composable
-        fun rememberVaultEncryptBehavior() =
-            rememberPreference(key = VAULT_ENCRYPT_BEHAVIOR, defaultValue = ENCRYPT_ASK)
-    }
 }
 
 sealed class Position {

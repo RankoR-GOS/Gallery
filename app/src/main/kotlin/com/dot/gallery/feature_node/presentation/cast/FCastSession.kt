@@ -18,7 +18,6 @@ import java.net.Inet4Address
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import dagger.hilt.android.qualifiers.ApplicationContext

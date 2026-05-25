@@ -110,7 +110,6 @@ class StandaloneActivity : ComponentActivity() {
                         mediaSelector = mediaSelector
                     ) {
                         Scaffold { paddingValues ->
-                            val vaults = viewModel.vaults.collectAsStateWithLifecycle()
                             val mediaState = viewModel.mediaState.collectAsStateWithLifecycle()
                             val albumsState = viewModel.albumsState.collectAsStateWithLifecycle()
                             val metadataState =
@@ -129,7 +128,6 @@ class StandaloneActivity : ComponentActivity() {
                                             isStandalone = true,
                                             mediaId = mediaId,
                                             mediaState = mediaState,
-                                            vaultState = vaults,
                                             albumsState = albumsState,
                                             metadataState = metadataState,
                                             sharedTransitionScope = this@SharedTransitionLayout,

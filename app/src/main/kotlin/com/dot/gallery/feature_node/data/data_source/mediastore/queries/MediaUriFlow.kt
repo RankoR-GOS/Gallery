@@ -173,9 +173,7 @@ class MediaUriFlow(
                 mimeType = mimeType
             )
         }.let { flow ->
-            // Derive candidate media IDs from provided URIs. These may be either
-            // MediaStore content:// URIs or file:// URIs that represent encrypted
-            // vault files whose filenames follow the pattern <originalId>.enc
+            // Derive candidate media IDs from provided MediaStore content:// URIs.
             val ids: List<Long> = uris.mapNotNull { uri ->
                 parseCandidateId(uri)
             }.distinct()
@@ -197,8 +195,7 @@ class MediaUriFlow(
 
     private fun getBucketIdFromFirstUri(): Long? {
         val firstUri = uris.firstOrNull() ?: return null
-        // Bucket lookup only makes sense for MediaStore content URIs. File based
-        // (encrypted) URIs won't have a bucket; skip early.
+        // Bucket lookup only makes sense for MediaStore content URIs.
         if (firstUri.scheme != ContentResolver.SCHEME_CONTENT) return null
         val id = try {
             ContentUris.parseId(firstUri)
@@ -226,33 +223,18 @@ class MediaUriFlow(
     /**
      * Attempt to derive a stable numeric media ID from a supplied URI.
      *  - For content:// URIs we delegate to [ContentUris.parseId].
-     *  - For file:// URIs pointing to encrypted vault files we strip a trailing
-     *    ".enc" extension and parse the remaining filename as a Long.
      * Returns null (instead of a random fabricated ID) if parsing fails so the
-     * caller can simply exclude the unmatched entry. This prevents accidental
-     * association with unrelated media rows and avoids decryption failures due
-     * to ID skew.
+     * caller can simply exclude the unmatched entry.
      */
     private fun parseCandidateId(uri: Uri): Long? {
-        return if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
-            try {
-                ContentUris.parseId(uri)
-            } catch (e: NumberFormatException) {
-                // Unexpected malformed content URI; exclude.
-                printWarning("MediaUriFlow: Failed to parse content URI id: $uri -> ${e.message}")
-                null
-            }
-        } else {
-            // file:// or other scheme; check for encrypted vault naming pattern
-            val name = uri.lastPathSegment ?: return null
-            val numericPart = if (name.endsWith(".enc", ignoreCase = true)) {
-                name.removeSuffix(".enc")
-            } else name
-            numericPart.toLongOrNull().also { parsed ->
-                if (parsed == null) {
-                    printWarning("MediaUriFlow: Unable to derive id from URI filename '$name'")
-                }
-            }
+        if (uri.scheme != ContentResolver.SCHEME_CONTENT) {
+            return null
+        }
+        return try {
+            ContentUris.parseId(uri)
+        } catch (e: NumberFormatException) {
+            printWarning("MediaUriFlow: Failed to parse content URI id: $uri -> ${e.message}")
+            null
         }
     }
 }

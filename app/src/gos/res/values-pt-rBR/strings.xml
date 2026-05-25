@@ -4,7 +4,6 @@
     <string name="manage_media_title">Permita que Gallery gerencie sua mídia</string>
     <string name="blacklist_summary">Ignorar álbuns da Galeria</string>
     <string name="add_to_ignored_summary">Remover um álbum da exibição na Galeria</string>
-    <string name="restore_vault_summary">The current vault and its content will be decrypted and restored.\nThis action will make your content accessible again in the Gallery.</string>
     <string name="donate">Donate to ReFra</string>
     <string name="support_the_project">Support ReFra</string>
 </resources>

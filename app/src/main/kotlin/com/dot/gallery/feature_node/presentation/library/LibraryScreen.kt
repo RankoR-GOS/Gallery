@@ -88,7 +88,6 @@ import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.categorySharedElement
-import com.dot.gallery.ui.core.icons.Encrypted
 import com.dot.gallery.ui.theme.BlackScrim
 import com.dot.gallery.ui.theme.WhiterBlackScrim
 import com.dot.gallery.ui.theme.isDarkTheme
@@ -98,7 +97,6 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.dot.gallery.ui.core.Icons as GalleryIcons
 
 @OptIn(
     ExperimentalSharedTransitionApi::class, ExperimentalHazeMaterialsApi::class,
@@ -278,17 +276,6 @@ fun LibraryScreen(
                                 Alignment.CenterHorizontally
                             )
                         ) {
-                            LibrarySmallItem(
-                                title = stringResource(R.string.vault),
-                                icon = GalleryIcons.Encrypted,
-                                contentColor = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clickable {
-                                        eventHandler.navigate(Screen.VaultScreen())
-                                    },
-                                contentDescription = stringResource(R.string.vault)
-                            )
                             LibrarySmallItem(
                                 title = stringResource(R.string.ignored),
                                 icon = Icons.Outlined.VisibilityOff,

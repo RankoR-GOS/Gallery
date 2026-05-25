@@ -39,7 +39,6 @@ profileinstaller = "1.4.1"
 room = "2.8.4"
 accompanist = "0.37.3"
 datastore = "1.2.1"
-securityCrypto = "1.1.0"
 sketch = "4.5.0-alpha03"
 startupRuntime = "1.2.0"
 uiautomator = "2.3.0"
@@ -76,7 +75,6 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
 
 # Coil
-androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startupRuntime" }
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
@@ -178,4 +176,3 @@ baselineProfilePlugin = { id = "androidx.baselineprofile", version.ref = "benchm
 kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 [bundles]
-

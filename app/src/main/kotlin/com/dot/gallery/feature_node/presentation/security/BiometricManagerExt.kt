@@ -1,7 +1,6 @@
-package com.dot.gallery.feature_node.presentation.vault.utils
+package com.dot.gallery.feature_node.presentation.security
 
 import android.app.KeyguardManager
-import android.content.Context
 import android.os.Build
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
@@ -19,7 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 
 @Composable
-fun rememberBiometricManager(): BiometricManager {
+internal fun rememberBiometricManager(): BiometricManager {
     val context = LocalContext.current
     return remember(context) {
         BiometricManager.from(context)
@@ -27,9 +26,9 @@ fun rememberBiometricManager(): BiometricManager {
 }
 
 @Composable
-fun rememberBiometricCallback(
+internal fun rememberBiometricCallback(
     onSuccess: () -> Unit,
-    onFailed: () -> Unit
+    onFailed: () -> Unit,
 ): BiometricPrompt.AuthenticationCallback {
     val currentOnSuccess by rememberUpdatedState(onSuccess)
     val currentOnFailed by rememberUpdatedState(onFailed)
@@ -44,24 +43,23 @@ fun rememberBiometricCallback(
                 super.onAuthenticationSucceeded(result)
                 currentOnSuccess()
             }
-
-            override fun onAuthenticationFailed() {
-                super.onAuthenticationFailed()
-            }
         }
     }
 }
 
 @Composable
-fun rememberBiometricState(
+internal fun rememberBiometricState(
     title: String,
     subtitle: String,
     onSuccess: () -> Unit,
-    onFailed: () -> Unit
+    onFailed: () -> Unit,
 ): BiometricState {
     val context = LocalContext.current
     val biometricManager = rememberBiometricManager()
-    val callback = rememberBiometricCallback(onSuccess, onFailed)
+    val callback = rememberBiometricCallback(
+        onSuccess = onSuccess,
+        onFailed = onFailed,
+    )
     return remember(biometricManager, title, subtitle) {
         val promptInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             PromptInfo.Builder()
@@ -81,16 +79,16 @@ fun rememberBiometricState(
             activity = context as FragmentActivity,
             biometricManager = biometricManager,
             promptInfo = promptInfo,
-            callback = callback
+            callback = callback,
         )
     }
 }
 
-class BiometricState(
+internal class BiometricState(
     private val activity: FragmentActivity,
     biometricManager: BiometricManager,
     private val promptInfo: PromptInfo,
-    private val callback: BiometricPrompt.AuthenticationCallback
+    private val callback: BiometricPrompt.AuthenticationCallback,
 ) {
     val isSupported by mutableStateOf(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -103,12 +101,9 @@ class BiometricState(
 
     fun authenticate() {
         if (isSupported) {
-            // Create a fresh BiometricPrompt each time to avoid stale internal
-            // BiometricFragment state that silently swallows subsequent callbacks.
             val executor = ContextCompat.getMainExecutor(activity)
             val prompt = BiometricPrompt(activity, executor, callback)
             prompt.authenticate(promptInfo)
         }
     }
-
 }

@@ -15,8 +15,6 @@ import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
@@ -28,8 +26,6 @@ fun <T : Media> TrashButton(
     media: T,
     followTheme: Boolean = false,
     enabled: Boolean,
-    deleteMedia: ((Vault, T, () -> Unit) -> Unit)?,
-    currentVault: Vault?
 ) {
     val handler = LocalMediaHandler.current
     var shouldMoveToTrash by rememberSaveable { mutableStateOf(true) }
@@ -37,7 +33,7 @@ fun <T : Media> TrashButton(
     val scope = rememberCoroutineScope()
     val trashEnabled = rememberTrashEnabled()
     val trashEnabledRes = remember(trashEnabled, media) {
-        if (trashEnabled.value && !media.isEncrypted && SdkCompat.supportsTrash) R.string.trash else R.string.trash_delete
+        if (trashEnabled.value && SdkCompat.supportsTrash) R.string.trash else R.string.trash_delete
     }
     val result = rememberActivityResult {
         scope.launch {
@@ -68,24 +64,16 @@ fun <T : Media> TrashButton(
     TrashDialog(
         appBottomSheetState = state,
         data = listOf(media),
-        action = if (deleteMedia != null && currentVault != null) {
-            TrashDialogAction.DELETE
-        } else if (shouldMoveToTrash) {
+        action = if (shouldMoveToTrash) {
             TrashDialogAction.TRASH
         } else {
             TrashDialogAction.DELETE
         }
     ) {
-        if (deleteMedia != null && currentVault != null) {
-            it.forEach { media ->
-                deleteMedia(currentVault, media) {}
-            }
+        if (shouldMoveToTrash && SdkCompat.supportsTrash) {
+            handler.trashMedia(result, it, true)
         } else {
-            if (shouldMoveToTrash && SdkCompat.supportsTrash) {
-                handler.trashMedia(result, it, true)
-            } else {
-                handler.deleteMedia(result, it)
-            }
+            handler.deleteMedia(result, it)
         }
     }
 }

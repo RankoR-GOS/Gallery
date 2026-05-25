@@ -42,7 +42,7 @@ class LocalMediaHttpServer(
     }
 
     /**
-     * Register a file for serving (e.g., decrypted vault media). Returns the token.
+     * Register a file for serving. Returns the token.
      */
     fun registerFile(token: String, file: File, mimeType: String): String {
         mediaEntries[token] = MediaEntry(uri = null, file = file, mimeType = mimeType, size = file.length())

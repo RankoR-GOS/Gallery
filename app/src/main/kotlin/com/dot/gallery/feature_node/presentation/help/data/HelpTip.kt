@@ -22,7 +22,6 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Navigation
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PhotoLibrary
@@ -77,7 +76,6 @@ enum class PreviewType {
     PHOTO_EDITOR_CROP,
     PHOTO_EDITOR_FILTERS,
     PHOTO_EDITOR_MARKUP,
-    VAULT_LOCK,
     SEARCH_BAR,
     FAVORITES_GRID,
     TRASH_GRID,
@@ -103,7 +101,6 @@ enum class HelpCategory {
     SEARCH,
     AI_FEATURES,
     ALBUMS,
-    VAULT,
     FAVORITES_TRASH,
     METADATA,
     SETTINGS_APPEARANCE,
@@ -128,7 +125,6 @@ fun HelpCategory.displayTitle(): String = when (this) {
     HelpCategory.SEARCH -> stringResource(R.string.help_cat_search)
     HelpCategory.AI_FEATURES -> stringResource(R.string.help_cat_ai)
     HelpCategory.ALBUMS -> stringResource(R.string.help_cat_albums)
-    HelpCategory.VAULT -> stringResource(R.string.help_cat_vault)
     HelpCategory.FAVORITES_TRASH -> stringResource(R.string.help_cat_fav_trash)
     HelpCategory.METADATA -> stringResource(R.string.help_cat_metadata)
     HelpCategory.SETTINGS_APPEARANCE -> stringResource(R.string.help_cat_settings_appearance)
@@ -152,7 +148,6 @@ fun HelpCategory.icon(): ImageVector = when (this) {
     HelpCategory.SEARCH -> Icons.Outlined.Search
     HelpCategory.AI_FEATURES -> Icons.Outlined.AutoAwesome
     HelpCategory.ALBUMS -> Icons.Outlined.Collections
-    HelpCategory.VAULT -> Icons.Outlined.Lock
     HelpCategory.FAVORITES_TRASH -> Icons.Outlined.FavoriteBorder
     HelpCategory.METADATA -> Icons.Outlined.Info
     HelpCategory.SETTINGS_APPEARANCE -> Icons.Outlined.Colorize

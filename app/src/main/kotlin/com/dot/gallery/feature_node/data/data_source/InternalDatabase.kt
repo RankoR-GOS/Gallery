@@ -5,12 +5,9 @@
 
 package com.dot.gallery.feature_node.data.data_source
 
-import androidx.room.AutoMigration
 import androidx.room.Database
-import androidx.room.DeleteColumn
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.room.migration.AutoMigrationSpec
 import com.dot.gallery.feature_node.domain.model.AlbumGroup
 import com.dot.gallery.feature_node.domain.model.AlbumGroupMember
 import com.dot.gallery.feature_node.domain.model.AlbumThumbnail
@@ -31,7 +28,6 @@ import com.dot.gallery.feature_node.domain.model.MergedSubfolderAlbum
 import com.dot.gallery.feature_node.domain.model.MediaVersion
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
-import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.util.Converters
 
 @Database(
@@ -42,8 +38,6 @@ import com.dot.gallery.feature_node.domain.util.Converters
         MediaVersion::class,
         TimelineSettings::class,
         Media.ClassifiedMedia::class,
-        Media.EncryptedMedia2::class,
-        Vault::class,
         MediaMetadataCore::class,
         MediaMetadataVideo::class,
         MediaMetadataFlags::class,
@@ -58,39 +52,13 @@ import com.dot.gallery.feature_node.domain.util.Converters
         MergedSubfolderAlbum::class,
         Collection::class,
         CollectionMedia::class,
-        CollectionAlbum::class
+        CollectionAlbum::class,
     ],
-    version = 22,
+    version = 1,
     exportSchema = true,
-    autoMigrations = [
-        AutoMigration(from = 1, to = 2),
-        AutoMigration(from = 2, to = 3),
-        AutoMigration(from = 3, to = 4),
-        AutoMigration(from = 4, to = 5),
-        AutoMigration(from = 5, to = 6),
-        AutoMigration(from = 6, to = 7),
-        AutoMigration(from = 7, to = 8),
-        AutoMigration(from = 8, to = 9),
-        AutoMigration(from = 9, to = 10),
-        AutoMigration(from = 10, to = 11),
-        AutoMigration(from = 11, to = 12),
-        // Migration 12 to 13 is handled manually in IgnoredAlbumMigration.kt
-        AutoMigration(from = 13, to = 14),
-        AutoMigration(from = 14, to = 15, spec = InternalDatabase.RemoveIconEmojiMigration::class),
-        AutoMigration(from = 15, to = 16),
-        AutoMigration(from = 16, to = 17),
-        AutoMigration(from = 17, to = 18),
-        AutoMigration(from = 18, to = 19),
-        AutoMigration(from = 19, to = 20),
-        AutoMigration(from = 20, to = 21),
-        AutoMigration(from = 21, to = 22),
-    ]
 )
 @TypeConverters(Converters::class)
 abstract class InternalDatabase : RoomDatabase() {
-
-    @DeleteColumn(tableName = "categories", columnName = "iconEmoji")
-    class RemoveIconEmojiMigration : AutoMigrationSpec
 
     abstract fun getPinnedDao(): PinnedDao
 
@@ -99,8 +67,6 @@ abstract class InternalDatabase : RoomDatabase() {
     abstract fun getMediaDao(): MediaDao
 
     abstract fun getClassifierDao(): ClassifierDao
-
-    abstract fun getVaultDao(): VaultDao
 
     abstract fun getMetadataDao(): MetadataDao
 

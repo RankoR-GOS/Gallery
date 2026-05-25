@@ -45,7 +45,7 @@ PanoramaViewer (Compose entry-point)
 | `PanoramaViewer` | Composable entry-point |
 | `ProjectionType` | `SPHERE` or `CYLINDER` enum |
 | `CameraState` | Data class with yaw, pitch, fov, arcDegrees, projectionType |
-| `PanoramaImageLoader` | Interface for custom image loading (encrypted, network, etc.) |
+| `PanoramaImageLoader` | Interface for custom image loading (network, archives, etc.) |
 | `PanoramaLog` | Toggleable debug logger (`PanoramaLog.enabled = true`) |
 
 All other classes are `internal` and not part of the public API.
@@ -53,8 +53,8 @@ All other classes are `internal` and not part of the public API.
 ## Custom Image Loader
 
 By default, `PanoramaViewer` loads images from a content URI using Android's
-`BitmapRegionDecoder`. To load images from other sources — encrypted vault files,
-network streams, custom archives — implement the `PanoramaImageLoader` interface
+`BitmapRegionDecoder`. To load images from other sources — network streams,
+custom archives, generated images — implement the `PanoramaImageLoader` interface
 and pass it via the `imageLoader` parameter.
 
 ### Interface
@@ -85,33 +85,25 @@ lifecycle automatically:
    the requested rectangle at high resolution.
 4. **`close()`** — Called when the viewer is disposed. Release all resources.
 
-### Example: Encrypted Vault Loader
+### Example: Byte Array Loader
 
 ```kotlin
-class EncryptedPanoramaImageLoader(
-    private val keychainHolder: KeychainHolder,
-    private val encryptedFile: File
+class ByteArrayPanoramaImageLoader(
+    private val data: ByteArray,
 ) : PanoramaImageLoader {
 
     private var decoder: BitmapRegionDecoder? = null
-    private var decryptedBytes: ByteArray? = null
 
     override var imageWidth: Int = 0; private set
     override var imageHeight: Int = 0; private set
 
     override fun initialize(): Boolean {
-        // Decrypt once, then use the raw bytes for all decoding
-        val media = with(keychainHolder) {
-            encryptedFile.decryptKotlin<EncryptedMedia>()
-        }
-        decryptedBytes = media.bytes
-
         val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeByteArray(media.bytes, 0, media.bytes.size, opts)
+        BitmapFactory.decodeByteArray(data, 0, data.size, opts)
         imageWidth = opts.outWidth
         imageHeight = opts.outHeight
 
-        decoder = BitmapRegionDecoder.newInstance(media.bytes, 0, media.bytes.size)
+        decoder = BitmapRegionDecoder.newInstance(data, 0, data.size)
         return decoder != null
     }
 
@@ -133,7 +125,7 @@ class EncryptedPanoramaImageLoader(
     }
 
     override fun close() {
-        decoder?.recycle(); decoder = null; decryptedBytes = null
+        decoder?.recycle(); decoder = null
     }
 }
 ```
@@ -142,7 +134,7 @@ class EncryptedPanoramaImageLoader(
 
 ```kotlin
 val loader = remember(media.id) {
-    EncryptedPanoramaImageLoader(keychainHolder, encryptedFile)
+    ByteArrayPanoramaImageLoader(imageBytes)
 }
 PanoramaViewer(
     imageUri       = Uri.EMPTY,          // ignored when imageLoader is set

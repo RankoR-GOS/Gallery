@@ -11,7 +11,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -24,30 +23,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.load.resource.gif.GifDrawable
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Settings
-import com.dot.gallery.core.decoder.EncryptedRegionDecoder
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.core.presentation.components.util.swipe
-import com.dot.gallery.feature_node.data.data_source.KeychainHolder
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.asSubsamplingImage
 import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
-import com.github.panpf.sketch.rememberAsyncImagePainter
-import com.github.panpf.sketch.request.ComposableImageRequest
 import com.github.panpf.zoomimage.GlideZoomAsyncImage
-import com.github.panpf.zoomimage.ZoomImage
 import com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi
 import com.github.panpf.zoomimage.rememberGlideZoomState
 import kotlinx.coroutines.delay
@@ -110,99 +100,45 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
     val zoomState = rememberGlideZoomState()
     val scope = rememberCoroutineScope()
 
-    if (media.isEncrypted) {
-        val painter = rememberAsyncImagePainter(
-            request = ComposableImageRequest(media.getUri().toString()) {
-                crossfade(durationMillis = 200)
-                setExtra(
-                    key = "mediaKeyPreviewEnc",
-                    value = media.idLessKey,
-                )
-                setExtra("realMimeType", media.mimeType)
-            },
-            contentScale = ContentScale.Fit,
-            filterQuality = FilterQuality.None,
-        )
-        val context = LocalContext.current
-        val keychainHolder = remember {
-            KeychainHolder(context)
-        }
-        LaunchedEffect(zoomState.subsampling) {
-            zoomState.subsampling.setRegionDecoders(listOf(EncryptedRegionDecoder.Factory(keychainHolder)))
-            zoomState.setSubsamplingImage(media.asSubsamplingImage(context))
-        }
-        ZoomImage(
-            zoomState = zoomState,
-            painter = painter,
-            modifier = Modifier
-                .fillMaxSize()
-                .swipe(
-                    onSwipeDown = onSwipeDown
-                )
-                .graphicsLayer {
-                    rotationZ = if (isRotating) rotationAnimation else 0f
-                }.then(modifier),
-            onTap = { onItemClick() },
-            onLongPress = {
-                if (!rotationDisabled) {
-                    scope.launch {
-                        isRotating = true
-                        feedbackManager.vibrate()
-                        currentRotation += 90
-                        onImageRotated(currentRotation)
-                        delay(350)
-                        zoomState.zoomable.rotate(currentRotation)
-                        isRotating = false
-                    }
+    GlideZoomAsyncImage(
+        zoomState = zoomState,
+        model = media.getUri(),
+        modifier = Modifier
+            .fillMaxSize()
+            .swipe(
+                onSwipeDown = onSwipeDown
+            )
+            .graphicsLayer {
+                rotationZ = if (isRotating) rotationAnimation else 0f
+            }
+            .then(modifier),
+        onTap = { onItemClick() },
+        onLongPress = {
+            if (!rotationDisabled) {
+                scope.launch {
+                    isRotating = true
+                    feedbackManager.vibrate()
+                    currentRotation += 90
+                    onImageRotated(currentRotation)
+                    delay(350)
+                    zoomState.zoomable.rotate(currentRotation)
+                    isRotating = false
                 }
-            },
-            alignment = Alignment.Center,
-            contentDescription = media.label,
-            scrollBar = null
-        )
-    } else {
-        GlideZoomAsyncImage(
-            zoomState = zoomState,
-            model = media.getUri(),
-            modifier = Modifier
-                .fillMaxSize()
-                .swipe(
-                    onSwipeDown = onSwipeDown
-                )
-                .graphicsLayer {
-                    rotationZ = if (isRotating) rotationAnimation else 0f
-                }
-                .then(modifier),
-            onTap = { onItemClick() },
-            onLongPress = {
-                if (!rotationDisabled) {
-                    scope.launch {
-                        isRotating = true
-                        feedbackManager.vibrate()
-                        currentRotation += 90
-                        onImageRotated(currentRotation)
-                        delay(350)
-                        zoomState.zoomable.rotate(currentRotation)
-                        isRotating = false
-                    }
-                }
-            },
-            alignment = Alignment.Center,
-            contentDescription = media.label,
-            requestBuilderTransform = {
-                var builder = it
-                    .signature(GlideInvalidation.signature(media))
-                    .thumbnail(it.clone().sizeMultiplier(0.1f))
+            }
+        },
+        alignment = Alignment.Center,
+        contentDescription = media.label,
+        requestBuilderTransform = {
+            var builder = it
+                .signature(GlideInvalidation.signature(media))
+                .thumbnail(it.clone().sizeMultiplier(0.1f))
 
-                if (media.label.contains(".gif", ignoreCase = true)) {
-                    builder = builder.decode(GifDrawable::class.java)
-                }
+            if (media.label.contains(".gif", ignoreCase = true)) {
+                builder = builder.decode(GifDrawable::class.java)
+            }
 
-                builder
-            },
-            scrollBar = null
-        )
-    }
+            builder
+        },
+        scrollBar = null
+    )
 }
-
-

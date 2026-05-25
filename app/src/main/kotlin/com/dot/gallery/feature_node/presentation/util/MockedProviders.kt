@@ -29,8 +29,6 @@ import com.dot.gallery.feature_node.domain.model.MergedSubfolderAlbum
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
 import com.dot.gallery.feature_node.domain.model.UIEvent
-import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.domain.util.MediaGroupType
 import kotlinx.coroutines.flow.Flow
@@ -72,8 +70,6 @@ open class MockedMediaDistributor: MediaDistributor {
     override val metadataFlow: StateFlow<MediaMetadataState> = MutableStateFlow(MediaMetadataState())
     override val locationsMediaFlow: SharedFlow<List<LocationMedia>> = MutableStateFlow(emptyList())
     override val geoMediaFlow: StateFlow<List<GeoMedia>> = MutableStateFlow(emptyList())
-    override val vaultsMediaFlow: StateFlow<VaultState> = MutableStateFlow(VaultState())
-    override fun vaultMediaFlow(vault: Vault?): StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
     override val imageEmbeddingsFlow: StateFlow<List<ImageEmbedding>> = MutableStateFlow(emptyList())
     override fun locationBasedMedia(
         gpsLocationNameCity: String,
@@ -162,7 +158,6 @@ class MockedMediaHandler: MediaHandler {
     override suspend fun updateAlbumThumbnail(albumId: Long, newThumbnail: Uri) = Unit
     override fun hasAlbumThumbnail(albumId: Long): Flow<Boolean> = emptyFlow()
     override suspend fun collectMetadataFor(media: Media) = Unit
-    override suspend fun <T : Media> addMedia(vault: Vault, media: T) = Unit
     override fun <T : Media> rotateImage(
         media: T,
         degrees: Int

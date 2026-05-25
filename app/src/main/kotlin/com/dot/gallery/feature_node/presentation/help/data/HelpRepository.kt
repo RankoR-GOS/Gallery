@@ -37,7 +37,7 @@ object HelpRepository {
     fun getMakeMostCategories() = listOf(
         HelpCategory.TIMELINE_ALBUMS, HelpCategory.VIEWING, HelpCategory.VIEWER_ACTIONS,
         HelpCategory.VIEWER_SETTINGS, HelpCategory.EDITING, HelpCategory.SEARCH,
-        HelpCategory.AI_FEATURES, HelpCategory.ALBUMS, HelpCategory.VAULT
+        HelpCategory.AI_FEATURES, HelpCategory.ALBUMS
     )
     fun getExploreMoreCategories() = listOf(
         HelpCategory.FAVORITES_TRASH, HelpCategory.METADATA,
@@ -286,12 +286,6 @@ object HelpRepository {
         HelpTip(id = "action_edit", title = R.string.help_tip_action_edit_title, subtitle = R.string.help_tip_action_edit_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Edit), category = HelpCategory.VIEWER_ACTIONS,
             pages = listOf(TutorialPage(title = R.string.help_tip_action_edit_p1_title, description = R.string.help_tip_action_edit_p1_desc, steps = listOf(R.string.help_tip_action_edit_p1_s1, R.string.help_tip_action_edit_p1_s2, R.string.help_tip_action_edit_p1_s3, R.string.help_tip_action_edit_p1_s4)))),
-        HelpTip(id = "action_hide_vault", title = R.string.help_tip_action_hide_vault_title, subtitle = R.string.help_tip_action_hide_vault_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.Lock), category = HelpCategory.VIEWER_ACTIONS,
-            pages = listOf(
-                TutorialPage(title = R.string.help_tip_action_hide_vault_p1_title, description = R.string.help_tip_action_hide_vault_p1_desc, previewType = PreviewType.VAULT_LOCK),
-                TutorialPage(title = R.string.help_tip_action_hide_vault_p2_title, description = R.string.help_tip_action_hide_vault_p2_desc, steps = listOf(R.string.help_tip_action_hide_vault_p2_s1, R.string.help_tip_action_hide_vault_p2_s2, R.string.help_tip_action_hide_vault_p2_s3, R.string.help_tip_action_hide_vault_p2_s4), previewType = PreviewType.VAULT_LOCK)
-            )),
         HelpTip(id = "action_copy_to_album", title = R.string.help_tip_action_copy_to_album_title, subtitle = R.string.help_tip_action_copy_to_album_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.FolderCopy), category = HelpCategory.VIEWER_ACTIONS,
             pages = listOf(TutorialPage(title = R.string.help_tip_action_copy_to_album_p1_title, description = R.string.help_tip_action_copy_to_album_p1_desc, steps = listOf(R.string.help_tip_action_copy_to_album_p1_s1, R.string.help_tip_action_copy_to_album_p1_s2, R.string.help_tip_action_copy_to_album_p1_s3, R.string.help_tip_action_copy_to_album_p1_s4)))),
@@ -489,36 +483,6 @@ object HelpRepository {
     )
     // endregion
 
-    // region Vault
-    private val VAULT_TIPS = listOf(
-        HelpTip(id = "vault_setup", title = R.string.help_tip_vault_setup_title, subtitle = R.string.help_tip_vault_setup_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.Lock), category = HelpCategory.VAULT,
-            pages = listOf(
-                TutorialPage(title = R.string.help_tip_vault_setup_p1_title, description = R.string.help_tip_vault_setup_p1_desc, previewType = PreviewType.VAULT_LOCK),
-                TutorialPage(title = R.string.help_tip_vault_setup_p2_title, description = R.string.help_tip_vault_setup_p2_desc, steps = listOf(R.string.help_tip_vault_setup_p2_s1, R.string.help_tip_vault_setup_p2_s2, R.string.help_tip_vault_setup_p2_s3, R.string.help_tip_vault_setup_p2_s4), previewType = PreviewType.VAULT_LOCK),
-                TutorialPage(title = R.string.help_tip_vault_setup_p3_title, description = R.string.help_tip_vault_setup_p3_desc, previewType = PreviewType.VAULT_LOCK)
-            )),
-        HelpTip(id = "vault_add", title = R.string.help_tip_vault_add_title, subtitle = R.string.help_tip_vault_add_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.Lock), category = HelpCategory.VAULT,
-            pages = listOf(
-                TutorialPage(title = R.string.help_tip_vault_add_p1_title, description = R.string.help_tip_vault_add_p1_desc, previewType = PreviewType.VAULT_LOCK),
-                TutorialPage(title = R.string.help_tip_vault_add_p2_title, description = R.string.help_tip_vault_add_p2_desc, steps = listOf(R.string.help_tip_vault_add_p2_s1, R.string.help_tip_vault_add_p2_s2, R.string.help_tip_vault_add_p2_s3, R.string.help_tip_vault_add_p2_s4), previewType = PreviewType.VAULT_LOCK)
-            )),
-        HelpTip(id = "vault_restore", title = R.string.help_tip_vault_restore_title, subtitle = R.string.help_tip_vault_restore_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.Lock), category = HelpCategory.VAULT,
-            pages = listOf(TutorialPage(title = R.string.help_tip_vault_restore_p1_title, description = R.string.help_tip_vault_restore_p1_desc, previewType = PreviewType.VAULT_LOCK))),
-        HelpTip(id = "vault_video_streaming", title = R.string.help_tip_vault_video_streaming_title, subtitle = R.string.help_tip_vault_video_streaming_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.Lock), category = HelpCategory.VAULT,
-            pages = listOf(TutorialPage(title = R.string.help_tip_vault_video_streaming_p1_title, description = R.string.help_tip_vault_video_streaming_p1_desc))),
-        HelpTip(id = "vault_overhaul", title = R.string.help_tip_vault_overhaul_title, subtitle = R.string.help_tip_vault_overhaul_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.Lock), category = HelpCategory.VAULT,
-            pages = listOf(
-                TutorialPage(title = R.string.help_tip_vault_overhaul_p1_title, description = R.string.help_tip_vault_overhaul_p1_desc, steps = listOf(R.string.help_tip_vault_overhaul_p1_s1, R.string.help_tip_vault_overhaul_p1_s2, R.string.help_tip_vault_overhaul_p1_s3), previewType = PreviewType.VAULT_LOCK),
-                TutorialPage(title = R.string.help_tip_vault_overhaul_p2_title, description = R.string.help_tip_vault_overhaul_p2_desc, steps = listOf(R.string.help_tip_vault_overhaul_p2_s1, R.string.help_tip_vault_overhaul_p2_s2, R.string.help_tip_vault_overhaul_p2_s3), previewType = PreviewType.VAULT_LOCK)
-            ))
-    )
-    // endregion
-
     // region Favorites & Trash
     private val FAV_TRASH_TIPS = listOf(
         HelpTip(id = "fav_add", title = R.string.help_tip_fav_add_title, subtitle = R.string.help_tip_fav_add_subtitle,
@@ -701,7 +665,7 @@ object HelpRepository {
     // region Aggregation
     private val ALL_TIPS: List<HelpTip> = BASICS_TIPS + NAVIGATION_TIPS + PERSONALIZATION_TIPS +
         TIMELINE_ALBUM_TIPS + VIEWING_TIPS + VIEWER_ACTION_TIPS + VIEWER_SETTINGS_TIPS +
-        EDITING_TIPS + SEARCH_TIPS + AI_TIPS + ALBUM_TIPS + VAULT_TIPS +
+        EDITING_TIPS + SEARCH_TIPS + AI_TIPS + ALBUM_TIPS +
         FAV_TRASH_TIPS + METADATA_TIPS +
         SETTINGS_APPEARANCE_TIPS + SETTINGS_GENERAL_TIPS + SETTINGS_NAV_TIPS + SETTINGS_SMART_TIPS +
         GESTURE_TIPS + SELECTION_TIPS + ACCESSIBILITY_TIPS

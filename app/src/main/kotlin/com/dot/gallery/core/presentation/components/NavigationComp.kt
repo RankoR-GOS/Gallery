@@ -115,8 +115,7 @@ import com.dot.gallery.feature_node.presentation.setup.SetupScreen
 import com.dot.gallery.feature_node.presentation.timeline.TimelineScreen
 import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.util.Screen
-import com.dot.gallery.feature_node.presentation.vault.VaultScreen
-import com.dot.gallery.feature_node.presentation.vault.utils.rememberBiometricState
+import com.dot.gallery.feature_node.presentation.security.rememberBiometricState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
@@ -168,9 +167,6 @@ fun NavigationComp(
     var lastShouldDisplay by rememberSaveable {
         mutableStateOf(bottomNavEntries.find { item -> item.route == currentDest } != null)
     }
-    val shouldSkipAuth = rememberSaveable {
-        mutableStateOf(false)
-    }
     val allowBlur by rememberAllowBlur()
 
     LaunchedEffect(navBackStackEntry) {
@@ -181,11 +177,8 @@ fun NavigationComp(
                 bottomBarState.value = shouldDisplayBottomBar
                 lastShouldDisplay = shouldDisplayBottomBar
             }
-            if (it != Screen.VaultScreen()) {
-                shouldSkipAuth.value = false
-            }
             systemBarFollowThemeState.value =
-                !((it.contains(Screen.MediaViewScreen.route) && allowBlur) || it.contains(Screen.VaultScreen()))
+                !(it.contains(Screen.MediaViewScreen.route) && allowBlur)
         }
     }
     val selector = LocalMediaSelector.current
@@ -196,8 +189,6 @@ fun NavigationComp(
     val albumsState = navViewModel.albumsState.collectAsStateWithLifecycle()
     val timelineState = navViewModel.timelineMediaState.collectAsStateWithLifecycle()
     val metadataState = navViewModel.metadataState.collectAsStateWithLifecycle()
-    val vaultState = navViewModel.vaultState.collectAsStateWithLifecycle()
-
     LaunchedEffect(permissionState) {
         navViewModel.updatePermissionGranted(permissionState)
     }
@@ -655,7 +646,6 @@ fun NavigationComp(
                     mediaState = mediaState,
                     metadataState = metadataState,
                     albumsState = albumsState,
-                    vaultState = vaultState,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -695,7 +685,6 @@ fun NavigationComp(
                     mediaState = mediaState,
                     metadataState = metadataState,
                     albumsState = albumsState,
-                    vaultState = vaultState,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -723,7 +712,6 @@ fun NavigationComp(
                     mediaState = mediaState,
                     metadataState = metadataState,
                     albumsState = albumsState,
-                    vaultState = vaultState,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -738,16 +726,6 @@ fun NavigationComp(
             ) {
                 IgnoredScreen(
                     albumsState = albumsState
-                )
-            }
-
-            composable(
-                route = Screen.VaultScreen()
-            ) {
-                VaultScreen(
-                    paddingValues = paddingValues,
-                    toggleRotate = toggleRotate,
-                    shouldSkipAuth = shouldSkipAuth
                 )
             }
 
@@ -959,7 +937,6 @@ fun NavigationComp(
                     mediaState = mediaState,
                     metadataState = metadataState,
                     albumsState = albumsState,
-                    vaultState = vaultState,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -999,7 +976,6 @@ fun NavigationComp(
                     mediaState = mediaState,
                     metadataState = metadataState,
                     albumsState = albumsState,
-                    vaultState = vaultState,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -1073,7 +1049,6 @@ fun NavigationComp(
                     mediaState = mediaState,
                     metadataState = metadataState,
                     albumsState = albumsState,
-                    vaultState = vaultState,
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this
                 )
@@ -1247,7 +1222,6 @@ fun NavigationComp(
                     mediaState = mediaState,
                     metadataState = metadataState,
                     albumsState = albumsState,
-                    vaultState = vaultState,
                     target = "location_${gpsLocationNameCity}_$gpsLocationNameCountry",
                     sharedTransitionScope = this@SharedTransitionLayout,
                     animatedContentScope = this

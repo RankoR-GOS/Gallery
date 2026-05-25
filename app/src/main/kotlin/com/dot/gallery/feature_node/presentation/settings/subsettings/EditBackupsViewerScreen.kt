@@ -399,7 +399,6 @@ fun EditBackupsViewerScreen(
                                 isPhotosphere = false,
                                 isMotionPhoto = false,
                                 motionPhotoState = null,
-                                currentVault = null,
                                 rotationDisabled = true,
                                 onImageRotated = {},
                                 onItemClick = {

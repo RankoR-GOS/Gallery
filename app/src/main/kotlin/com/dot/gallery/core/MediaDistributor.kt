@@ -14,8 +14,6 @@ import com.dot.gallery.feature_node.domain.model.LockedAlbum
 import com.dot.gallery.feature_node.domain.model.MergedSubfolderAlbum
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
-import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.domain.model.VaultState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -68,12 +66,6 @@ interface MediaDistributor {
     val metadataFlow: Flow<MediaMetadataState>
     val locationsMediaFlow: Flow<List<LocationMedia>>
     val geoMediaFlow: Flow<List<GeoMedia>>
-
-    /**
-     * Vault
-     */
-    val vaultsMediaFlow: StateFlow<VaultState>
-    fun vaultMediaFlow(vault: Vault?): StateFlow<MediaState<Media.UriMedia>>
 
     /**
      * Collections

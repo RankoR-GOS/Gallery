@@ -12,7 +12,6 @@ import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.CopyAll
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.EnhancedEncryption
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.automirrored.outlined.RotateRight
@@ -98,11 +97,6 @@ enum class SelectionAction(
         descriptionRes = R.string.action_desc_trash,
         zone = ActionZone.BOTTOM,
     ),
-    ADD_TO_VAULT(
-        labelRes = R.string.hide,
-        descriptionRes = R.string.action_desc_hide,
-        zone = ActionZone.BOTTOM,
-    ),
     EDIT(
         labelRes = R.string.edit,
         descriptionRes = R.string.action_desc_edit,
@@ -126,7 +120,6 @@ enum class SelectionAction(
             COPY -> Icons.Outlined.CopyAll
             MOVE -> Icons.AutoMirrored.Outlined.DriveFileMove
             TRASH -> Icons.Outlined.DeleteOutline
-            ADD_TO_VAULT -> Icons.Outlined.EnhancedEncryption
             EDIT -> Icons.Outlined.Edit
             ROTATE -> Icons.AutoMirrored.Outlined.RotateRight
         }

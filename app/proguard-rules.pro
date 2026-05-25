@@ -36,7 +36,7 @@
 -dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options$GpuBackend
 -dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options
 
-# Keep custom Glide decoders and model loaders (HEIF/JXL/Encrypted)
+# Keep custom Glide decoders and model loaders (HEIF/JXL)
 -keep class com.dot.gallery.core.decoder.glide.** { *; }
 -keep class com.radzivon.bartoshyk.avif.** { *; }
 -keep class com.awxkee.jxlcoder.** { *; }

@@ -13,16 +13,9 @@ import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.Media.UriMedia
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
-import com.dot.gallery.feature_node.domain.util.getUri
-import androidx.work.WorkManager
-import com.dot.gallery.core.workers.VaultOperationWorker
-import com.dot.gallery.core.workers.enqueueVaultOperation
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -35,7 +28,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 @Suppress("UNCHECKED_CAST")
 @HiltViewModel(assistedFactory = StandaloneViewModel.Factory::class)
@@ -43,7 +35,6 @@ class StandaloneViewModel @AssistedInject constructor(
     @param:ApplicationContext
     private val applicationContext: Context,
     private val repository: MediaRepository,
-    private val workManager: WorkManager,
     distributor: MediaDistributor,
     @Assisted private val reviewMode: Boolean,
     @Assisted private val dataList: List<Uri>
@@ -81,23 +72,11 @@ class StandaloneViewModel @AssistedInject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, MediaState())
 
 
-    val vaults = distributor.vaultsMediaFlow
-        .stateIn(viewModelScope, SharingStarted.Eagerly, VaultState())
-
     val albumsState = distributor.albumsFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, AlbumState())
 
     val metadataState = distributor.metadataFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, MediaMetadataState())
-
-
-    fun addMedia(vault: Vault, media: UriMedia) {
-        workManager.enqueueVaultOperation(
-            operation = VaultOperationWorker.OP_ENCRYPT,
-            media = listOf(media.getUri()),
-            vault = vault
-        )
-    }
 
     private fun <T: Media> mediaFromUris(): MediaState<T> {
         val mediaList = dataList.mapNotNull {

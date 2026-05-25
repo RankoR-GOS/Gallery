@@ -63,15 +63,12 @@ import com.dot.gallery.core.presentation.components.NavigationBarSpacer
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
-import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.domain.model.VaultState
 import com.dot.gallery.feature_node.domain.model.rememberLocationData
 import com.dot.gallery.feature_node.domain.model.rememberMediaDateCaption
 import com.dot.gallery.feature_node.domain.util.canMakeActions
 import com.dot.gallery.feature_node.domain.util.fileExtension
 import com.dot.gallery.feature_node.domain.util.getCategory
 import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.domain.util.isEncrypted
 import com.dot.gallery.feature_node.domain.util.isRaw
 import com.dot.gallery.feature_node.domain.util.isTrashed
 import com.dot.gallery.feature_node.domain.util.isVideo
@@ -98,11 +95,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun <T : Media> MediaViewSheetDetails(
     albumsState: State<AlbumState>,
-    vaultState: State<VaultState>,
     metadataState: State<MediaMetadataState>,
     currentMedia: T?,
-    restoreMedia: ((Vault, T, () -> Unit) -> Unit)?,
-    currentVault: Vault?,
     motionPhotoState: MotionPhotoState? = null,
 ) {
     val metadata by rememberedDerivedState(metadataState.value, currentMedia) {
@@ -328,13 +322,6 @@ fun <T : Media> MediaViewSheetDetails(
                                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                                     )
                                 }
-                                if (currentMedia.isEncrypted) {
-                                    MediaInfoChip(
-                                        text = stringResource(R.string.encrypted),
-                                        containerColor = MaterialTheme.colorScheme.error,
-                                        contentColor = MaterialTheme.colorScheme.onError
-                                    )
-                                }
                             }
                             LocationItem(
                                 iconBackgroundModifier = Modifier
@@ -504,30 +491,28 @@ fun <T : Media> MediaViewSheetDetails(
                                     onClick = it.onClick
                                 )
                             }
-                            if (!currentMedia.isEncrypted) {
-                                MediaInfoRow(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp),
-                                    label = stringResource(R.string.view_all_metadata),
-                                    content = stringResource(R.string.metadata),
-                                    icon = Icons.Outlined.Info,
-                                    iconBackgroundModifier = Modifier
-                                        .then(iconBackgroundModifier)
-                                        .hazeEffect(
-                                            state = LocalHazeState.current,
-                                            style = iconBackgroundHazeStyle
-                                        ),
-                                    onClick = {
-                                        allMetadataEventHandler.navigate(
-                                            Screen.MetadataViewScreen.uriAndType(
-                                                mediaUri = currentMedia.getUri().toString(),
-                                                isVideo = currentMedia.isVideo
-                                            )
+                            MediaInfoRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                label = stringResource(R.string.view_all_metadata),
+                                content = stringResource(R.string.metadata),
+                                icon = Icons.Outlined.Info,
+                                iconBackgroundModifier = Modifier
+                                    .then(iconBackgroundModifier)
+                                    .hazeEffect(
+                                        state = LocalHazeState.current,
+                                        style = iconBackgroundHazeStyle
+                                    ),
+                                onClick = {
+                                    allMetadataEventHandler.navigate(
+                                        Screen.MetadataViewScreen.uriAndType(
+                                            mediaUri = currentMedia.getUri().toString(),
+                                            isVideo = currentMedia.isVideo
                                         )
-                                    }
-                                )
-                            }
+                                    )
+                                }
+                            )
                             if (category != null) {
                                 val mediaCategoryCounter by handler.getClassifiedMediaCountAtCategory(
                                     category!!
@@ -585,9 +570,6 @@ fun <T : Media> MediaViewSheetDetails(
                         MediaViewSheetActions(
                             media = currentMedia,
                             albumsState = albumsState,
-                            vaults = vaultState,
-                            restoreMedia = restoreMedia,
-                            currentVault = currentVault
                         )
                     }
                     item {

@@ -6,11 +6,7 @@
 package com.dot.gallery.core.presentation.components
 
 import android.app.Activity
-import android.content.Intent
-import android.provider.MediaStore
-import android.widget.Toast
 import androidx.activity.compose.LocalActivity
-import androidx.activity.result.IntentSenderRequest
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.slideInVertically
@@ -41,7 +37,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -53,7 +48,6 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -84,7 +78,6 @@ import com.dot.gallery.R
 import com.dot.gallery.core.LocalMediaDistributor
 import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.LocalMediaSelector
-import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberSelectionSheetConfig
 import com.dot.gallery.core.Settings.Misc.rememberShowFavoriteButton
@@ -96,8 +89,6 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.SelectionAction
-import com.dot.gallery.feature_node.domain.model.Vault
-import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.collection.CollectionViewModel
 import com.dot.gallery.feature_node.presentation.collection.components.AddToCollectionSheet
 import com.dot.gallery.feature_node.presentation.exif.CopyMediaSheet
@@ -111,17 +102,12 @@ import com.dot.gallery.feature_node.presentation.util.launchEditIntent
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberMediaInfo
-import com.dot.gallery.feature_node.presentation.util.shareMediaWithVaultSupport
-import com.dot.gallery.feature_node.presentation.vault.VaultViewModel
-import com.dot.gallery.feature_node.presentation.vault.components.AddToVaultSheet
-import com.dot.gallery.feature_node.presentation.vault.components.SelectVaultSheet
+import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.ui.theme.Shapes
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -130,8 +116,6 @@ fun <T : Media> BoxScope.SelectionSheet(
     allMedia: MediaState<T>,
     selectedMedia: SnapshotStateList<T>,
     collectionId: Long? = null,
-    isInVault: Boolean = false,
-    currentVault: Vault? = null,
 ) {
     val albumsState = LocalMediaDistributor.current.albumsFlow.collectAsStateWithLifecycle()
     val selector = LocalMediaSelector.current
@@ -146,14 +130,6 @@ fun <T : Media> BoxScope.SelectionSheet(
     val copySheetState = rememberAppBottomSheetState()
     var showCollectionSheet by rememberSaveable { mutableStateOf(false) }
     val collectionViewModel = hiltViewModel<CollectionViewModel>()
-    val vaultViewModel = hiltViewModel<VaultViewModel>()
-    val vaultSheetState = rememberAppBottomSheetState()
-    // Tracks what the vault sheet is for: "hide", "copy", or "move"
-    var vaultSheetAction by rememberSaveable { mutableStateOf("hide") }
-    var vaultEncryptBehavior by Settings.Vault.rememberVaultEncryptBehavior()
-    val addToVaultSheetState = rememberAppBottomSheetState()
-    var hideTargetVault by remember { mutableStateOf<Vault?>(null) }
-    val vaults = vaultViewModel.vaultState.collectAsStateWithLifecycle()
     var showInfoSheet by rememberSaveable { mutableStateOf(false) }
     val metadataState = LocalMediaDistributor.current.metadataFlow.collectAsStateWithLifecycle(
         initialValue = MediaMetadataState()
@@ -178,11 +154,8 @@ fun <T : Media> BoxScope.SelectionSheet(
         else Modifier.wrapContentWidth()
     }
     val config by rememberSelectionSheetConfig()
-    val sanitizedConfig = remember(config, isInVault) {
-        val base = config.sanitized()
-        if (isInVault && SelectionAction.ADD_TO_VAULT !in base.bottomActions) {
-            base.copy(bottomActions = base.bottomActions + SelectionAction.ADD_TO_VAULT)
-        } else base
+    val sanitizedConfig = remember(config) {
+        config.sanitized()
     }
     val showFavoriteButton by rememberShowFavoriteButton()
     val trashEnabled = rememberTrashEnabled()
@@ -331,7 +304,7 @@ fun <T : Media> BoxScope.SelectionSheet(
             }
             // Middle actions — full-width pill buttons
             sanitizedConfig.middleActions.forEach { action ->
-                val isVisible = isActionVisible(action, collectionId, showFavoriteButton, isInVault)
+                val isVisible = isActionVisible(action, collectionId, showFavoriteButton)
                 if (isVisible) {
                     when (action) {
                         SelectionAction.COLLECTION -> {
@@ -388,7 +361,7 @@ fun <T : Media> BoxScope.SelectionSheet(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 sanitizedConfig.bottomActions.forEach { action ->
-                    val isVisible = isActionVisible(action, collectionId, showFavoriteButton, isInVault)
+                    val isVisible = isActionVisible(action, collectionId, showFavoriteButton)
                     if (isVisible) {
                         when (action) {
                             SelectionAction.SHARE -> {
@@ -398,7 +371,7 @@ fun <T : Media> BoxScope.SelectionSheet(
                                     title = stringResource(action.labelRes)
                                 ) {
                                     scope.launch {
-                                        context.shareMediaWithVaultSupport(selectedMedia, currentVault = currentVault)
+                                        context.shareMedia(selectedMedia)
                                     }
                                 }
                             }
@@ -420,12 +393,7 @@ fun <T : Media> BoxScope.SelectionSheet(
                                     tabletMode = tabletMode,
                                     title = stringResource(action.labelRes)
                                 ) {
-                                    if (isInVault) {
-                                        vaultSheetAction = "copy"
-                                        scope.launch { vaultSheetState.show() }
-                                    } else {
-                                        scope.launch { copySheetState.show() }
-                                    }
+                                    scope.launch { copySheetState.show() }
                                 }
                             }
                             SelectionAction.MOVE -> {
@@ -434,74 +402,31 @@ fun <T : Media> BoxScope.SelectionSheet(
                                     tabletMode = tabletMode,
                                     title = stringResource(action.labelRes)
                                 ) {
-                                    if (isInVault) {
-                                        vaultSheetAction = "move"
-                                        scope.launch { vaultSheetState.show() }
-                                    } else {
-                                        scope.launch { moveSheetState.show() }
-                                    }
+                                    scope.launch { moveSheetState.show() }
                                 }
                             }
                             
                             SelectionAction.TRASH -> {
-                                if (isInVault) {
-                                    SelectionBarColumn(
-                                        imageVector = action.icon,
-                                        tabletMode = tabletMode,
-                                        title = stringResource(R.string.trash_delete)
-                                    ) {
-                                        scope.launch {
-                                            val vault = currentVault ?: vaultViewModel.currentVault.value ?: return@launch
-                                            selectedMedia.filterIsInstance<Media.UriMedia>().forEach { media ->
-                                                vaultViewModel.deleteMedia(vault, media) {}
-                                            }
-                                            selector.clearSelection()
-                                        }
-                                    }
-                                } else {
-                                    val trashEnabledRes = remember(trashEnabled) {
-                                        if (trashEnabled.value) R.string.trash else R.string.trash_delete
-                                    }
-                                    SelectionBarColumn(
-                                        imageVector = action.icon,
-                                        tabletMode = tabletMode,
-                                        title = stringResource(id = trashEnabledRes),
-                                        onItemLongClick = {
-                                            scope.launch {
-                                                shouldMoveToTrash = false
-                                                trashSheetState.show()
-                                            }
-                                        },
-                                        onItemClick = {
-                                            scope.launch {
-                                                shouldMoveToTrash = true
-                                                trashSheetState.show()
-                                            }
-                                        }
-                                    )
+                                val trashEnabledRes = remember(trashEnabled) {
+                                    if (trashEnabled.value) R.string.trash else R.string.trash_delete
                                 }
-                            }
-                            SelectionAction.ADD_TO_VAULT -> {
                                 SelectionBarColumn(
-                                    imageVector = if (isInVault) Icons.Outlined.Restore else action.icon,
+                                    imageVector = action.icon,
                                     tabletMode = tabletMode,
-                                    title = stringResource(
-                                        if (isInVault) R.string.restore else action.labelRes
-                                    )
-                                ) {
-                                    if (isInVault) {
+                                    title = stringResource(id = trashEnabledRes),
+                                    onItemLongClick = {
                                         scope.launch {
-                                            val vault = currentVault ?: vaultViewModel.currentVault.value ?: return@launch
-                                            selectedMedia.filterIsInstance<Media.UriMedia>().forEach { media ->
-                                                vaultViewModel.restoreMedia(vault, media) {}
-                                            }
-                                            selector.clearSelection()
+                                            shouldMoveToTrash = false
+                                            trashSheetState.show()
                                         }
-                                    } else {
-                                        vaultSheetAction = "hide"
-                                        scope.launch { vaultSheetState.show() }
+                                    },
+                                    onItemClick = {
+                                        scope.launch {
+                                            shouldMoveToTrash = true
+                                            trashSheetState.show()
+                                        }
                                     }
-                                }
+                                )
                             }
                             SelectionAction.EDIT -> {
                                 SelectionBarColumn(
@@ -527,107 +452,6 @@ fun <T : Media> BoxScope.SelectionSheet(
                                 }
                             }
                             else -> {} // Top-zone actions don't appear in bottom bar
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    SelectVaultSheet(
-        state = vaultSheetState,
-        vaultState = vaults.value,
-        excludeVault = if (isInVault) vaultViewModel.currentVault.value else null,
-        onVaultSelected = { targetVault ->
-            scope.launch {
-                when (vaultSheetAction) {
-                    "copy", "move" -> {
-                        val isCopy = vaultSheetAction == "copy"
-                        val sourceVault = vaultViewModel.currentVault.value ?: return@launch
-                        val mediaToTransfer = selectedMedia.filterIsInstance<Media.UriMedia>()
-                        for (media in mediaToTransfer) {
-                            vaultViewModel.transferMedia(sourceVault, targetVault, media, copy = isCopy)
-                        }
-                        // Switch to target vault so the user sees the result
-                        vaultViewModel.currentVault.value = targetVault
-                    }
-                    else -> {
-                        // Regular hide: encrypt into selected vault
-                        when (vaultEncryptBehavior) {
-                            Settings.Vault.ENCRYPT_DELETE -> {
-                                Toast.makeText(context, context.getString(R.string.vault_hide_in_progress), Toast.LENGTH_SHORT).show()
-                                vaultViewModel.encryptAndRequestDeletion(
-                                    targetVault,
-                                    selectedMedia.map { it.getUri() }
-                                )
-                            }
-                            Settings.Vault.ENCRYPT_KEEP -> {
-                                Toast.makeText(context, context.getString(R.string.vault_hide_in_progress), Toast.LENGTH_SHORT).show()
-                                vaultViewModel.addMediaKeepOriginals(
-                                    targetVault,
-                                    selectedMedia.map { it.getUri() }
-                                )
-                            }
-                            else -> {
-                                hideTargetVault = targetVault
-                                addToVaultSheetState.show()
-                                return@launch // Don't clear selection yet
-                            }
-                        }
-                    }
-                }
-                selector.clearSelection()
-            }
-        }
-    )
-
-    AddToVaultSheet(
-        state = addToVaultSheetState,
-        onEncryptAndDelete = {
-            val vault = hideTargetVault ?: return@AddToVaultSheet
-            Toast.makeText(context, context.getString(R.string.vault_hide_in_progress), Toast.LENGTH_SHORT).show()
-            scope.launch {
-                vaultViewModel.encryptAndRequestDeletion(vault, selectedMedia.map { it.getUri() })
-                selector.clearSelection()
-            }
-        },
-        onEncryptAndKeep = {
-            val vault = hideTargetVault ?: return@AddToVaultSheet
-            Toast.makeText(context, context.getString(R.string.vault_hide_in_progress), Toast.LENGTH_SHORT).show()
-            scope.launch {
-                vaultViewModel.addMediaKeepOriginals(vault, selectedMedia.map { it.getUri() })
-                selector.clearSelection()
-            }
-        },
-        onBehaviorChanged = { vaultEncryptBehavior = it }
-    )
-
-    val hideResult = rememberActivityResult(onResultOk = {})
-    // Show user feedback (Toast) for hide operations
-    LaunchedEffect(Unit) {
-        vaultViewModel.userMessage.collect { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-        }
-    }
-    // Collect deletion batches for permission request
-    LaunchedEffect(Unit) {
-        vaultViewModel.pendingDeletions.collect { leftovers ->
-            if (leftovers.isNotEmpty()) {
-                if (SdkCompat.supportsMediaStoreRequests) {
-                    val intentSender = MediaStore.createDeleteRequest(
-                        context.contentResolver,
-                        leftovers
-                    ).intentSender
-                    val senderRequest = IntentSenderRequest.Builder(intentSender)
-                        .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
-                        .build()
-                    hideResult.launch(senderRequest)
-                } else {
-                    withContext(Dispatchers.IO) {
-                        leftovers.forEach { uri ->
-                            runCatching {
-                                context.contentResolver.delete(uri, null, null)
-                            }
                         }
                     }
                 }
@@ -730,18 +554,7 @@ private fun isActionVisible(
     action: SelectionAction,
     collectionId: Long?,
     showFavoriteButton: Boolean,
-    isInVault: Boolean = false,
 ): Boolean {
-    if (isInVault) {
-        // In vault: only allow close, select_all, share, trash (delete), restore (ADD_TO_VAULT)
-        return action in setOf(
-            SelectionAction.CLOSE,
-            SelectionAction.SELECT_ALL,
-            SelectionAction.SHARE,
-            SelectionAction.TRASH,
-            SelectionAction.ADD_TO_VAULT,
-        )
-    }
     return when (action.requiresCondition) {
         ActionCondition.NONE -> true
         ActionCondition.SUPPORTS_FAVORITES -> showFavoriteButton && SdkCompat.supportsFavorites

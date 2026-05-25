@@ -11,7 +11,7 @@ import com.radzivon.bartoshyk.avif.coder.HeifCoder
 import java.io.InputStream
 
 /**
- * Decodes HEIF/AVIF from an InputStream (already decrypted if using EncryptedFileModelLoader).
+ * Decodes HEIF/AVIF from an InputStream.
  * Relies on HeifCoder (same as SketchHeifDecoder).
  */
 class HeifBitmapDecoder(

@@ -31,11 +31,9 @@ import com.dot.gallery.feature_node.domain.model.LockedAlbum
 import com.dot.gallery.feature_node.domain.model.MergedSubfolderAlbum
 import com.dot.gallery.feature_node.domain.model.PinnedAlbum
 import com.dot.gallery.feature_node.domain.model.TimelineSettings
-import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import kotlinx.coroutines.flow.Flow
-import java.io.File
 
 interface MediaRepository {
 
@@ -145,54 +143,6 @@ interface MediaRepository {
         relativePath: String,
         displayName: String
     ): Boolean
-
-    fun getVaults(): Flow<Resource<List<Vault>>>
-
-    suspend fun createVault(
-        vault: Vault,
-        transferable: Boolean = false,
-        onSuccess: () -> Unit,
-        onFailed: (reason: String) -> Unit
-    )
-
-    suspend fun deleteVault(
-        vault: Vault,
-        onSuccess: () -> Unit,
-        onFailed: (reason: String) -> Unit
-    )
-
-    fun getEncryptedMedia(vault: Vault?): Flow<Resource<List<UriMedia>>>
-
-    suspend fun <T: Media> addMedia(vault: Vault, media: T): Boolean
-
-    suspend fun <T: Media> restoreMedia(vault: Vault, media: T): Boolean
-
-    suspend fun <T: Media> transferMedia(sourceVault: Vault, targetVault: Vault, media: T, copy: Boolean): Boolean
-
-    suspend fun <T: Media> deleteEncryptedMedia(vault: Vault, media: T): Boolean
-
-    suspend fun deleteAllEncryptedMedia(
-        vault: Vault,
-        onSuccess: () -> Unit,
-        onFailed: (failedFiles: List<File>) -> Unit
-    ): Boolean
-
-    suspend fun getUnmigratedVaultMediaSize(): Int
-
-    suspend fun importPortableVault(
-        vault: Vault,
-        base64Key: String,
-        force: Boolean = false
-    ): Boolean
-
-    suspend fun migrateVaultToPortable(
-        vault: Vault,
-        onProgress: (current: Int, total: Int) -> Unit = { _, _ -> }
-    ): Boolean
-
-    suspend fun migrateVault()
-
-    suspend fun restoreVault(vault: Vault)
 
     fun getTimelineSettings(): Flow<TimelineSettings?>
 

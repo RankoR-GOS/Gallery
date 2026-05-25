@@ -10,10 +10,7 @@ import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.workers.CategoryWorker
-import com.dot.gallery.core.workers.VaultOperationWorker
-import com.dot.gallery.core.workers.enqueueVaultOperation
 import com.dot.gallery.core.workers.startCategoryClassification
-import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.core.workers.startClassification
 import com.dot.gallery.core.workers.stopCategoryClassification
 import com.dot.gallery.core.workers.stopClassification
@@ -22,7 +19,6 @@ import com.dot.gallery.feature_node.domain.model.Category
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.model.Vault
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.util.update
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -287,14 +283,6 @@ class CategoriesViewModel @Inject constructor(
             }
             selectionState.update(selectedMedia.isNotEmpty())
         }
-    }
-
-    fun <T: Media> addMedia(vault: Vault, media: T) {
-        workManager.enqueueVaultOperation(
-            operation = VaultOperationWorker.OP_ENCRYPT,
-            media = listOf(media.getUri()),
-            vault = vault
-        )
     }
 
     /**
