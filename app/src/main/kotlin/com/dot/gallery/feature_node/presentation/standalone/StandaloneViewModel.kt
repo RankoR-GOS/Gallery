@@ -36,15 +36,19 @@ class StandaloneViewModel @AssistedInject constructor(
     private val applicationContext: Context,
     private val repository: MediaRepository,
     distributor: MediaDistributor,
-    @Assisted private val reviewMode: Boolean,
-    @Assisted private val dataList: List<Uri>
+    @Assisted("reviewMode") private val reviewMode: Boolean,
+    @Assisted("secureReviewMode") private val secureReviewMode: Boolean,
+    @Assisted private val dataList: List<Uri>,
 ) : ViewModel() {
 
     @AssistedFactory
     interface Factory {
         fun create(
+            @Assisted("reviewMode")
             reviewMode: Boolean,
-            dataList: List<Uri>
+            @Assisted("secureReviewMode")
+            secureReviewMode: Boolean,
+            dataList: List<Uri>,
         ): StandaloneViewModel
     }
 
@@ -55,7 +59,11 @@ class StandaloneViewModel @AssistedInject constructor(
         try { ContentUris.parseId(uri) } catch (_: NumberFormatException) { null }
     } ?: -1L
 
-    var mediaState = repository.getMediaListByUris(dataList, reviewMode)
+    var mediaState = repository.getMediaListByUris(
+        listOfUris = dataList,
+        reviewMode = reviewMode,
+        onlyMatching = secureReviewMode,
+    )
         .map {
             val data = it.data
             if (data != null) {
@@ -78,7 +86,7 @@ class StandaloneViewModel @AssistedInject constructor(
     val metadataState = distributor.metadataFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, MediaMetadataState())
 
-    private fun <T: Media> mediaFromUris(): MediaState<T> {
+    private fun <T : Media> mediaFromUris(): MediaState<T> {
         val mediaList = dataList.mapNotNull {
             Media.createFromUri(applicationContext, it) as T?
         }

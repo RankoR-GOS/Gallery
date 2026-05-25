@@ -82,7 +82,11 @@ interface MediaRepository {
 
     fun getAlbumsWithType(allowedMedia: AllowedMedia): Flow<Resource<List<Album>>>
 
-    fun getMediaListByUris(listOfUris: List<Uri>, reviewMode: Boolean, onlyMatching: Boolean = false): Flow<Resource<List<UriMedia>>>
+    fun getMediaListByUris(
+        listOfUris: List<Uri>,
+        reviewMode: Boolean,
+        onlyMatching: Boolean = false,
+    ): Flow<Resource<List<UriMedia>>>
 
     suspend fun <T: Media> toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,

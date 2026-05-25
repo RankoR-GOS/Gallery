@@ -29,9 +29,10 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaType
 import com.dot.gallery.feature_node.domain.util.isTrashed
 import com.dot.gallery.feature_node.presentation.util.getDate
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import com.dot.gallery.feature_node.presentation.util.printWarning
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 /**
  * Media uri flow
@@ -51,8 +52,19 @@ class MediaUriFlow(
 ) : QueryFlow<Media.UriMedia>() {
 
     private var buckedId: Long = MediaStoreBuckets.MEDIA_STORE_BUCKET_TIMELINE.id
+    private val mediaStoreIds: List<Long> by lazy {
+        uris
+            .mapNotNull { uri ->
+                parseCandidateId(uri)
+            }
+            .distinct()
+    }
 
     override fun flowCursor(): Flow<Cursor?> {
+        if (onlyMatchingUris && mediaStoreIds.isEmpty()) {
+            return flowOf(null)
+        }
+
         val uri = MediaQuery.MediaStoreFileUri
         val projection = MediaQuery.MediaProjection
         val imageOrVideo = PickerUtils.mediaTypeFromGenericMimeType(mimeType)?.let {
@@ -83,6 +95,15 @@ class MediaUriFlow(
             MediaStore.Files.FileColumns.MIME_TYPE eq Query.ARG
         }
 
+        val mediaStoreIdFilter = when {
+            onlyMatchingUris -> {
+                val placeholders = mediaStoreIds.joinToString(separator = ",") { Query.ARG }
+                "${MediaStore.Files.FileColumns._ID} IN ($placeholders)"
+            }
+
+            else -> null
+        }
+
         // Join all the non-null queries
         val selection = listOfNotNull(
             imageOrVideo,
@@ -90,12 +111,26 @@ class MediaUriFlow(
             mimeTypeQuery,
         ).join(Query::and)
 
-        val selectionArgs = listOfNotNull(
+        val sqlSelection = listOfNotNull(
+            selection?.build(),
+            mediaStoreIdFilter,
+        )
+            .takeIf { it.isNotEmpty() }
+            ?.joinToString(separator = " AND ") { "($it)" }
+
+        val selectionArgs = buildList {
             buckedId.takeIf {
                 MediaStoreBuckets.entries.toTypedArray().none { bucket -> it == bucket.id }
-            }?.toString(),
-            rawMimeType,
-        ).toTypedArray()
+            }
+                ?.toString()
+                ?.let(::add)
+
+            rawMimeType?.let(::add)
+
+            if (onlyMatchingUris) {
+                mediaStoreIds.map { it.toString() }.let(::addAll)
+            }
+        }.toTypedArray()
 
         val sortOrder = when (buckedId) {
             MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id ->
@@ -106,7 +141,7 @@ class MediaUriFlow(
         }
 
         val queryArgs = Bundle().apply {
-            putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection?.build())
+            putString(ContentResolver.QUERY_ARG_SQL_SELECTION, sqlSelection)
             putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
             putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, sortOrder)
 
@@ -118,7 +153,7 @@ class MediaUriFlow(
                         MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id -> MediaStore.MATCH_ONLY
 
                         else -> MediaStore.MATCH_EXCLUDE
-                    }
+                    },
                 )
             }
         }
@@ -130,8 +165,8 @@ class MediaUriFlow(
         )
     }
 
-    override fun flowData() =
-        flowCursor().mapEachRow(MediaQuery.MediaProjection) { it, indexCache ->
+    override fun flowData(): Flow<List<Media.UriMedia>> {
+        return flowCursor().mapEachRow(MediaQuery.MediaProjection) { it, indexCache ->
             var i = 0
 
             val id = it.getLong(indexCache[i++])
@@ -148,12 +183,16 @@ class MediaUriFlow(
             // IS_FAVORITE and IS_TRASHED are only available on API 30+
             val isFavorite = if (SdkCompat.supportsFavorites) it.getInt(indexCache[i++]) else 0
             val isTrashed = if (SdkCompat.supportsTrash) it.getInt(indexCache[i]) else 0
-            val contentUri = if (mimeType.contains("image"))
+            val contentUri = if (mimeType.contains("image")) {
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-            else
+            } else {
                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            }
             val uri = ContentUris.withAppendedId(contentUri, id)
-            val formattedDate = (takenTimestamp?.div(1000) ?: modifiedTimestamp).getDate(Constants.FULL_DATE_FORMAT)
+            val formattedDate = (takenTimestamp?.div(1000) ?: modifiedTimestamp).getDate(
+                Constants.FULL_DATE_FORMAT,
+            )
+
             Media.UriMedia(
                 id = id,
                 label = title,
@@ -170,16 +209,16 @@ class MediaUriFlow(
                 favorite = isFavorite,
                 trashed = isTrashed,
                 size = size,
-                mimeType = mimeType
+                mimeType = mimeType,
             )
         }.let { flow ->
             // Derive candidate media IDs from provided MediaStore content:// URIs.
-            val ids: List<Long> = uris.mapNotNull { uri ->
-                parseCandidateId(uri)
-            }.distinct()
+            val ids = mediaStoreIds
             if (onlyMatchingUris) {
                 flow.map { mediaList ->
-                    mediaList.filter { media -> ids.contains(media.id) && !media.isTrashed }
+                    mediaList
+                        .filter { media -> ids.contains(media.id) && !media.isTrashed }
+                        .sortedBy { media -> ids.indexOf(media.id) }
                 }
             } else {
                 val bucketId = getBucketIdFromFirstUri()
@@ -192,11 +231,12 @@ class MediaUriFlow(
                 }
             }
         }
+    }
 
     private fun getBucketIdFromFirstUri(): Long? {
         val firstUri = uris.firstOrNull() ?: return null
         // Bucket lookup only makes sense for MediaStore content URIs.
-        if (firstUri.scheme != ContentResolver.SCHEME_CONTENT) return null
+        if (!isMediaStoreContentUri(firstUri)) return null
         val id = try {
             ContentUris.parseId(firstUri)
         } catch (e: NumberFormatException) {
@@ -211,7 +251,7 @@ class MediaUriFlow(
             projection,
             selection,
             selectionArgs,
-            null
+            null,
         )?.use { cursor ->
             if (cursor.moveToFirst()) {
                 return cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.BUCKET_ID))
@@ -222,12 +262,12 @@ class MediaUriFlow(
 
     /**
      * Attempt to derive a stable numeric media ID from a supplied URI.
-     *  - For content:// URIs we delegate to [ContentUris.parseId].
+     *  - For MediaStore content:// URIs we delegate to [ContentUris.parseId].
      * Returns null (instead of a random fabricated ID) if parsing fails so the
      * caller can simply exclude the unmatched entry.
      */
     private fun parseCandidateId(uri: Uri): Long? {
-        if (uri.scheme != ContentResolver.SCHEME_CONTENT) {
+        if (!isMediaStoreContentUri(uri)) {
             return null
         }
         return try {
@@ -236,5 +276,10 @@ class MediaUriFlow(
             printWarning("MediaUriFlow: Failed to parse content URI id: $uri -> ${e.message}")
             null
         }
+    }
+
+    private fun isMediaStoreContentUri(uri: Uri): Boolean {
+        return uri.scheme == ContentResolver.SCHEME_CONTENT &&
+                uri.authority == MediaStore.AUTHORITY
     }
 }

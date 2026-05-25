@@ -228,12 +228,16 @@ class MediaRepositoryImpl(
         listOfUris: List<Uri>,
         reviewMode: Boolean,
         onlyMatching: Boolean
-    ): Flow<Resource<List<UriMedia>>> =
-        MediaUriFlow(
+    ): Flow<Resource<List<UriMedia>>> {
+        return MediaUriFlow(
             contentResolver = contentResolver,
             uris = listOfUris,
-            onlyMatchingUris = onlyMatching
-        ).flowData().mapAsResource(errorOnEmpty = true, errorMessage = "Media could not be opened")
+            onlyMatchingUris = onlyMatching,
+        ).flowData().mapAsResource(
+            errorOnEmpty = true,
+            errorMessage = "Media could not be opened",
+        )
+    }
 
     override suspend fun <T : Media> toggleFavorite(
         result: ActivityResultLauncher<IntentSenderRequest>,

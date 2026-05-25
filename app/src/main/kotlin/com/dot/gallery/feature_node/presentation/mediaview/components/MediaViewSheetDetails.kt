@@ -97,6 +97,7 @@ fun <T : Media> MediaViewSheetDetails(
     albumsState: State<AlbumState>,
     metadataState: State<MediaMetadataState>,
     currentMedia: T?,
+    isSecureReview: Boolean = false,
     motionPhotoState: MotionPhotoState? = null,
 ) {
     val metadata by rememberedDerivedState(metadataState.value, currentMedia) {
@@ -252,7 +253,7 @@ fun <T : Media> MediaViewSheetDetails(
                     media = currentMedia,
                     exifMetadata = metadata,
                     onLabelClick = {
-                        if (!currentMedia.readUriOnly) {
+                        if (!currentMedia.readUriOnly && !isSecureReview) {
                             scope.launch {
                                 metadataSheetState.show()
                             }
@@ -265,7 +266,7 @@ fun <T : Media> MediaViewSheetDetails(
                     mutableStateOf(currentMedia.getCategory)
                 }
                 LaunchedEffect(currentMedia, category, handler) {
-                    if (category == null) {
+                    if (!isSecureReview && category == null) {
                         category = handler.getCategoryForMediaId(currentMedia.id)
                     }
                 }
@@ -296,7 +297,7 @@ fun <T : Media> MediaViewSheetDetails(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable(
-                                        enabled = !currentMedia.readUriOnly,
+                                        enabled = !currentMedia.readUriOnly && !isSecureReview,
                                         indication = null,
                                         interactionSource = remember {
                                             MutableInteractionSource()
@@ -333,7 +334,7 @@ fun <T : Media> MediaViewSheetDetails(
                                 locationData = locationData
                             )
                             AnimatedVisibility(
-                                visible = currentMedia.canMakeActions
+                                visible = currentMedia.canMakeActions && !isSecureReview
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -473,7 +474,9 @@ fun <T : Media> MediaViewSheetDetails(
                                             style = iconBackgroundHazeStyle
                                         ),
                                     trailingContent = {
-                                        if (it.trailingIcon != null && currentMedia.canMakeActions) {
+                                        if (it.trailingIcon != null && currentMedia.canMakeActions &&
+                                            !isSecureReview
+                                        ) {
                                             MediaInfoChip(
                                                 text = stringResource(R.string.edit),
                                                 contentColor = MaterialTheme.colorScheme.secondary,
@@ -488,32 +491,39 @@ fun <T : Media> MediaViewSheetDetails(
                                             )
                                         }
                                     },
-                                    onClick = it.onClick
+                                    onClick = if (!isSecureReview) it.onClick else null,
+                                    onLongClick = if (isSecureReview) {
+                                        {}
+                                    } else {
+                                        null
+                                    },
                                 )
                             }
-                            MediaInfoRow(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                label = stringResource(R.string.view_all_metadata),
-                                content = stringResource(R.string.metadata),
-                                icon = Icons.Outlined.Info,
-                                iconBackgroundModifier = Modifier
-                                    .then(iconBackgroundModifier)
-                                    .hazeEffect(
-                                        state = LocalHazeState.current,
-                                        style = iconBackgroundHazeStyle
-                                    ),
-                                onClick = {
-                                    allMetadataEventHandler.navigate(
-                                        Screen.MetadataViewScreen.uriAndType(
-                                            mediaUri = currentMedia.getUri().toString(),
-                                            isVideo = currentMedia.isVideo
+                            if (!isSecureReview) {
+                                MediaInfoRow(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp),
+                                    label = stringResource(R.string.view_all_metadata),
+                                    content = stringResource(R.string.metadata),
+                                    icon = Icons.Outlined.Info,
+                                    iconBackgroundModifier = Modifier
+                                        .then(iconBackgroundModifier)
+                                        .hazeEffect(
+                                            state = LocalHazeState.current,
+                                            style = iconBackgroundHazeStyle
+                                        ),
+                                    onClick = {
+                                        allMetadataEventHandler.navigate(
+                                            Screen.MetadataViewScreen.uriAndType(
+                                                mediaUri = currentMedia.getUri().toString(),
+                                                isVideo = currentMedia.isVideo
+                                            )
                                         )
-                                    )
-                                }
-                            )
-                            if (category != null) {
+                                    }
+                                )
+                            }
+                            if (!isSecureReview && category != null) {
                                 val mediaCategoryCounter by handler.getClassifiedMediaCountAtCategory(
                                     category!!
                                 ).collectAsStateWithLifecycle(0)
@@ -566,18 +576,20 @@ fun <T : Media> MediaViewSheetDetails(
                             }
                         }
                     }
-                    item {
-                        MediaViewSheetActions(
-                            media = currentMedia,
-                            albumsState = albumsState,
-                        )
+                    if (!isSecureReview) {
+                        item {
+                            MediaViewSheetActions(
+                                media = currentMedia,
+                                albumsState = albumsState,
+                            )
+                        }
                     }
                     item {
                         NavigationBarSpacer()
                     }
                 }
 
-                if (metadataSheetState.isVisible) {
+                if (!isSecureReview && metadataSheetState.isVisible) {
                     MetadataEditSheet(
                         state = metadataSheetState,
                         media = currentMedia,

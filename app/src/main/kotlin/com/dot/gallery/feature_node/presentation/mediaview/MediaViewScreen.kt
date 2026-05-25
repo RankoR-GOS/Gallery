@@ -138,7 +138,7 @@ import com.github.panpf.sketch.sketch
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -175,6 +175,7 @@ fun <T : Media> MediaViewScreenRoute(
     toggleRotate: () -> Unit,
     paddingValues: PaddingValues,
     isStandalone: Boolean = false,
+    isSecureReview: Boolean = false,
     mediaId: Long,
     target: String? = null,
     mediaState: State<MediaState<out T>>,
@@ -188,6 +189,7 @@ fun <T : Media> MediaViewScreenRoute(
         toggleRotate = toggleRotate,
         paddingValues = paddingValues,
         isStandalone = isStandalone,
+        isSecureReview = isSecureReview,
         mediaId = mediaId,
         target = target,
         mediaState = mediaState,
@@ -213,6 +215,7 @@ fun <T : Media> MediaViewScreen(
     toggleRotate: () -> Unit,
     paddingValues: PaddingValues,
     isStandalone: Boolean = false,
+    isSecureReview: Boolean = false,
     mediaId: Long,
     target: String? = null,
     mediaState: State<MediaState<out T>>,
@@ -237,6 +240,15 @@ fun <T : Media> MediaViewScreen(
     val fcastState by fcastVm.state.collectAsStateWithLifecycle()
     var showCastPicker by rememberSaveable { mutableStateOf(false) }
     var showCastPermissions by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(isSecureReview) {
+        if (isSecureReview) {
+            fcastVm.stopCasting()
+            fcastVm.stopDiscovery()
+            showCastPicker = false
+            showCastPermissions = false
+        }
+    }
 
     // Use pagerMedia for paging (only representatives when grouped, otherwise all media)
     val pagerItems by rememberedDerivedState(mediaState.value) {
@@ -354,7 +366,9 @@ fun <T : Media> MediaViewScreen(
         canAutoPlay
     ) { currentMedia?.isVideo == true && canAutoPlay }
     val isReadOnly by rememberedDerivedState { currentMedia?.readUriOnly == true }
-    val showInfo by rememberedDerivedState { currentMedia?.trashed == 0 && !isReadOnly }
+    val showInfo by rememberedDerivedState {
+        currentMedia?.trashed == 0 && !isReadOnly && !isSecureReview
+    }
 
     var showUI by rememberSaveable { mutableStateOf(true) }
     var isTopDark by remember { mutableStateOf(false) }
@@ -694,7 +708,7 @@ fun <T : Media> MediaViewScreen(
                                 isPhotosphere = mediaMetadata?.isPhotosphere == true,
                                 isMotionPhoto = mediaMetadata?.isMotionPhoto == true,
                                 motionPhotoState = motionPhotoState,
-                                rotationDisabled = isLocked,
+                                rotationDisabled = isLocked || isSecureReview,
                                 onImageRotated = { newRotation ->
                                     showRotationHelper.value =
                                         media?.isImage == true && newRotation != 0 && newRotation != 360
@@ -890,7 +904,7 @@ fun <T : Media> MediaViewScreen(
                 onLock = {
                     isLocked = !isLocked
                 },
-                castButton = if (fcastVm.isCastAvailable()) { { followTheme ->
+                castButton = if (!isSecureReview && fcastVm.isCastAvailable()) { { followTheme ->
                     CastButton(
                         isConnected = fcastState.connectedDevice != null,
                         isConnecting = fcastState.isConnecting,
@@ -907,7 +921,9 @@ fun <T : Media> MediaViewScreen(
                         }
                     )
                 } } else null,
-                castBanner = if (fcastVm.isCastAvailable() && fcastState.connectedDevice != null) {
+                castBanner = if (!isSecureReview && fcastVm.isCastAvailable() &&
+                    fcastState.connectedDevice != null
+                ) {
                     {
                         CastStatusBanner(
                             deviceName = fcastState.connectedDevice?.name ?: "",
@@ -922,13 +938,15 @@ fun <T : Media> MediaViewScreen(
             LaunchedEffect(fcastState.connectedDevice?.host) {
                 val device = fcastState.connectedDevice
                 val media = currentMedia
-                if (device != null && media != null && fcastState.castingMediaId == null) {
+                if (!isSecureReview && device != null && media != null &&
+                    fcastState.castingMediaId == null
+                ) {
                     fcastVm.castMedia(media)
                 }
             }
 
             // FCast device picker dialog
-            if (showCastPicker) {
+            if (!isSecureReview && showCastPicker) {
                 FCastDevicePickerDialog(
                     state = fcastState,
                     onDeviceSelected = { device ->
@@ -953,7 +971,7 @@ fun <T : Media> MediaViewScreen(
             }
 
             // Cast permissions checklist dialog
-            if (showCastPermissions) {
+            if (!isSecureReview && showCastPermissions) {
                 CastPermissionsDialog(
                     permissions = fcastVm.checkPermissions(),
                     onDismiss = { showCastPermissions = false }
@@ -1008,7 +1026,7 @@ fun <T : Media> MediaViewScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // Floating action bar for group multi-select
-                    AnimatedVisibility(visible = groupMultiSelectMode) {
+                    AnimatedVisibility(visible = !isSecureReview && groupMultiSelectMode) {
                         GroupMemberSelectionBar(
                             selectedCount = groupMultiSelectedIds.size,
                             totalCount = currentGroupMembers.size,
@@ -1040,11 +1058,13 @@ fun <T : Media> MediaViewScreen(
                             onSelect = { id ->
                                 selectedMemberOverrideId = id
                             },
-                            multiSelectMode = groupMultiSelectMode,
+                            multiSelectMode = !isSecureReview && groupMultiSelectMode,
                             multiSelectedIds = groupMultiSelectedIds,
                             onEnterMultiSelect = { id ->
-                                groupMultiSelectMode = true
-                                groupMultiSelectedIds = setOf(id)
+                                if (!isSecureReview) {
+                                    groupMultiSelectMode = true
+                                    groupMultiSelectedIds = setOf(id)
+                                }
                             },
                             onToggleMultiSelect = { id ->
                                 val newSet = if (id in groupMultiSelectedIds) {
@@ -1062,7 +1082,7 @@ fun <T : Media> MediaViewScreen(
                 }
             }
             // Back handler for group multi-select mode
-            BackHandler(groupMultiSelectMode) {
+            BackHandler(!isSecureReview && groupMultiSelectMode) {
                 groupMultiSelectMode = false
                 groupMultiSelectedIds = emptySet()
             }
@@ -1099,7 +1119,7 @@ fun <T : Media> MediaViewScreen(
                         label = "MediaViewActions2Alpha"
                     )
                     AnimatedVisibility(
-                        visible = currentMedia != null,
+                        visible = currentMedia != null && !isSecureReview,
                         enter = enterAnimation,
                         exit = exitAnimation
                     ) {
@@ -1163,12 +1183,15 @@ fun <T : Media> MediaViewScreen(
                         }
                     }
 
-                    MediaViewSheetDetails(
-                        albumsState = albumsState,
-                        metadataState = metadataState,
-                        currentMedia = currentMedia,
-                        motionPhotoState = motionPhotoState,
-                    )
+                    if (!isSecureReview) {
+                        MediaViewSheetDetails(
+                            albumsState = albumsState,
+                            metadataState = metadataState,
+                            currentMedia = currentMedia,
+                            isSecureReview = isSecureReview,
+                            motionPhotoState = motionPhotoState,
+                        )
+                    }
                 }
             }
         }

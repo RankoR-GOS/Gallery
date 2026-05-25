@@ -5,8 +5,11 @@
 
 package com.dot.gallery.feature_node.presentation.standalone
 
+import android.app.KeyguardManager
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -44,10 +47,13 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
 import javax.inject.Inject
 
+private const val CAMERA_ACTION_REVIEW = "com.android.camera.action.REVIEW"
+
 @AndroidEntryPoint
 class StandaloneActivity : ComponentActivity() {
 
     private val eventHandler: EventHandler = DefaultEventHandler()
+    private var showWhenLockedForCurrentIntent = false
 
     @Inject
     lateinit var mediaDistributor: MediaDistributor
@@ -63,17 +69,10 @@ class StandaloneActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
-        val action = intent.action.toString()
-        val isSecure = action.lowercase().contains("secure")
-        val clipData = intent.clipData
-        val uriList = mutableSetOf<Uri>()
-        intent.data?.let(uriList::add)
-        if (clipData != null) {
-            for (i in 0 until clipData.itemCount) {
-                uriList.add(clipData.getItemAt(i).uri)
-            }
-        }
-        setShowWhenLocked(isSecure)
+        val isReviewSecure = isReviewSecureAction(reviewIntent = intent)
+        val isReview = isReviewAction(reviewIntent = intent)
+        val uriList = getReviewUris(reviewIntent = intent)
+        applyShowWhenLockedForIntent(reviewIntent = intent)
         setContent {
             GalleryTheme {
                 val allowBlur by rememberAllowBlur()
@@ -83,8 +82,9 @@ class StandaloneActivity : ComponentActivity() {
                 val viewModel =
                     hiltViewModel<StandaloneViewModel, StandaloneViewModel.Factory> { factory ->
                         factory.create(
-                            reviewMode = action.contains("REVIEW", true),
-                            dataList = uriList.toList()
+                            reviewMode = isReview,
+                            secureReviewMode = isReviewSecure,
+                            dataList = uriList,
                         )
                     }
                 CompositionLocalProvider(
@@ -126,6 +126,7 @@ class StandaloneActivity : ComponentActivity() {
                                             toggleRotate = ::toggleOrientation,
                                             paddingValues = paddingValues,
                                             isStandalone = true,
+                                            isSecureReview = isReviewSecure,
                                             mediaId = mediaId,
                                             mediaState = mediaState,
                                             albumsState = albumsState,
@@ -144,6 +145,54 @@ class StandaloneActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        applyShowWhenLockedForIntent(reviewIntent = intent)
+        recreate()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!isDeviceLocked()) {
+            showWhenLockedForCurrentIntent = false
+        }
+        setShowWhenLocked(showWhenLockedForCurrentIntent)
+    }
+
+    private fun isDeviceLocked(): Boolean {
+        val keyguardManager = getSystemService(KeyguardManager::class.java)
+        return keyguardManager?.isDeviceLocked == true
+    }
+
+    private fun applyShowWhenLockedForIntent(reviewIntent: Intent) {
+        showWhenLockedForCurrentIntent = isReviewSecureAction(reviewIntent = reviewIntent) &&
+                isDeviceLocked()
+        setShowWhenLocked(showWhenLockedForCurrentIntent)
+    }
+
+    private fun isReviewAction(reviewIntent: Intent): Boolean {
+        return reviewIntent.action == MediaStore.ACTION_REVIEW ||
+                reviewIntent.action == MediaStore.ACTION_REVIEW_SECURE ||
+                reviewIntent.action == CAMERA_ACTION_REVIEW
+    }
+
+    private fun isReviewSecureAction(reviewIntent: Intent): Boolean {
+        return reviewIntent.action == MediaStore.ACTION_REVIEW_SECURE
+    }
+
+    private fun getReviewUris(reviewIntent: Intent): List<Uri> {
+        val uriList = linkedSetOf<Uri>()
+        reviewIntent.data?.let(uriList::add)
+        reviewIntent.clipData?.let { clipData ->
+            for (i in 0 until clipData.itemCount) {
+                clipData.getItemAt(i).uri?.let(uriList::add)
+            }
+        }
+
+        return uriList.toList()
     }
 
 }
