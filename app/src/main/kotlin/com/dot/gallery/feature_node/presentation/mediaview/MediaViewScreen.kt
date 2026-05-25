@@ -57,7 +57,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -112,11 +111,6 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewS
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MediaPreviewComponent
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoFilmstrip
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayerController
-import com.dot.gallery.feature_node.presentation.cast.FCastViewModel
-import com.dot.gallery.feature_node.presentation.cast.components.CastButton
-import com.dot.gallery.feature_node.presentation.cast.components.FCastDevicePickerDialog
-import com.dot.gallery.feature_node.presentation.cast.components.CastPermissionsDialog
-import com.dot.gallery.feature_node.presentation.cast.components.CastStatusBanner
 import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.feature_node.presentation.util.FullBrightnessWindow
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
@@ -234,21 +228,6 @@ fun <T : Media> MediaViewScreen(
     val windowInsetsController = rememberWindowInsetsController()
 
     var initialPageSetup by rememberSaveable(mediaId) { mutableStateOf(false) }
-
-    // FCast
-    val fcastVm: FCastViewModel = hiltViewModel()
-    val fcastState by fcastVm.state.collectAsStateWithLifecycle()
-    var showCastPicker by rememberSaveable { mutableStateOf(false) }
-    var showCastPermissions by rememberSaveable { mutableStateOf(false) }
-
-    LaunchedEffect(isSecureReview) {
-        if (isSecureReview) {
-            fcastVm.stopCasting()
-            fcastVm.stopDiscovery()
-            showCastPicker = false
-            showCastPermissions = false
-        }
-    }
 
     // Use pagerMedia for paging (only representatives when grouped, otherwise all media)
     val pagerItems by rememberedDerivedState(mediaState.value) {
@@ -733,15 +712,6 @@ fun <T : Media> MediaViewScreen(
                                             windowInsetsController.toggleSystemBars(false)
                                         }
                                     }
-                                    // Mute local player while casting to avoid double audio
-                                    val isCasting = fcastState.connectedDevice != null
-                                    LaunchedEffect(isCasting) {
-                                        if (isCasting) {
-                                            player.volume = 0f
-                                        } else {
-                                            player.volume = 1f
-                                        }
-                                    }
                                     val resources = LocalResources.current
                                     val width =
                                         remember(context) { resources.displayMetrics.widthPixels }
@@ -828,20 +798,6 @@ fun <T : Media> MediaViewScreen(
                                             buffer = buffer,
                                             toggleRotate = toggleRotate,
                                             frameRate = frameRate,
-                                            onCastSeek = if (fcastState.connectedDevice != null) {
-                                                { seconds -> fcastVm.seek(seconds) }
-                                            } else null,
-                                            onCastPlayPause = if (fcastState.connectedDevice != null) {
-                                                { playing ->
-                                                    if (playing) fcastVm.resume() else fcastVm.pause()
-                                                }
-                                            } else null,
-                                            onCastVolume = if (fcastState.connectedDevice != null) {
-                                                { vol -> fcastVm.setVolume(vol) }
-                                            } else null,
-                                            onCastSpeed = if (fcastState.connectedDevice != null) {
-                                                { spd -> fcastVm.setSpeed(spd) }
-                                            } else null
                                         )
                                     }
                                 }
@@ -903,80 +859,8 @@ fun <T : Media> MediaViewScreen(
                 },
                 onLock = {
                     isLocked = !isLocked
-                },
-                castButton = if (!isSecureReview && fcastVm.isCastAvailable()) { { followTheme ->
-                    CastButton(
-                        isConnected = fcastState.connectedDevice != null,
-                        isConnecting = fcastState.isConnecting,
-                        followTheme = followTheme,
-                        onClick = {
-                            if (fcastState.connectedDevice != null) {
-                                showCastPicker = true
-                            } else if (!fcastVm.hasAllPermissions()) {
-                                showCastPermissions = true
-                            } else {
-                                fcastVm.startDiscovery()
-                                showCastPicker = true
-                            }
-                        }
-                    )
-                } } else null,
-                castBanner = if (!isSecureReview && fcastVm.isCastAvailable() &&
-                    fcastState.connectedDevice != null
-                ) {
-                    {
-                        CastStatusBanner(
-                            deviceName = fcastState.connectedDevice?.name ?: "",
-                            onStop = { fcastVm.stopCasting() },
-                            onClick = { showCastPicker = true }
-                        )
-                    }
-                } else null
-            )
-
-            // Auto-cast current media when device connects
-            LaunchedEffect(fcastState.connectedDevice?.host) {
-                val device = fcastState.connectedDevice
-                val media = currentMedia
-                if (!isSecureReview && device != null && media != null &&
-                    fcastState.castingMediaId == null
-                ) {
-                    fcastVm.castMedia(media)
                 }
-            }
-
-            // FCast device picker dialog
-            if (!isSecureReview && showCastPicker) {
-                FCastDevicePickerDialog(
-                    state = fcastState,
-                    onDeviceSelected = { device ->
-                        fcastVm.connect(device)
-                        showCastPicker = false
-                    },
-                    onCastMedia = {
-                        currentMedia?.let { fcastVm.castMedia(it) }
-                    },
-                    onStopCasting = {
-                        fcastVm.stopCasting()
-                    },
-                    onDisconnect = {
-                        fcastVm.disconnect()
-                        showCastPicker = false
-                    },
-                    onDismiss = {
-                        fcastVm.stopDiscovery()
-                        showCastPicker = false
-                    }
-                )
-            }
-
-            // Cast permissions checklist dialog
-            if (!isSecureReview && showCastPermissions) {
-                CastPermissionsDialog(
-                    permissions = fcastVm.checkPermissions(),
-                    onDismiss = { showCastPermissions = false }
-                )
-            }
+            )
 
             // Floating filmstrip overlay (positioned like video seekbar)
             AnimatedVisibility(

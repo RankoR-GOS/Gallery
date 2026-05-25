@@ -273,9 +273,6 @@ dependencies {
     implementation(libs.androidx.exifinterface)
     implementation(libs.metadata.extractor)
 
-    // NanoHTTPD - Embedded HTTP server for FCast media serving
-    implementation(libs.nanohttpd)
-
     // Datastore Preferences
     implementation(libs.datastore.prefs)
 

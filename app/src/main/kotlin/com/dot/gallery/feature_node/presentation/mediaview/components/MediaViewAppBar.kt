@@ -83,8 +83,6 @@ fun MediaViewAppBar(
     onLock: () -> Unit,
     isImageDark: Boolean = false,
     autoContrast: Boolean = false,
-    castButton: @Composable ((followTheme: Boolean) -> Unit)? = null,
-    castBanner: @Composable (() -> Unit)? = null
 ) {
     val allowBlur by rememberAllowBlur()
     val isDarkTheme = isDarkTheme()
@@ -207,8 +205,6 @@ fun MediaViewAppBar(
                         ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    castButton?.invoke(followTheme)
-
                     this@Column.AnimatedVisibility(
                         visible = showInfo,
                         enter = enterAnimation,
@@ -226,8 +222,6 @@ fun MediaViewAppBar(
                 }
                 }
             }
-
-            castBanner?.invoke()
 
             AnimatedVisibility(
                 visible = isLocked,

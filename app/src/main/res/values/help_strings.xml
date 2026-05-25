@@ -795,18 +795,6 @@
     <!-- ACTION LABELS -->
     <string name="help_action_open_settings">Open settings</string>
 
-    <!-- VIEWER ACTIONS: Cast -->
-    <string name="help_tip_viewer_cast_title">Cast videos to your TV</string>
-    <string name="help_tip_viewer_cast_subtitle">Stream media to FCast-compatible devices on your network</string>
-    <string name="help_tip_viewer_cast_p1_title">Cast to a device</string>
-    <string name="help_tip_viewer_cast_p1_desc">Cast videos and images to any FCast-compatible device on your local network. Gallery discovers devices automatically using mDNS, sets up a local streaming server, and plays your media on the big screen — all without any cloud services.</string>
-    <string name="help_tip_viewer_cast_p2_title">Control playback</string>
-    <string name="help_tip_viewer_cast_p2_desc">While casting, a mini controller appears in the viewer showing cast status. Use the remote controls to play, pause, seek, adjust volume, and change playback speed — all from your phone. Tap the cast button again to stop casting or switch devices.</string>
-    <string name="help_tip_viewer_cast_p2_s1">Open a video in the viewer</string>
-    <string name="help_tip_viewer_cast_p2_s2">Tap the cast button in the top bar</string>
-    <string name="help_tip_viewer_cast_p2_s3">Select a device from the picker</string>
-    <string name="help_tip_viewer_cast_p2_s4">Use on-screen controls to manage playback</string>
-
     <!-- VIEWER SETTINGS: Auto-Contrast -->
     <string name="help_tip_viewer_auto_contrast_title">Auto-contrast (Beta)</string>
     <string name="help_tip_viewer_auto_contrast_subtitle">Automatically enhance display contrast based on image brightness</string>

@@ -16,7 +16,6 @@ hazeMaterials = "1.7.2"
 jxlCoder = "2.6.0"
 kotlin = "2.3.21"
 kotlinCollectionsImmutable = "0.4.0"
-nanohttpd = "2.3.1"
 kotlinCoroutinesVersion = "1.10.2"
 ksp = "2.3.4"
 core-ktx = "1.18.0"
@@ -115,7 +114,6 @@ jxl-coder-coil = { module = "io.github.awxkee:jxl-coder-coil", version.ref = "jx
 lazycolumnscrollbar = { module = "com.github.nanihadesuka:LazyColumnScrollbar", version.ref = "lazycolumnscrollbar" }
 maplibre-native = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibreNative" }
 metadata-extractor = { module = "com.drewnoakes:metadata-extractor", version.ref = "metadataExtractor" }
-nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 onnxruntime-android = { module = "com.microsoft.onnxruntime:onnxruntime-android", version.ref = "onnxruntimeAndroid" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }

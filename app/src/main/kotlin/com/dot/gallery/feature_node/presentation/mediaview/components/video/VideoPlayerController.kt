@@ -85,10 +85,6 @@ fun VideoPlayerController(
     buffer: Int,
     toggleRotate: () -> Unit,
     frameRate: Float,
-    onCastSeek: ((Double) -> Unit)? = null,
-    onCastPlayPause: ((Boolean) -> Unit)? = null,
-    onCastVolume: ((Double) -> Unit)? = null,
-    onCastSpeed: ((Double) -> Unit)? = null,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -116,13 +112,8 @@ fun VideoPlayerController(
             var currentVolume by rememberSaveable { mutableFloatStateOf(player.volume) }
 
             // Keep player volume in sync when configuration changes / media swaps
-            val isCasting = onCastVolume != null
-            LaunchedEffect(LocalConfiguration.current, player.currentMediaItem, isMuted, isCasting) {
-                if (isCasting) {
-                    player.volume = 0f
-                } else {
-                    player.volume = if (isMuted) 0f else currentVolume
-                }
+            LaunchedEffect(LocalConfiguration.current, player.currentMediaItem, isMuted) {
+                player.volume = if (isMuted) 0f else currentVolume
             }
 
             // Playback speed / menu
@@ -142,7 +133,6 @@ fun VideoPlayerController(
             }
             LaunchedEffect(playbackSpeed) {
                 player.setPlaybackSpeed(playbackSpeed)
-                onCastSpeed?.invoke(playbackSpeed.toDouble())
                 showMenu = false
             }
 
@@ -197,19 +187,13 @@ fun VideoPlayerController(
 
             IconButton(
                 onClick = {
-                    if (onCastVolume != null) {
-                        // When casting, only control remote volume; local stays muted
-                        isMuted = !isMuted
-                        onCastVolume.invoke(if (isMuted) 0.0 else currentVolume.toDouble())
+                    if (isMuted) {
+                        player.volume = currentVolume
+                        isMuted = false
                     } else {
-                        if (isMuted) {
-                            player.volume = currentVolume
-                            isMuted = false
-                        } else {
-                            currentVolume = player.volume
-                            player.volume = 0f
-                            isMuted = true
-                        }
+                        currentVolume = player.volume
+                        player.volume = 0f
+                        isMuted = true
                     }
                 }
             ) {
@@ -395,7 +379,6 @@ fun VideoPlayerController(
                                     val target = sliderValue.toLong().coerceIn(0L, totalTime)
                                     player.seekTo(target)
                                     currentTime.longValue = target
-                                    onCastSeek?.invoke(target.toDouble() / 1000.0)
                                     isScrubbing = false
                                     sensitivityFactor = 1f
                                     if (wasPlayingBeforeScrub) {
@@ -434,7 +417,6 @@ fun VideoPlayerController(
                 } else {
                     player.pause()
                 }
-                onCastPlayPause?.invoke(newState)
             },
             modifier = Modifier
                 .align(Alignment.Center)

@@ -865,38 +865,4 @@
     <string name="help_cat_selection_actions">Selection &amp; batch actions</string>
     <string name="help_cat_accessibility">Accessibility &amp; advanced</string>
 
-    <!-- FCast -->
-    <string name="cancel">Cancel</string>
-    <string name="cast_connect">Cast</string>
-    <string name="cast_disconnect">Disconnect</string>
-    <string name="cast_select_device">Select a device</string>
-    <string name="cast_connected_to">Connected to %1$s</string>
-    <string name="cast_currently_connected">You are currently connected to this device. Tap disconnect to stop casting.</string>
-    <string name="cast_searching">Searching for devices…</string>
-    <string name="cast_casting_to">Casting to %1$s</string>
-    <string name="cast_volume_up">Volume up</string>
-    <string name="cast_volume_down">Volume down</string>
-    <string name="cast_seek_forward">Seek forward 10s</string>
-    <string name="cast_seek_backward">Seek backward 10s</string>
-    <string name="cast_stop">Stop casting</string>
-    <string name="cast_media">Cast to device</string>
-    <string name="cast_manual_connect">Connect manually</string>
-    <string name="cast_enter_ip">Enter IP address</string>
-    <string name="cast_ip_hint">192.168.1.100</string>
-    <string name="cast_port_hint">Port (default: 46899)</string>
-    <string name="cast_connect_button">Connect</string>
-    <string name="cast_this_media">Cast this media</string>
-    <string name="cast_stop_current">Stop current cast</string>
-    <string name="cast_now_casting">Now casting</string>
-    <string name="cast_permissions_required">Permissions required</string>
-    <string name="cast_permissions_message">The following permissions are needed for casting. Please grant them in app settings.</string>
-    <string name="cast_open_settings">Open settings</string>
-    <string name="cast_perm_internet">Internet</string>
-    <string name="cast_perm_internet_desc">Required for connecting to cast devices and streaming media</string>
-    <string name="cast_perm_wifi_state">Wi-Fi state</string>
-    <string name="cast_perm_wifi_state_desc">Required for detecting network information</string>
-    <string name="cast_perm_network_state">Network state</string>
-    <string name="cast_perm_network_state_desc">Required for checking network connectivity</string>
-    <string name="cast_perm_multicast">Multicast</string>
-    <string name="cast_perm_multicast_desc">Required for automatic device discovery on your network</string>
 </resources>

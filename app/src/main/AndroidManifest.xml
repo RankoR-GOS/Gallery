@@ -14,13 +14,10 @@
     <!-- Required to access GPS Data of Media -->
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
 
-    <!-- Required to download Map Preview for Media and FCast media serving -->
+    <!-- Required to download Map Preview for Media -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
-    <!-- Required for FCast device discovery and media streaming -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
 
     <!-- Remove unwanted permissions from being added -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove"/>

@@ -7,7 +7,6 @@ package com.dot.gallery.feature_node.presentation.help.data
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Cast
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.Contrast
@@ -294,13 +293,7 @@ object HelpRepository {
             pages = listOf(TutorialPage(title = R.string.help_tip_action_add_collection_p1_title, description = R.string.help_tip_action_add_collection_p1_desc, previewType = PreviewType.COLLECTION_VIEW))),
         HelpTip(id = "action_view_all_metadata", title = R.string.help_tip_action_view_all_metadata_title, subtitle = R.string.help_tip_action_view_all_metadata_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.EditNote), category = HelpCategory.VIEWER_ACTIONS,
-            pages = listOf(TutorialPage(title = R.string.help_tip_action_view_all_metadata_p1_title, description = R.string.help_tip_action_view_all_metadata_p1_desc, previewType = PreviewType.EXIF_VIEWER))),
-        HelpTip(id = "action_cast", title = R.string.help_tip_viewer_cast_title, subtitle = R.string.help_tip_viewer_cast_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.Cast), category = HelpCategory.VIEWER_ACTIONS,
-            pages = listOf(
-                TutorialPage(title = R.string.help_tip_viewer_cast_p1_title, description = R.string.help_tip_viewer_cast_p1_desc, previewType = PreviewType.MEDIA_VIEWER),
-                TutorialPage(title = R.string.help_tip_viewer_cast_p2_title, description = R.string.help_tip_viewer_cast_p2_desc, steps = listOf(R.string.help_tip_viewer_cast_p2_s1, R.string.help_tip_viewer_cast_p2_s2, R.string.help_tip_viewer_cast_p2_s3, R.string.help_tip_viewer_cast_p2_s4), previewType = PreviewType.MEDIA_VIEWER)
-            ))
+            pages = listOf(TutorialPage(title = R.string.help_tip_action_view_all_metadata_p1_title, description = R.string.help_tip_action_view_all_metadata_p1_desc, previewType = PreviewType.EXIF_VIEWER)))
     )
 
     private val VIEWER_SETTINGS_TIPS = listOf(
