@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
@@ -34,6 +35,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -110,24 +112,38 @@ fun <T : Media> GridPinchZoomScope.MediaGrid(
         Column(
             modifier = Modifier.padding(paddingValues).fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
-            AnimatedVisibility(
-                visible = mediaState.value.isLoading,
-                enter = enterAnimation,
-                exit = exitAnimation
-            ) {
-                LoadingMedia()
+            if (aboveGridContent != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawWithContent { }
+                ) {
+                    aboveGridContent()
+                }
             }
-            AnimatedVisibility(
-                visible = mediaState.value.media.isEmpty() && !mediaState.value.isLoading,
-                enter = enterAnimation,
-                exit = exitAnimation
+            Column(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                emptyContent()
-            }
-            AnimatedVisibility(visible = mediaState.value.error.isNotEmpty()) {
-                Error(errorMessage = mediaState.value.error)
+                AnimatedVisibility(
+                    visible = mediaState.value.isLoading,
+                    enter = enterAnimation,
+                    exit = exitAnimation
+                ) {
+                    LoadingMedia()
+                }
+                AnimatedVisibility(
+                    visible = mediaState.value.media.isEmpty() && !mediaState.value.isLoading,
+                    enter = enterAnimation,
+                    exit = exitAnimation
+                ) {
+                    emptyContent()
+                }
+                AnimatedVisibility(visible = mediaState.value.error.isNotEmpty()) {
+                    Error(errorMessage = mediaState.value.error)
+                }
             }
         }
     }
