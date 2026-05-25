@@ -94,6 +94,7 @@ import com.dot.gallery.core.Settings.Misc.rememberExtendedDateHeaderFormat
 import com.dot.gallery.core.Settings.Misc.rememberShowMediaViewDateHeader
 import com.dot.gallery.core.Settings.Misc.rememberVideoAutoplay
 import com.dot.gallery.core.navigateUp
+import com.dot.gallery.core.setFollowTheme
 import com.dot.gallery.core.presentation.components.util.swipe
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
@@ -814,19 +815,24 @@ fun <T : Media> MediaViewScreen(
                 }
             }
             // Sync status bar icon color with the top image luminance
-            LaunchedEffect(isTopDark, autoContrast, isDarkTheme, allowBlur) {
-                windowInsetsController.isAppearanceLightStatusBars = if (autoContrast) {
-                    // Dark top means white status icons; bright top means dark status icons
+            val isCurrentVideo by rememberedDerivedState(currentMedia) {
+                currentMedia?.isVideo == true
+            }
+            LaunchedEffect(isTopDark, autoContrast, isDarkTheme, allowBlur, isCurrentVideo) {
+                val followTheme = if (autoContrast) {
                     !isTopDark
                 } else {
-                    // Match background: black bg uses light icons, white bg uses dark icons
-                    !allowBlur && !isDarkTheme
+                    !allowBlur && !isCurrentVideo
                 }
+                windowInsetsController.isAppearanceLightStatusBars =
+                    if (followTheme) !isDarkTheme else false
+                eventHandler.setFollowTheme(followTheme)
             }
             DisposableEffect(Unit) {
                 val previousLightStatusBars = windowInsetsController.isAppearanceLightStatusBars
                 onDispose {
                     windowInsetsController.isAppearanceLightStatusBars = previousLightStatusBars
+                    eventHandler.setFollowTheme(true)
                 }
             }
 
