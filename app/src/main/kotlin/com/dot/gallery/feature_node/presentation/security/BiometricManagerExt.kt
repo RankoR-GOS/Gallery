@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.presentation.security
 
 import android.app.KeyguardManager
 import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
@@ -54,13 +55,15 @@ internal fun rememberBiometricState(
     onSuccess: () -> Unit,
     onFailed: () -> Unit,
 ): BiometricState {
-    val context = LocalContext.current
+    val activity = LocalActivity.current as? FragmentActivity
+
     val biometricManager = rememberBiometricManager()
     val callback = rememberBiometricCallback(
         onSuccess = onSuccess,
         onFailed = onFailed,
     )
-    return remember(biometricManager, title, subtitle) {
+
+    return remember(activity, biometricManager, title, subtitle) {
         val promptInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             PromptInfo.Builder()
                 .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
@@ -76,7 +79,7 @@ internal fun rememberBiometricState(
                 .build()
         }
         BiometricState(
-            activity = context as FragmentActivity,
+            activity = activity,
             biometricManager = biometricManager,
             promptInfo = promptInfo,
             callback = callback,
@@ -85,24 +88,28 @@ internal fun rememberBiometricState(
 }
 
 internal class BiometricState(
-    private val activity: FragmentActivity,
+    private val activity: FragmentActivity?,
     biometricManager: BiometricManager,
     private val promptInfo: PromptInfo,
     private val callback: BiometricPrompt.AuthenticationCallback,
 ) {
     val isSupported by mutableStateOf(
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            biometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == BIOMETRIC_SUCCESS
-        } else {
-            val keyguardManager = activity.getSystemService(KeyguardManager::class.java)
-            keyguardManager?.isDeviceSecure == true
-        }
+        activity?.let { currentActivity ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                biometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == BIOMETRIC_SUCCESS
+            } else {
+                val keyguardManager = currentActivity.getSystemService(KeyguardManager::class.java)
+                keyguardManager?.isDeviceSecure == true
+            }
+        } == true
     )
 
     fun authenticate() {
         if (isSupported) {
-            val executor = ContextCompat.getMainExecutor(activity)
-            val prompt = BiometricPrompt(activity, executor, callback)
+            val currentActivity = activity ?: return
+
+            val executor = ContextCompat.getMainExecutor(currentActivity)
+            val prompt = BiometricPrompt(currentActivity, executor, callback)
             prompt.authenticate(promptInfo)
         }
     }
