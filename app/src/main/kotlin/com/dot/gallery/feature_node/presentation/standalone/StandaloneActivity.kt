@@ -13,6 +13,7 @@ import android.provider.MediaStore
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -25,7 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
-import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.core.DefaultEventHandler
@@ -50,7 +50,7 @@ import javax.inject.Inject
 private const val CAMERA_ACTION_REVIEW = "com.android.camera.action.REVIEW"
 
 @AndroidEntryPoint
-class StandaloneActivity : FragmentActivity() {
+class StandaloneActivity : AppCompatActivity() {
 
     private val eventHandler: EventHandler = DefaultEventHandler()
     private var showWhenLockedForCurrentIntent = false
