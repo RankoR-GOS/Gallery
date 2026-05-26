@@ -66,6 +66,8 @@ import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.domain.util.isVideo
+import com.dot.gallery.feature_node.domain.util.mediaStoreVolumeName
+import com.dot.gallery.feature_node.domain.util.resolveMediaStoreVolume
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.BOTH
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.PHOTOS
@@ -345,11 +347,77 @@ class MediaRepositoryImpl(
 
     override suspend fun <T : Media> moveMedia(
         media: T,
-        newPath: String
-    ): Boolean = context.updateMedia(
-        media = media,
-        contentValues = relativePath(newPath)
-    )
+        newPath: String,
+    ): Boolean {
+        val (destVolume, destRelPath) = resolveMediaStoreVolume(newPath)
+        val sourceVolume = media.mediaStoreVolumeName
+
+        if (destVolume == sourceVolume) {
+            return context.updateMedia(
+                media = media,
+                contentValues = relativePath(destRelPath)
+            )
+        }
+
+        return crossVolumeMove(
+            media = media,
+            destVolume = destVolume,
+            destRelPath = destRelPath,
+        )
+    }
+
+    private suspend fun <T : Media> crossVolumeMove(
+        media: T,
+        destVolume: String,
+        destRelPath: String,
+    ): Boolean {
+        return withContext(Dispatchers.IO) {
+            val cr = context.contentResolver
+            try {
+                val srcUri = media.getUri()
+                val mediaType = cr.getType(srcUri) ?: return@withContext false
+                val isVideo = mediaType.startsWith("video")
+
+                val targetUri = cr.insert(
+                    if (isVideo) MediaStore.Video.Media.getContentUri(destVolume)
+                    else MediaStore.Images.Media.getContentUri(destVolume),
+                    ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, media.label)
+                        put(MediaStore.MediaColumns.MIME_TYPE, media.mimeType)
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, destRelPath)
+                        put(MediaStore.MediaColumns.IS_PENDING, 1)
+                    }
+                ) ?: return@withContext false
+
+                cr.openInputStream(srcUri)?.use { input ->
+                    cr.openOutputStream(targetUri)?.use { output ->
+                        input.copyTo(output)
+                    }
+                } ?: run {
+                    cr.delete(targetUri, null, null)
+                    return@withContext false
+                }
+
+                cr.update(
+                    targetUri,
+                    ContentValues().apply {
+                        put(MediaStore.MediaColumns.IS_PENDING, 0)
+                        put(
+                            MediaStore.MediaColumns.DATE_MODIFIED,
+                            System.currentTimeMillis() / 1000,
+                        )
+                    },
+                    null, null
+                )
+
+                cr.delete(srcUri, null, null)
+                true
+            } catch (e: Exception) {
+                printWarning("Cross-volume move failed: ${e.message}")
+                false
+            }
+        }
+    }
 
     override suspend fun <T : Media> deleteMediaGPSMetadata(media: T): Boolean =
         context.updateMediaExif(

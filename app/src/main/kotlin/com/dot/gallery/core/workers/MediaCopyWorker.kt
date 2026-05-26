@@ -3,6 +3,7 @@ package com.dot.gallery.core.workers
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import androidx.core.net.toUri
@@ -15,6 +16,7 @@ import androidx.work.workDataOf
 import com.dot.gallery.core.util.ProgressThrottler
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.domain.util.resolveMediaStoreVolume
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -89,7 +91,10 @@ class MediaCopyWorker @AssistedInject constructor(
                 semaphore.withPermit {
                     if (!currentCoroutineContext().isActive || isStopped) return@withPermit false
                     val uri = uriStr.toUri()
-                    val result = copyOne(uri, relPath) { delta ->
+                    val result = copyOne(
+                        src = uri,
+                        destPath = relPath,
+                    ) { delta ->
                         if (bytesTotal.get() > 0L) {
                             val newTotal = bytesCopied.addAndGet(delta.toLong())
                             val pctBytes = ((newTotal.toFloat() / bytesTotal.get().toFloat()) * 100f).toInt().coerceIn(0, 100)
@@ -120,15 +125,20 @@ class MediaCopyWorker @AssistedInject constructor(
         }
     }
 
-    private suspend fun copyOne(src: android.net.Uri, relPath: String, onBytesCopied: suspend (Int) -> Unit = {}): Boolean =
-        withContext(Dispatchers.IO) {
+    private suspend fun copyOne(
+        src: Uri,
+        destPath: String,
+        onBytesCopied: suspend (Int) -> Unit = {},
+    ): Boolean {
+        return withContext(Dispatchers.IO) {
             val cr: ContentResolver = appContext.contentResolver
             try {
+                val (volumeName, relPath) = resolveMediaStoreVolume(destPath)
                 val mediaType = cr.getType(src) ?: return@withContext false
                 val isVideo = mediaType.startsWith("video")
                 val targetUri = cr.insert(
-                    if (isVideo) MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                    else MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    if (isVideo) MediaStore.Video.Media.getContentUri(volumeName)
+                    else MediaStore.Images.Media.getContentUri(volumeName),
                     ContentValues().apply {
                         put(MediaStore.MediaColumns.DISPLAY_NAME, src.lastPathSegment)
                         put(MediaStore.MediaColumns.MIME_TYPE, mediaType)
@@ -166,6 +176,7 @@ class MediaCopyWorker @AssistedInject constructor(
                 return@withContext false
             }
         }
+    }
 
     companion object {
         private const val MAX_CONCURRENT_COPIES = 4
