@@ -130,6 +130,16 @@ data class MediaMetadata(
     val isRelevant: Boolean
         get() = isNightMode || isPanorama || isPhotosphere || isLongExposure || isMotionPhoto
 
+    val searchableText: String
+        get() = buildString {
+            imageDescription?.let { append(it).append(' ') }
+            gpsLocationName?.let { append(it).append(' ') }
+            gpsLocationNameCity?.let { append(it).append(' ') }
+            gpsLocationNameCountry?.let { append(it).append(' ') }
+            manufacturerName?.let { append(it).append(' ') }
+            modelName?.let { append(it) }
+        }
+
     val formattedCords: String?
         get() = if (gpsLatitude != null && gpsLongitude != null) String.format(
             Locale.getDefault(), "%.3f, %.3f", gpsLatitude, gpsLongitude
