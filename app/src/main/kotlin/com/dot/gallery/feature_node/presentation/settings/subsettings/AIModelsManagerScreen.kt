@@ -115,7 +115,7 @@ fun AIModelsManagerScreen(
                 actionEnabled = true
                 actionClick = { showDeleteDialog = true }
             }
-            ModelStatus.DOWNLOADING, ModelStatus.COPYING -> {
+            ModelStatus.DOWNLOADING -> {
                 actionTitle = stringResource(R.string.ai_models_downloading)
                 val speedStr = Formatter.formatFileSize(context, downloadInfo.speed)
                 val downloadedStr = Formatter.formatFileSize(context, downloadInfo.downloadedBytes)
@@ -134,17 +134,25 @@ fun AIModelsManagerScreen(
                 actionEnabled = true
                 actionClick = { viewModel.cancelDownload() }
             }
+            ModelStatus.COPYING -> {
+                actionTitle = stringResource(R.string.ai_models_copying)
+                actionSummary = downloadInfo.currentFile.ifEmpty {
+                    stringResource(R.string.ai_models_copy_summary)
+                }
+                actionEnabled = false
+                actionClick = {}
+            }
             ModelStatus.ERROR -> {
-                actionTitle = stringResource(R.string.ai_models_download)
+                actionTitle = stringResource(R.string.ai_models_copy)
                 actionSummary = errorMessage ?: "Unknown error"
                 actionEnabled = true
-                actionClick = { viewModel.downloadModels() }
+                actionClick = { viewModel.installModels() }
             }
             ModelStatus.NOT_INSTALLED -> {
-                actionTitle = stringResource(R.string.ai_models_download)
-                actionSummary = stringResource(R.string.ai_models_download_summary)
+                actionTitle = stringResource(R.string.ai_models_copy)
+                actionSummary = stringResource(R.string.ai_models_copy_summary)
                 actionEnabled = true
-                actionClick = { viewModel.downloadModels() }
+                actionClick = { viewModel.installModels() }
             }
         }
 
@@ -275,7 +283,7 @@ fun AIModelsManagerScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text(stringResource(R.string.ai_models_delete)) },
-            text = { Text(stringResource(R.string.ai_models_delete_confirm)) },
+            text = { Text(stringResource(R.string.ai_models_delete_confirm_bundled)) },
             confirmButton = {
                 TextButton(
                     onClick = {

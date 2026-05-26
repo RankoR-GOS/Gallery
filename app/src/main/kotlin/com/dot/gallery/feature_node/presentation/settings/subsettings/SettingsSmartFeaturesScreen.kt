@@ -35,7 +35,6 @@ fun SettingsSmartFeaturesScreen(
     viewModel: SmartFeaturesViewModel = hiltViewModel()
 ) {
     val handler = LocalEventHandler.current
-    val hasInternet = viewModel.hasInternetPermission
     val modelStatus by viewModel.modelStatus.collectAsStateWithLifecycle()
     val isMetadataWorkerRunning by viewModel.isMetadataWorkerRunning.collectAsStateWithLifecycle()
     val metadataProgress by viewModel.metadataProgress.collectAsStateWithLifecycle()
@@ -58,21 +57,20 @@ fun SettingsSmartFeaturesScreen(
     ) { padding ->
         // Resolve strings outside the non-composable settings{} DSL
         val smartFeaturesHeader = stringResource(R.string.ai_category)
-        val aiModelsManagerTitle = if (hasInternet) stringResource(R.string.ai_models_manager) else ""
-        val modelSummary = if (hasInternet) when (modelStatus) {
+        val aiModelsManagerTitle = stringResource(R.string.ai_models_manager)
+        val modelSummary = when (modelStatus) {
             ModelStatus.READY -> stringResource(R.string.ai_models_ready_summary)
-            ModelStatus.NOT_INSTALLED -> stringResource(R.string.ai_models_download_summary)
-            ModelStatus.DOWNLOADING, ModelStatus.COPYING -> stringResource(R.string.ai_models_downloading)
+            ModelStatus.NOT_INSTALLED -> stringResource(R.string.ai_models_copy_summary)
+            ModelStatus.DOWNLOADING -> stringResource(R.string.ai_models_downloading)
+            ModelStatus.COPYING -> stringResource(R.string.ai_models_copying)
             ModelStatus.ERROR -> stringResource(R.string.ai_models_error)
-        } else ""
-        val categoriesTitle = if (hasInternet) stringResource(R.string.categories) else ""
-        val categoriesSummary = if (hasInternet) {
-            if (modelStatus == ModelStatus.READY) {
-                stringResource(R.string.categorise_your_media)
-            } else {
-                stringResource(R.string.ai_models_unavailable)
-            }
-        } else ""
+        }
+        val categoriesTitle = stringResource(R.string.categories)
+        val categoriesSummary = if (modelStatus == ModelStatus.READY) {
+            stringResource(R.string.categorise_your_media)
+        } else {
+            stringResource(R.string.ai_models_unavailable)
+        }
         val databaseHeader = stringResource(R.string.database)
         val refreshMetadataTitle = stringResource(R.string.refresh_metadata)
         val metadataSummary = when {
@@ -97,22 +95,20 @@ fun SettingsSmartFeaturesScreen(
             )
         ) {
             settings {
-                if (hasInternet) {
-                    Header(smartFeaturesHeader)
+                Header(smartFeaturesHeader)
 
-                    Preference(
-                        title = aiModelsManagerTitle,
-                        summary = modelSummary,
-                        onClick = { handler.navigate(Screen.AIModelsManagerScreen()) }
-                    )
+                Preference(
+                    title = aiModelsManagerTitle,
+                    summary = modelSummary,
+                    onClick = { handler.navigate(Screen.AIModelsManagerScreen()) }
+                )
 
-                    Preference(
-                        title = categoriesTitle,
-                        summary = categoriesSummary,
-                        enabled = modelStatus == ModelStatus.READY,
-                        onClick = { handler.navigate(Screen.CategoriesScreen()) }
-                    )
-                }
+                Preference(
+                    title = categoriesTitle,
+                    summary = categoriesSummary,
+                    enabled = modelStatus == ModelStatus.READY,
+                    onClick = { handler.navigate(Screen.CategoriesScreen()) }
+                )
 
                 Header(databaseHeader)
 

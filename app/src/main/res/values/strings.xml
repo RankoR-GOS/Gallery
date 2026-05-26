@@ -376,6 +376,9 @@
     <string name="ai_models_not_installed">AI models are not installed. Download them from Settings > Smart Features.</string>
     <string name="ai_models_manager">AI Models Manager</string>
     <string name="ai_models_manager_summary">Manage AI models for image search and classification</string>
+    <string name="ai_models_copy">Copy AI Models</string>
+    <string name="ai_models_copy_summary">Copy bundled AI models for image search and classification (~147 MB)</string>
+    <string name="ai_models_copying">Copying AI Models...</string>
     <string name="ai_models_download">Download AI Models</string>
     <string name="ai_models_download_summary">Download AI models for image search and classification (~147 MB)</string>
     <string name="ai_models_downloading">Downloading AI Models…</string>
@@ -383,7 +386,8 @@
     <string name="ai_models_ready_summary">AI-powered search and classification are available</string>
     <string name="ai_models_error">AI Model Error</string>
     <string name="ai_models_delete">Delete AI Models</string>
-    <string name="ai_models_delete_summary">Remove downloaded AI models to free up storage</string>
+    <string name="ai_models_delete_summary">Remove installed AI models to free up storage</string>
+    <string name="ai_models_delete_confirm_bundled">Are you sure you want to delete the AI models? You can copy them back from bundled app assets to use AI features.</string>
     <string name="ai_models_delete_confirm">Are you sure you want to delete the AI models? You will need to download them again to use AI features.</string>
     <string name="ai_models_size">Model size: %s</string>
     <string name="ai_models_unavailable">Unavailable — Requires AI Models Feature</string>

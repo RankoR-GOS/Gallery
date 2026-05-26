@@ -32,7 +32,6 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        buildConfigField("Boolean", "ML_MODELS_BUNDLED", "true")
         base.archivesName.set("Gallery")
     }
 

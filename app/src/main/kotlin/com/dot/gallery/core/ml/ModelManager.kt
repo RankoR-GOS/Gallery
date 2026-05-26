@@ -8,7 +8,9 @@ package com.dot.gallery.core.ml
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import com.dot.gallery.BuildConfig
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import com.dot.gallery.core.dataStore
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printInfo
 import com.dot.gallery.feature_node.presentation.util.printWarning
@@ -17,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -24,6 +27,8 @@ import java.io.File
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private val BUNDLED_MODELS_REMOVED_BY_USER = booleanPreferencesKey("bundled_models_removed_by_user")
 
 data class DownloadInfo(
     val speed: Long = 0L,
@@ -69,8 +74,7 @@ class ModelManager @Inject constructor(
 
     /**
      * Whether the app has INTERNET permission declared in its manifest.
-     * When false, AI model download and all dependent features (categories, AI search)
-     * should be hidden/disabled since models cannot be downloaded.
+     * Network model downloads require this permission, but bundled model copies do not.
      */
     val hasInternetPermission: Boolean by lazy {
         context.packageManager.checkPermission(
@@ -83,22 +87,32 @@ class ModelManager @Inject constructor(
 
     /**
      * Initialize models on app start.
-     * For withML builds: copies bundled assets to filesDir if not already present.
-     * For noML builds: checks if models have been previously downloaded.
+     * Copies bundled assets to filesDir on first launch only.
      */
-    suspend fun initializeModels() = mutex.withLock {
-        withContext(Dispatchers.IO) {
-            if (checkModelsPresent()) {
-                _status.value = ModelStatus.READY
-                printInfo("ModelManager: Models already present in filesDir")
-                return@withContext
-            }
+    suspend fun initializeModels() {
+        mutex.withLock {
+            withContext(Dispatchers.IO) {
+                if (checkModelsPresent()) {
+                    setBundledModelsRemovedByUser(removed = false)
+                    _status.value = ModelStatus.READY
+                    printInfo("ModelManager: Models already present in filesDir")
+                    return@withContext
+                }
 
-            if (BuildConfig.ML_MODELS_BUNDLED) {
+                if (!wereBundledModelsRemovedByUser()) {
+                    copyBundledModels()
+                } else {
+                    _status.value = ModelStatus.NOT_INSTALLED
+                    printInfo("ModelManager: Models not installed")
+                }
+            }
+        }
+    }
+
+    suspend fun restoreBundledModels() {
+        mutex.withLock {
+            withContext(Dispatchers.IO) {
                 copyBundledModels()
-            } else {
-                _status.value = ModelStatus.NOT_INSTALLED
-                printInfo("ModelManager: Models not installed (noML build)")
             }
         }
     }
@@ -164,16 +178,19 @@ class ModelManager @Inject constructor(
     /**
      * Delete all downloaded/copied model files.
      */
-    suspend fun deleteModels() = mutex.withLock {
-        withContext(Dispatchers.IO) {
-            if (modelsDir.exists()) {
-                modelsDir.deleteRecursively()
-                printInfo("ModelManager: Models deleted")
+    suspend fun deleteModels() {
+        mutex.withLock {
+            withContext(Dispatchers.IO) {
+                if (modelsDir.exists()) {
+                    modelsDir.deleteRecursively()
+                    printInfo("ModelManager: Models deleted")
+                }
+                setBundledModelsRemovedByUser(removed = true)
+                _status.value = ModelStatus.NOT_INSTALLED
+                _downloadProgress.value = 0f
+                _errorMessage.value = null
+                _downloadInfo.value = DownloadInfo()
             }
-            _status.value = ModelStatus.NOT_INSTALLED
-            _downloadProgress.value = 0f
-            _errorMessage.value = null
-            _downloadInfo.value = DownloadInfo()
         }
     }
 
@@ -220,12 +237,14 @@ class ModelManager @Inject constructor(
      */
     private suspend fun copyBundledModels() {
         _status.value = ModelStatus.COPYING
+        _downloadInfo.value = DownloadInfo()
         try {
             modelsDir.mkdirs()
             val assetManager = context.assets
             val totalFiles = REQUIRED_FILES.size
             REQUIRED_FILES.forEachIndexed { index, fileName ->
                 val destFile = File(modelsDir, fileName)
+                _downloadInfo.value = DownloadInfo(currentFile = fileName)
                 if (!destFile.exists() || destFile.length() == 0L) {
                     printDebug("ModelManager: Copying asset $fileName to filesDir")
                     assetManager.open(fileName).use { input ->
@@ -236,12 +255,24 @@ class ModelManager @Inject constructor(
                 }
                 _downloadProgress.value = ((index + 1).toFloat() / totalFiles) * 100f
             }
+            setBundledModelsRemovedByUser(removed = false)
+            _downloadInfo.value = DownloadInfo()
             _status.value = ModelStatus.READY
             printInfo("ModelManager: Bundled models copied to filesDir")
         } catch (e: Exception) {
             _status.value = ModelStatus.ERROR
             _errorMessage.value = "Failed to copy bundled models: ${e.message}"
             printWarning("ModelManager: Failed to copy bundled models: ${e.message}")
+        }
+    }
+
+    private suspend fun wereBundledModelsRemovedByUser(): Boolean {
+        return context.dataStore.data.first()[BUNDLED_MODELS_REMOVED_BY_USER] ?: false
+    }
+
+    private suspend fun setBundledModelsRemovedByUser(removed: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[BUNDLED_MODELS_REMOVED_BY_USER] = removed
         }
     }
 

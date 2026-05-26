@@ -15,9 +15,9 @@ import com.dot.gallery.core.ml.ModelFileInfo
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.workers.cancelModelDownload
-import com.dot.gallery.core.workers.downloadModels
 import com.dot.gallery.core.workers.forceMetadataCollect
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -39,9 +39,9 @@ class SmartFeaturesViewModel @Inject constructor(
 
     val installedSize: Long get() = modelManager.getInstalledSize()
 
-    fun getFileInfos(): List<ModelFileInfo> = modelManager.getFileInfos()
-
-    val hasInternetPermission: Boolean get() = modelManager.hasInternetPermission
+    fun getFileInfos(): List<ModelFileInfo> {
+        return modelManager.getFileInfos()
+    }
 
     val isMetadataWorkerRunning: StateFlow<Boolean> = workManager.getWorkInfosFlow(
         WorkQuery.fromUniqueWorkNames("MetadataCollection")
@@ -64,20 +64,21 @@ class SmartFeaturesViewModel @Inject constructor(
         initialValue = -1
     )
 
-    fun downloadModels() {
-        if (!modelManager.hasInternetPermission) return
-        workManager.downloadModels()
+    fun installModels() {
+        viewModelScope.launch(Dispatchers.IO) {
+            modelManager.restoreBundledModels()
+        }
     }
 
     fun cancelDownload() {
         workManager.cancelModelDownload()
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             modelManager.deleteModels()
         }
     }
 
     fun deleteModels() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             modelManager.deleteModels()
         }
     }
