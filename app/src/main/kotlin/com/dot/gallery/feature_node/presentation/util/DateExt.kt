@@ -15,7 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import kotlin.math.roundToInt
+
 import androidx.compose.ui.text.intl.Locale as ComposeLocale
 
 private val FILENAME_DATE_REGEX = Regex("""(\d{4})(\d{2})(\d{2})[_-](\d{2})(\d{2})(\d{2})""")
@@ -99,35 +99,35 @@ fun Long.getDate(
     currentDate.timeInMillis = System.currentTimeMillis()
     val mediaDate = Calendar.getInstance(locale)
     mediaDate.timeInMillis = this * 1000L
-    val different: Long = System.currentTimeMillis() - mediaDate.timeInMillis
-    val secondsInMilli: Long = 1000
-    val minutesInMilli = secondsInMilli * 60
-    val hoursInMilli = minutesInMilli * 60
-    val daysInMilli = hoursInMilli * 24
 
-    val daysDifference = (different / daysInMilli.toFloat()).roundToInt()
+    // Use calendar-day difference (truncate to start of day) to avoid
+    // grouping artifacts at day boundaries. Raw time division caused
+    // photos from the same calendar day to land in different groups
+    // when their hour-of-day differences straddled a rounding boundary.
+    val currentDayStart = Calendar.getInstance(locale).apply {
+        timeInMillis = currentDate.timeInMillis
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    val mediaDayStart = Calendar.getInstance(locale).apply {
+        timeInMillis = mediaDate.timeInMillis
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    val daysDifference = ((currentDayStart.timeInMillis - mediaDayStart.timeInMillis) / (24 * 60 * 60 * 1000L)).toInt()
 
-    return when (daysDifference) {
-        0 -> {
-            if (currentDate.get(Calendar.DATE) != mediaDate.get(Calendar.DATE)) {
-                stringYesterday
-            } else {
-                stringToday
-            }
-        }
-
-        1 -> {
-            stringYesterday
-        }
-
+    return when {
+        daysDifference <= 0 -> stringToday
+        daysDifference == 1 -> stringYesterday
+        daysDifference in 2..6 -> DateFormat.format(weeklyFormat, mediaDate).toString()
         else -> {
-            if (daysDifference in 2..6) {
-                DateFormat.format(weeklyFormat, mediaDate).toString()
-            } else {
-                if (currentDate.get(Calendar.YEAR) > mediaDate.get(Calendar.YEAR)) {
-                    DateFormat.format(extendedFormat, mediaDate).toString()
-                } else DateFormat.format(format, mediaDate).toString()
-            }
+            if (currentDate.get(Calendar.YEAR) > mediaDate.get(Calendar.YEAR)) {
+                DateFormat.format(extendedFormat, mediaDate).toString()
+            } else DateFormat.format(format, mediaDate).toString()
         }
     }
 }
