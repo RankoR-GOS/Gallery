@@ -24,7 +24,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -36,6 +36,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionLayout
+import com.dot.gallery.feature_node.presentation.util.launchViewUri
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import kotlinx.coroutines.launch
 
@@ -46,23 +47,23 @@ fun SupportSheet(
     state: AppBottomSheetState
 ) {
     val scope = rememberCoroutineScope()
-    val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     var showCryptoOptions by rememberSaveable {
         mutableStateOf(false)
     }
     val clipboard = LocalClipboardManager.current
-    val mainOptions = remember {
+    val mainOptions = remember(context) {
         listOf(
             OptionItem(
                 text = "PayPal",
                 onClick = {
-                    uriHandler.openUri("https://www.paypal.com/paypalme/iacobionut01")
+                    context.launchViewUri("https://www.paypal.com/paypalme/iacobionut01")
                 }
             ),
             OptionItem(
                 text = "Revolut",
                 onClick = {
-                    uriHandler.openUri("https://revolut.me/somaldoaca")
+                    context.launchViewUri("https://revolut.me/somaldoaca")
                 }
             ),
             OptionItem(

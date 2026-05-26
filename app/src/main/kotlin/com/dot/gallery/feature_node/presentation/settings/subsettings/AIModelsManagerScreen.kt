@@ -62,6 +62,7 @@ import com.dot.gallery.R
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.presentation.components.NavigationBackButton
 import com.dot.gallery.feature_node.presentation.settings.components.settings
+import com.dot.gallery.feature_node.presentation.util.launchViewUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -209,12 +210,8 @@ fun AIModelsManagerScreen(
                     title = sourceLabel,
                     summary = sourceUrl,
                     onClick = {
-                        val intent = android.content.Intent(
-                            android.content.Intent.ACTION_VIEW,
-                            android.net.Uri.parse(sourceUrl)
-                        )
-                        context.startActivity(intent)
-                    }
+                        context.launchViewUri(sourceUrl)
+                    },
                 )
             }
 

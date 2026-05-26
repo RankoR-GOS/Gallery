@@ -30,9 +30,16 @@ fun <T : Media> EditButton(
         enabled = enabled
     ) {
         if (it.isImage && defaultEditor != Settings.Misc.EDITOR_BUILTIN) {
-            try {
-                context.launchEditImageIntent(defaultEditor, it.getUri())
+            val launched = try {
+                context.launchEditImageIntent(
+                    packageName = defaultEditor,
+                    uri = it.getUri(),
+                    showError = false,
+                )
             } catch (_: Exception) {
+                false
+            }
+            if (!launched) {
                 context.launchEditIntent(it)
             }
         } else {

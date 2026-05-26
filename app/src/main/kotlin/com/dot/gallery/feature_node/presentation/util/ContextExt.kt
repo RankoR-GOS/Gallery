@@ -7,6 +7,7 @@
 package com.dot.gallery.feature_node.presentation.util
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -52,6 +53,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.dot.gallery.BuildConfig
@@ -292,6 +294,33 @@ private fun Context.isTouchExplorationEnabled(): Boolean {
     return accessibilityManager?.isTouchExplorationEnabled ?: false
 }
 
+fun Context.tryStartActivity(
+    intent: Intent,
+    errorMessage: String,
+    showError: Boolean = true,
+): Boolean {
+    return try {
+        startActivity(intent)
+        true
+    } catch (_: ActivityNotFoundException) {
+        if (showError) {
+            Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+        }
+        false
+    }
+}
+
+fun Context.launchViewUri(uri: String): Boolean {
+    val intent = Intent(
+        Intent.ACTION_VIEW,
+        uri.toUri(),
+    )
+    return tryStartActivity(
+        intent = intent,
+        errorMessage = getString(R.string.error_toast),
+    )
+}
+
 fun Activity.toggleOrientation() {
     requestedOrientation =
         if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED ||
@@ -302,12 +331,15 @@ fun Activity.toggleOrientation() {
 }
 
 @RequiresApi(Build.VERSION_CODES.S)
-fun Context.launchManageMedia() {
+fun Context.launchManageMedia(): Boolean {
     val intent = Intent().apply {
         action = Settings.ACTION_REQUEST_MANAGE_MEDIA
         data = Uri.fromParts("package", packageName, null)
     }
-    startActivity(intent)
+    return tryStartActivity(
+        intent = intent,
+        errorMessage = getString(R.string.error_toast),
+    )
 }
 
 fun Context.getEditImageCapableApps(): List<ResolveInfo> {
@@ -318,7 +350,11 @@ fun Context.getEditImageCapableApps(): List<ResolveInfo> {
     return resolveInfoList.filterNot { it.activityInfo.packageName == BuildConfig.APPLICATION_ID }
 }
 
-fun Context.launchEditImageIntent(packageName: String, uri: Uri) {
+fun Context.launchEditImageIntent(
+    packageName: String,
+    uri: Uri,
+    showError: Boolean = true,
+): Boolean {
     val intent = Intent(Intent.ACTION_EDIT).apply {
         addCategory(Intent.CATEGORY_DEFAULT)
         setDataAndType(uri.authorizedUri(this@launchEditImageIntent), "image/*")
@@ -326,12 +362,17 @@ fun Context.launchEditImageIntent(packageName: String, uri: Uri) {
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         setPackage(packageName)
     }
-    startActivity(intent)
+    return tryStartActivity(
+        intent = intent,
+        errorMessage = getString(R.string.error_toast),
+        showError = showError,
+    )
 }
 
-fun <T: Media>  Context.launchEditIntent(media: T) {
+fun <T: Media>  Context.launchEditIntent(media: T): Boolean {
     if (media.isImage) {
         EditActivity.launchEditor(this@launchEditIntent, media.getUri().authorizedUri(this@launchEditIntent))
+        return true
     } else {
         val intent = Intent(Intent.ACTION_EDIT).apply {
             addCategory(Intent.CATEGORY_DEFAULT)
@@ -339,31 +380,42 @@ fun <T: Media>  Context.launchEditIntent(media: T) {
             putExtra("mimeType", media.mimeType)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        startActivity(Intent.createChooser(intent, getString(R.string.edit)))
+        return tryStartActivity(
+            intent = Intent.createChooser(intent, getString(R.string.edit)),
+            errorMessage = getString(R.string.error_toast),
+        )
     }
 }
 
-suspend fun <T: Media> Context.launchUseAsIntent(media: T) =
-    withContext(Dispatchers.Default) {
-        val intent = Intent(Intent.ACTION_ATTACH_DATA).apply {
-            addCategory(Intent.CATEGORY_DEFAULT)
-            setDataAndType(media.getUri().authorizedUri(this@launchUseAsIntent), media.mimeType)
-            putExtra("mimeType", media.mimeType)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        startActivity(Intent.createChooser(intent, getString(R.string.set_as)))
+suspend fun <T: Media> Context.launchUseAsIntent(media: T): Boolean {
+    val intent = Intent(Intent.ACTION_ATTACH_DATA).apply {
+        addCategory(Intent.CATEGORY_DEFAULT)
+        setDataAndType(media.getUri().authorizedUri(this@launchUseAsIntent), media.mimeType)
+        putExtra("mimeType", media.mimeType)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
+    return withContext(Dispatchers.Main) {
+        tryStartActivity(
+            intent = Intent.createChooser(intent, getString(R.string.set_as)),
+            errorMessage = getString(R.string.error_toast),
+        )
+    }
+}
 
-suspend fun <T: Media> Context.launchOpenWithIntent(media: T) =
-    withContext(Dispatchers.Default) {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            addCategory(Intent.CATEGORY_DEFAULT)
-            setDataAndType(media.getUri().authorizedUri(this@launchOpenWithIntent), media.mimeType)
-            putExtra("mimeType", media.mimeType)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        startActivity(Intent.createChooser(intent, getString(R.string.open_with)))
+suspend fun <T: Media> Context.launchOpenWithIntent(media: T): Boolean {
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        addCategory(Intent.CATEGORY_DEFAULT)
+        setDataAndType(media.getUri().authorizedUri(this@launchOpenWithIntent), media.mimeType)
+        putExtra("mimeType", media.mimeType)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
+    return withContext(Dispatchers.Main) {
+        tryStartActivity(
+            intent = Intent.createChooser(intent, getString(R.string.open_with)),
+            errorMessage = getString(R.string.error_toast),
+        )
+    }
+}
 
 @Composable
 fun rememberIsMediaManager(): Boolean {

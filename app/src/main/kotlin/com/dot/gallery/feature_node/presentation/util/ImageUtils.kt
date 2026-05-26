@@ -236,7 +236,7 @@ fun <T : Media> Context.copyMediaToClipboard(media: T) {
     Toast.makeText(this, getString(R.string.copied_to_clipboard), Toast.LENGTH_SHORT).show()
 }
 
-fun <T : Media> Context.shareMedia(media: T) {
+fun <T : Media> Context.shareMedia(media: T): Boolean {
     val originalUri = media.getUri()
     val uri = if (originalUri.toString()
             .startsWith("content://")
@@ -246,14 +246,18 @@ fun <T : Media> Context.shareMedia(media: T) {
         originalUri.toFile()
     )
 
-    ShareCompat
+    val shareIntent = ShareCompat
         .IntentBuilder(this)
         .setType(media.mimeType)
         .addStream(uri)
-        .startChooser()
+        .createChooserIntent()
+    return tryStartActivity(
+        intent = shareIntent,
+        errorMessage = getString(R.string.error_toast),
+    )
 }
 
-fun <T : Media> Context.shareMedia(mediaList: List<T>) {
+fun <T : Media> Context.shareMedia(mediaList: List<T>): Boolean {
     val mimeTypes =
         if (mediaList.find { it.duration != null } != null) {
             if (mediaList.find { it.duration == null } != null) "video/*,image/*" else "video/*"
@@ -265,5 +269,8 @@ fun <T : Media> Context.shareMedia(mediaList: List<T>) {
     mediaList.forEach {
         shareCompat.addStream(it.getUri())
     }
-    shareCompat.startChooser()
+    return tryStartActivity(
+        intent = shareCompat.createChooserIntent(),
+        errorMessage = getString(R.string.error_toast),
+    )
 }

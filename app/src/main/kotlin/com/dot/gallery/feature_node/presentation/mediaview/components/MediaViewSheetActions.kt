@@ -147,9 +147,16 @@ fun <T : Media> MediaViewSheetActions(
                 text = editText,
                 onClick = {
                     if (media.isImage && defaultEditor != Settings.Misc.EDITOR_BUILTIN) {
-                        try {
-                            context.launchEditImageIntent(defaultEditor, media.getUri())
+                        val launched = try {
+                            context.launchEditImageIntent(
+                                packageName = defaultEditor,
+                                uri = media.getUri(),
+                                showError = false,
+                            )
                         } catch (_: Exception) {
+                            false
+                        }
+                        if (!launched) {
                             context.launchEditIntent(media)
                         }
                     } else {

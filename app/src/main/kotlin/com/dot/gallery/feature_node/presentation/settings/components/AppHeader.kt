@@ -38,7 +38,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.presentation.support.SupportSheet
+import com.dot.gallery.feature_node.presentation.util.launchViewUri
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.ui.theme.GalleryTheme
 import kotlinx.coroutines.launch
@@ -70,7 +71,7 @@ fun SettingsAppHeader() {
     val githubContentDesc = stringResource(R.string.github_button_cd)
     val githubUrl = stringResource(R.string.github_url)
 
-    val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val supportState = rememberAppBottomSheetState()
 
@@ -186,7 +187,7 @@ fun SettingsAppHeader() {
                     )
                 }
                 Button(
-                    onClick = { uriHandler.openUri(githubUrl) },
+                    onClick = { context.launchViewUri(githubUrl) },
                     colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.colorScheme.onTertiary,
                         disabledContentColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = .12f),
