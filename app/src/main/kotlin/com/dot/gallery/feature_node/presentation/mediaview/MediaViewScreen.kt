@@ -806,9 +806,14 @@ fun <T : Media> MediaViewScreen(
                 }
             }
             // Sync status bar icon color with the top image luminance
-            LaunchedEffect(isTopDark) {
-                // Dark top → white status icons; bright top → dark status icons
-                windowInsetsController.isAppearanceLightStatusBars = !isTopDark
+            LaunchedEffect(isTopDark, autoContrast, isDarkTheme, allowBlur) {
+                windowInsetsController.isAppearanceLightStatusBars = if (autoContrast) {
+                    // Dark top means white status icons; bright top means dark status icons
+                    !isTopDark
+                } else {
+                    // Match background: black bg uses light icons, white bg uses dark icons
+                    !allowBlur && !isDarkTheme
+                }
             }
             DisposableEffect(Unit) {
                 val previousLightStatusBars = windowInsetsController.isAppearanceLightStatusBars
