@@ -12,7 +12,6 @@ import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
-import com.dot.gallery.feature_node.domain.model.LocationMedia
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadata
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
@@ -111,15 +110,6 @@ class SearchViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = persistentListOf()
     )
-
-    // Top locations for the search screen carousel (matching LibraryScreen style)
-    val topLocations: StateFlow<ImmutableList<LocationMedia>> = mediaDistributor.locationsMediaFlow
-        .map { it.take(10).toImmutableList() }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = persistentListOf()
-        )
 
     // Top MIME types carousel – grouped by mimeType, readable labels
     val topMimeTypes: StateFlow<ImmutableList<SearchMediaItem>> = mediaDistributor.timelineMediaFlow

@@ -46,20 +46,6 @@ class CategoriesViewModel @Inject constructor(
 
     val modelStatus: StateFlow<ModelStatus> = modelManager.status
 
-    // ============ Locations ============
-    
-    /**
-     * Flow of all locations with their media
-     */
-    val locations = distributor.locationsMediaFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    /**
-     * Flow of all geo-tagged media with GPS coordinates for map display
-     */
-    val geoMedia = distributor.geoMediaFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
     // ============ New Category System ============
     
     /**

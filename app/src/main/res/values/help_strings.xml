@@ -53,7 +53,7 @@
     <string name="help_tip_nav_bottom_bar_p1_title">The navigation bar</string>
     <string name="help_tip_nav_bottom_bar_p1_desc">The bottom navigation bar is your main way to move around Gallery. It\'s always visible at the bottom of the screen (unless you enable auto-hide in settings). Each tab remembers where you left off, so switching between sections won\'t lose your scroll position.</string>
     <string name="help_tip_nav_bottom_bar_p2_title">Three main sections</string>
-    <string name="help_tip_nav_bottom_bar_p2_desc">Timeline shows all your media sorted by date — great for finding recent photos. Albums organizes photos by the folder they\'re stored in (Camera, Screenshots, Downloads, etc.) — perfect for browsing by source. Library is your hub for Favorites, Trash, Locations, and AI Categories — quick access to everything special.</string>
+    <string name="help_tip_nav_bottom_bar_p2_desc">Timeline shows all your media sorted by date — great for finding recent photos. Albums organizes photos by the folder they\'re stored in (Camera, Screenshots, Downloads, etc.) — perfect for browsing by source. Library is your hub for Favorites, Trash, and AI Categories — quick access to everything special.</string>
     <string name="help_tip_nav_albums_title">Browse by albums</string>
     <string name="help_tip_nav_albums_subtitle">See photos organized by folder</string>
     <string name="help_tip_nav_albums_p1_title">Album view</string>
@@ -77,9 +77,9 @@
     <string name="help_tip_nav_old_navbar_p1_s1">Go to Settings > Navigation</string>
     <string name="help_tip_nav_old_navbar_p1_s2">Toggle \'Old navigation bar style\'</string>
     <string name="help_tip_nav_library_title">Use the library</string>
-    <string name="help_tip_nav_library_subtitle">Quick access to favorites, trash, locations, and more</string>
+    <string name="help_tip_nav_library_subtitle">Quick access to favorites, trash, categories, and more</string>
     <string name="help_tip_nav_library_p1_title">The Library</string>
-    <string name="help_tip_nav_library_p1_desc">The Library is your hub for everything beyond the main timeline and albums. From here you can access: Favorites (your starred photos), Trash (recently deleted items, recoverable for 30 days), Locations (photos organized by where they were taken), and Categories (AI-sorted photo groups). Think of it as your gallery\'s control center.</string>
+    <string name="help_tip_nav_library_p1_desc">The Library is your hub for everything beyond the main timeline and albums. From here you can access: Favorites (your starred photos), Trash (recently deleted items, recoverable for 30 days), and Categories (AI-sorted photo groups). Think of it as your gallery\'s control center.</string>
     <string name="help_tip_nav_launch_screen_title">Set your default launch screen</string>
     <string name="help_tip_nav_launch_screen_subtitle">Choose which screen appears when you open Gallery</string>
     <string name="help_tip_nav_launch_screen_p1_title">Default launch screen</string>
@@ -671,7 +671,7 @@
     <string name="help_tip_settings_launch_screen_title">Default launch screen</string>
     <string name="help_tip_settings_launch_screen_subtitle">Choose Auto, Timeline, Albums, or Library</string>
     <string name="help_tip_settings_launch_screen_p1_title">Launch screen</string>
-    <string name="help_tip_settings_launch_screen_p1_desc">Choose which screen greets you when you open Gallery. Auto remembers the last screen you used. Timeline is great for browsing recent photos. Albums is ideal if you organize by folder. Library works well if you primarily access favorites, trash, locations, or categories.</string>
+    <string name="help_tip_settings_launch_screen_p1_desc">Choose which screen greets you when you open Gallery. Auto remembers the last screen you used. Timeline is great for browsing recent photos. Albums is ideal if you organize by folder. Library works well if you primarily access favorites, trash, or categories.</string>
     <string name="help_tip_settings_launch_screen_p1_s1">Go to Settings > Navigation</string>
     <string name="help_tip_settings_launch_screen_p1_s2">Tap \'Default launch screen\'</string>
     <string name="help_tip_settings_launch_screen_p1_s3">Choose Auto, Timeline, Albums, or Library</string>

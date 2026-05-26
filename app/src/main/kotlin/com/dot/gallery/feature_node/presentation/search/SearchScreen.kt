@@ -92,7 +92,6 @@ import com.dot.gallery.feature_node.domain.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.classifier.components.CategoryCarousel
-import com.dot.gallery.feature_node.presentation.classifier.components.LocationCarousel
 import com.dot.gallery.feature_node.presentation.classifier.components.SearchCarousel
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.common.components.MosaicMediaGrid
@@ -134,7 +133,6 @@ fun SearchScreen(
 
     // Categories for the carousel
     val topCategories by viewModel.topCategories.collectAsStateWithLifecycle()
-    val topLocations by viewModel.topLocations.collectAsStateWithLifecycle()
     val topMimeTypes by viewModel.topMimeTypes.collectAsStateWithLifecycle()
     val topLensModels by viewModel.topLensModels.collectAsStateWithLifecycle()
     val topMediaModes by viewModel.topMediaModes.collectAsStateWithLifecycle()
@@ -440,32 +438,6 @@ fun SearchScreen(
                                         eventHandler.navigate(
                                             Screen.CategoryViewScreen.categoryId(
                                                 categoryMedia.category.id
-                                            )
-                                        )
-                                    },
-                                    title = null
-                                )
-                            }
-                        }
-
-                        // Location Carousel
-                        if (topLocations.isNotEmpty()) {
-                            SettingsOptionLayout(
-                                modifier = Modifier.padding(top = 12.dp),
-                                optionList = listOf(SettingsEntity.Header(resources.getString(R.string.locations))),
-                                slimLayout = true
-                            )
-                            item {
-                                LocationCarousel(
-                                    locations = topLocations,
-                                    onLocationClick = { locationMedia ->
-                                        val city = locationMedia.location.substringBefore(",")
-                                        val country =
-                                            locationMedia.location.substringAfterLast(", ")
-                                        eventHandler.navigate(
-                                            Screen.LocationTimelineScreen.location(
-                                                gpsLocationNameCity = city,
-                                                gpsLocationNameCountry = country
                                             )
                                         )
                                     },

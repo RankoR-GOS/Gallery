@@ -25,7 +25,7 @@ data class SearchSuggestion(
 /**
  * Provides a group of search suggestions with a header title.
  * Implement this interface to add new suggestion categories
- * (e.g. locations, mime types, media tags, albums, etc.)
+ * (e.g. mime types, media tags, albums, etc.)
  */
 interface SearchSuggestionProvider {
     /** Header title shown above this group of suggestions */

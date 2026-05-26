@@ -5,18 +5,15 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.FileOpen
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.PermMedia
-import androidx.compose.material.icons.rounded.SignalWifi4Bar
 import androidx.compose.material.icons.rounded.VideoFile
 import com.dot.gallery.core.presentation.components.SetupButton
 import androidx.compose.material3.MaterialTheme
@@ -48,8 +45,6 @@ import com.dot.gallery.core.presentation.components.SetupWizard
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionLayout
 import com.dot.gallery.feature_node.presentation.util.RepeatOnResume
-import com.dot.gallery.feature_node.presentation.util.isManageFilesAllowed
-import com.dot.gallery.feature_node.presentation.util.launchManageFiles
 import com.dot.gallery.feature_node.presentation.util.launchManageMedia
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -139,9 +134,7 @@ fun SetupScreen(
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 var useMediaManager by rememberIsMediaManager()
-                var isStorageManager by remember { mutableStateOf(Environment.isExternalStorageManager()) }
                 RepeatOnResume {
-                    isStorageManager = Environment.isExternalStorageManager()
                     useMediaManager = MediaStore.canManageMedia(context)
                 }
 
@@ -154,7 +147,7 @@ fun SetupScreen(
                 val grantedString = stringResource(R.string.granted)
                 val secondaryContainer = MaterialTheme.colorScheme.secondaryContainer
                 val onSecondaryContainer = MaterialTheme.colorScheme.onSecondaryContainer
-                val optionsList = remember(useMediaManager, isStorageManager) {
+                val optionsList = remember(useMediaManager) {
                     mutableStateListOf(
                         OptionItem(
                             icon = Icons.Rounded.PermMedia,
@@ -164,21 +157,6 @@ fun SetupScreen(
                             onClick = {
                                 scope.launch {
                                     context.launchManageMedia()
-                                }
-                            },
-                            containerColor = secondaryContainer,
-                            contentColor = onSecondaryContainer
-                        ),
-                        OptionItem(
-                            icon = Icons.Rounded.FileOpen,
-                            text = resources.getString(R.string.permission_manage_files_title),
-                            summary = if (!isStorageManager && isManageFilesAllowed) resources.getString(
-                                R.string.permission_manage_files_summary
-                            ) else grantedString,
-                            enabled = !isStorageManager && isManageFilesAllowed,
-                            onClick = {
-                                scope.launch {
-                                    context.launchManageFiles()
                                 }
                             },
                             containerColor = secondaryContainer,
@@ -201,7 +179,7 @@ fun SetupScreen(
                         onPermissionResult = { isGranted = it }
                     )
                     LaunchedEffect(
-                        useMediaManager, isStorageManager, isGranted
+                        useMediaManager, isGranted
                     ) {
                         optionsList.removeIf { item -> item.icon == Icons.Rounded.Notifications }
                         optionsList.add(
@@ -253,14 +231,5 @@ private val Context.requiredPermissionsList: Array<Triple<ImageVector, String, S
                 getString(R.string.access_media_location_summary)
             ),
         )
-        if (BuildConfig.MAPS_ENABLED) {
-            list.add(
-                Triple(
-                    Icons.Rounded.SignalWifi4Bar,
-                    getString(R.string.internet),
-                    getString(R.string.internet_summary)
-                )
-            )
-        }
         return list.toTypedArray()
     }

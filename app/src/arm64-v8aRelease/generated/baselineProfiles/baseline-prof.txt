@@ -25044,7 +25044,6 @@ SPLcom/dot/gallery/feature_node/presentation/util/AppBottomSheetStateKt$$Externa
 Lcom/dot/gallery/feature_node/presentation/util/ContextExtKt;
 SPLcom/dot/gallery/feature_node/presentation/util/ContextExtKt;-><clinit>()V
 SPLcom/dot/gallery/feature_node/presentation/util/ContextExtKt;->getMediaStoreVersion(Landroid/content/Context;)Ljava/lang/String;
-SPLcom/dot/gallery/feature_node/presentation/util/ContextExtKt;->isManageFilesAllowed()Z
 PLcom/dot/gallery/feature_node/presentation/util/ContextExtKt;->isMediaUpToDate(Lcom/dot/gallery/feature_node/data/data_source/InternalDatabase;Landroid/content/Context;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 SPLcom/dot/gallery/feature_node/presentation/util/ContextExtKt;->isMetadataUpToDate(Lcom/dot/gallery/feature_node/data/data_source/InternalDatabase;Landroid/content/Context;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 PLcom/dot/gallery/feature_node/presentation/util/ContextExtKt;->launchManageMedia(Landroid/content/Context;)V

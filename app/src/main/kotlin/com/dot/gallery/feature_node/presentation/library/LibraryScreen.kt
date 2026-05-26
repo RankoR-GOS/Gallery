@@ -66,7 +66,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.LocalEventHandler
@@ -80,7 +79,6 @@ import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.common.components.GridPinchZoomLayout
 import com.dot.gallery.feature_node.presentation.common.components.rememberGridPinchZoomState
 import com.dot.gallery.feature_node.presentation.library.components.LibrarySmallItem
-import com.dot.gallery.feature_node.presentation.library.components.MapPreviewCard
 import com.dot.gallery.feature_node.presentation.library.components.dashedBorder
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
@@ -124,21 +122,12 @@ fun LibraryScreen(
         }
     }
 
-    val locations by viewModel.locations.collectAsStateWithLifecycle()
-    val geoMedia by viewModel.geoMedia.collectAsStateWithLifecycle()
-
     val indicatorState by viewModel.indicatorState.collectAsStateWithLifecycle()
 
     // New category system
     val topCategories by viewModel.topCategories.collectAsStateWithLifecycle()
     val totalCategoryCount by viewModel.totalCategoryCount.collectAsStateWithLifecycle()
     val noCategoriesFound by rememberedDerivedState { topCategories.isEmpty() }
-
-    // Locations
-    val noLocationsFound by rememberedDerivedState { locations.isEmpty() }
-    val totalLocationsCount by rememberedDerivedState { locations.size }
-    val mapsEnabled = remember { BuildConfig.MAPS_ENABLED }
-    val isDark = isDarkTheme()
 
     val modelStatus by viewModel.modelStatus.collectAsStateWithLifecycle()
     val hasInternet = viewModel.hasInternetPermission
@@ -286,133 +275,6 @@ fun LibraryScreen(
                                         eventHandler.navigate(Screen.IgnoredScreen())
                                     }
                             )
-                        }
-                    }
-                }
-
-                // Locations section
-                if (!noLocationsFound) {
-                    item(
-                        span = { GridItemSpan(maxLineSpan) },
-                        key = "LocationsHeader"
-                    ) {
-                        if (mapsEnabled) {
-                            val latest = geoMedia.firstOrNull()
-                            MapPreviewCard(
-                                modifier = Modifier
-                                    .animateItem()
-                                    .pinchItem(key = "LocationsHeader")
-                                    .padding(horizontal = 16.dp)
-                                    .padding(top = 8.dp)
-                                    .clip(RoundedCornerShape(24.dp))
-                                    .clickable {
-                                        eventHandler.navigate(Screen.LocationsScreen())
-                                    },
-                                latestMedia = latest?.media,
-                                latitude = latest?.latitude,
-                                longitude = latest?.longitude,
-                                isDark = isDark
-                            )
-                        } else {
-                            Column(
-                                modifier = Modifier
-                                    .animateItem()
-                                    .pinchItem(key = "LocationsHeader")
-                                    .padding(horizontal = 16.dp)
-                                    .padding(top = 8.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                LibrarySmallItem(
-                                    title = stringResource(R.string.locations),
-                                    icon = null,
-                                    contentColor = MaterialTheme.colorScheme.onSurface,
-                                    containerColor = MaterialTheme.colorScheme.surface,
-                                    useIndicator = true,
-                                    indicatorCounter = totalLocationsCount,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            eventHandler.navigate(Screen.LocationsScreen())
-                                        }
-                                )
-                            }
-                        }
-                    }
-                    // Locations carousel
-                    item(
-                        span = { GridItemSpan(maxLineSpan) },
-                        key = "LocationsList"
-                    ) {
-                        LazyRow(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(top = 8.dp)
-                                .clip(RoundedCornerShape(16.dp)),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(
-                                items = locations,
-                                key = { it.toString() }
-                            ) { (media, location) ->
-                                with(sharedTransitionScope) {
-                                    val isDarkTheme = isDarkTheme()
-                                    val allowBlur by rememberAllowBlur()
-                                    val followTheme = remember(allowBlur) { !allowBlur }
-                                    val gradientColor by animateColorAsState(
-                                        if (followTheme) {
-                                            if (isDarkTheme) BlackScrim else WhiterBlackScrim
-                                        } else BlackScrim,
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .width(164.dp)
-                                            .height(256.dp)
-                                            .clip(RoundedCornerShape(24.dp))
-                                            .clickable {
-                                                val gpsLocationNameCity =
-                                                    location.substringBefore(",")
-                                                val gpsLocationNameCountry =
-                                                    location.substringAfterLast(", ")
-                                                eventHandler.navigate(
-                                                    Screen.LocationTimelineScreen.location(
-                                                        gpsLocationNameCity = gpsLocationNameCity,
-                                                        gpsLocationNameCountry = gpsLocationNameCountry
-                                                    )
-                                                )
-                                            },
-                                    ) {
-                                        GlideImage(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentScale = ContentScale.Crop,
-                                            model = media.getUri(),
-                                            contentDescription = location,
-                                            requestBuilderTransform = {
-                                                it.signature(GlideInvalidation.signature(media))
-                                            }
-                                        )
-                                        Text(
-                                            modifier = Modifier
-                                                .align(Alignment.BottomCenter)
-                                                .fillMaxWidth()
-                                                .background(
-                                                    Brush.verticalGradient(
-                                                        colors = listOf(
-                                                            Color.Transparent,
-                                                            gradientColor
-                                                        )
-                                                    )
-                                                )
-                                                .padding(24.dp),
-                                            text = location,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = Color.White,
-                                            fontWeight = FontWeight.SemiBold,
-                                            textAlign = TextAlign.Center,
-                                            overflow = TextOverflow.MiddleEllipsis
-                                        )
-                                    }
-                                }
-                            }
                         }
                     }
                 }

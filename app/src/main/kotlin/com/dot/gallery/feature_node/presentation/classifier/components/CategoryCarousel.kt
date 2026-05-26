@@ -44,7 +44,6 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
-import com.dot.gallery.feature_node.domain.model.LocationMedia
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.library.CategoryMedia
 import com.dot.gallery.feature_node.presentation.search.SearchMediaItem
@@ -173,97 +172,8 @@ fun CategoryCarousel(
 }
 
 /**
- * A horizontal carousel of location recommendations for the search screen.
- * Matches the LibraryScreen location carousel style.
- */
-@OptIn(ExperimentalGlideComposeApi::class)
-@Composable
-fun LocationCarousel(
-    locations: ImmutableList<LocationMedia>,
-    onLocationClick: (LocationMedia) -> Unit,
-    modifier: Modifier = Modifier,
-    title: String? = stringResource(R.string.locations),
-    contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp)
-) {
-    if (locations.isEmpty()) return
-
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        if (title != null) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(contentPadding)
-            )
-        }
-
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = contentPadding,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(
-                items = locations,
-                key = { it.location }
-            ) { locationMedia ->
-                val isDarkTheme = isDarkTheme()
-                val allowBlur by rememberAllowBlur()
-                val followTheme = remember(allowBlur) { !allowBlur }
-                val gradientColor by animateColorAsState(
-                    if (followTheme) {
-                        if (isDarkTheme) BlackScrim else WhiterBlackScrim
-                    } else BlackScrim,
-                )
-                Box(
-                    modifier = Modifier
-                        .width(164.dp)
-                        .height(256.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .clickable { onLocationClick(locationMedia) },
-                ) {
-                    GlideImage(
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        model = locationMedia.media.getUri(),
-                        contentDescription = locationMedia.location,
-                        requestBuilderTransform = {
-                            it.signature(GlideInvalidation.signature(locationMedia.media))
-                        }
-                    )
-                    Text(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        gradientColor
-                                    )
-                                )
-                            )
-                            .padding(24.dp),
-                        text = locationMedia.location,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 2
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
  * A generic horizontal carousel for dynamic search items (MIME types, lens models, media modes, etc.).
- * Uses the same visual style as CategoryCarousel / LocationCarousel.
+ * Uses the same visual style as CategoryCarousel.
  */
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable

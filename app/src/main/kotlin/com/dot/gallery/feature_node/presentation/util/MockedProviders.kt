@@ -20,8 +20,6 @@ import com.dot.gallery.feature_node.domain.model.CollectionWithCount
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.GeoMedia
-import com.dot.gallery.feature_node.domain.model.LocationMedia
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.LockedAlbum
@@ -33,7 +31,6 @@ import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.domain.util.MediaGroupType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import java.util.UUID
@@ -68,13 +65,7 @@ open class MockedMediaDistributor: MediaDistributor {
     override val favoritesMediaFlow: StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
     override val trashMediaFlow: StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
     override val metadataFlow: StateFlow<MediaMetadataState> = MutableStateFlow(MediaMetadataState())
-    override val locationsMediaFlow: SharedFlow<List<LocationMedia>> = MutableStateFlow(emptyList())
-    override val geoMediaFlow: StateFlow<List<GeoMedia>> = MutableStateFlow(emptyList())
     override val imageEmbeddingsFlow: StateFlow<List<ImageEmbedding>> = MutableStateFlow(emptyList())
-    override fun locationBasedMedia(
-        gpsLocationNameCity: String,
-        gpsLocationNameCountry: String
-    ): Flow<MediaState<Media.UriMedia>> = emptyFlow()
     override val collectionsFlow: StateFlow<List<CollectionWithCount>> = MutableStateFlow(emptyList())
     override val collectionAlbumIdsFlow: StateFlow<Set<Long>> = MutableStateFlow(emptySet())
     override fun collectionAlbumIdsInCollection(collectionId: Long): Flow<List<Long>> = emptyFlow()

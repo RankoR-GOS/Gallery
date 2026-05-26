@@ -16,10 +16,8 @@ import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.AlbumThumbnail
 import com.dot.gallery.feature_node.domain.model.CollectionWithCount
-import com.dot.gallery.feature_node.domain.model.GeoMedia
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
-import com.dot.gallery.feature_node.domain.model.LocationMedia
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
@@ -536,80 +534,6 @@ class MediaDistributorImpl @Inject constructor(
             isLoadingProgress = progress
         )
     }
-
-    override fun locationBasedMedia(
-        gpsLocationNameCity: String,
-        gpsLocationNameCountry: String
-    ): Flow<MediaState<Media.UriMedia>> = combine(
-        repository.getMetadata(),
-        repository.getCompleteMedia()
-    ) { metadata, media ->
-        val matchingMediaIds = metadata
-            .filter {
-                it.gpsLocationNameCity == gpsLocationNameCity &&
-                        it.gpsLocationNameCountry == gpsLocationNameCountry
-            }
-            .mapTo(HashSet()) { it.mediaId }
-        val filteredMedia = media.data.orEmpty().filter {
-            it.id in matchingMediaIds
-        }
-        return@combine mapMediaToItem(
-            data = filteredMedia,
-            error = media.message ?: "",
-            albumId = -1L,
-            defaultDateFormat = dateFormatsFlow.value.first,
-            extendedDateFormat = dateFormatsFlow.value.second,
-            weeklyDateFormat = dateFormatsFlow.value.third
-        )
-    }
-
-    private val locationsAndGeoMediaFlow: SharedFlow<Pair<List<LocationMedia>, List<GeoMedia>>> = combine(
-        repository.getMetadata(),
-        timelineMediaFlow
-    ) { metadata, timelineState ->
-        val mediaById = HashMap<Long, Media.UriMedia>(timelineState.media.size)
-        for (m in timelineState.media) { mediaById[m.id] = m }
-
-        val locationGroupMap = LinkedHashMap<String, Media.UriMedia>()
-        val geoList = ArrayList<GeoMedia>(metadata.size / 2)
-
-        for (meta in metadata) {
-            val media = mediaById[meta.mediaId] ?: continue
-
-            if (meta.gpsLocationNameCity != null && meta.gpsLocationNameCountry != null) {
-                val key = "${meta.gpsLocationNameCity}, ${meta.gpsLocationNameCountry}"
-                val existing = locationGroupMap[key]
-                if (existing == null || media.definedTimestamp > existing.definedTimestamp) {
-                    locationGroupMap[key] = media
-                }
-            }
-
-            if (meta.gpsLatitude != null && meta.gpsLongitude != null) {
-                geoList.add(
-                    GeoMedia(
-                        mediaId = meta.mediaId,
-                        latitude = meta.gpsLatitude,
-                        longitude = meta.gpsLongitude,
-                        locationCity = meta.gpsLocationNameCity,
-                        locationCountry = meta.gpsLocationNameCountry,
-                        media = media
-                    )
-                )
-            }
-        }
-
-        val locations = locationGroupMap.entries
-            .map { (location, media) -> LocationMedia(media = media, location = location) }
-            .sortedBy { it.location }
-
-        Pair(locations, geoList)
-    }.shareIn(appScope, sharingMethod, replay = 1)
-
-    override val locationsMediaFlow: Flow<List<LocationMedia>> =
-        locationsAndGeoMediaFlow.map { it.first }
-
-    override val geoMediaFlow: Flow<List<GeoMedia>> =
-        locationsAndGeoMediaFlow.map { it.second }
 
     /**
      * Collections

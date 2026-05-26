@@ -80,7 +80,6 @@ import com.dot.gallery.feature_node.presentation.classifier.CategoryEditorScreen
 import com.dot.gallery.feature_node.presentation.classifier.EditCategoryScreen
 import com.dot.gallery.feature_node.presentation.classifier.CategoriesScreen
 import com.dot.gallery.feature_node.presentation.classifier.CategoriesViewModel
-import com.dot.gallery.feature_node.presentation.location.LocationsScreen
 import com.dot.gallery.feature_node.presentation.classifier.CategoryViewModel
 import com.dot.gallery.feature_node.presentation.classifier.CategoryViewScreen
 import com.dot.gallery.feature_node.presentation.collection.CollectionViewModel
@@ -94,8 +93,6 @@ import com.dot.gallery.feature_node.presentation.help.TutorialCategoryScreen
 import com.dot.gallery.feature_node.presentation.help.TutorialDetailScreen
 import com.dot.gallery.feature_node.presentation.ignored.IgnoredScreen
 import com.dot.gallery.feature_node.presentation.library.LibraryScreen
-import com.dot.gallery.feature_node.presentation.location.LocationTimelineScreen
-import com.dot.gallery.feature_node.presentation.location.LocationsViewModel
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreenRoute
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.search.SearchScreen
@@ -765,29 +762,6 @@ fun NavigationComp(
             }
 
             composable(
-                route = Screen.LocationsScreen.withMediaId(),
-                arguments = listOf(
-                    navArgument("mediaId") {
-                        type = NavType.LongType
-                        defaultValue = -1L
-                    }
-                )
-            ) { backStackEntry ->
-                val initialMediaId = remember(backStackEntry) {
-                    backStackEntry.arguments?.getLong("mediaId", -1L) ?: -1L
-                }
-                val locationsViewModel = hiltViewModel<CategoriesViewModel>()
-                val locations by locationsViewModel.locations.collectAsStateWithLifecycle()
-                val geoMedia by locationsViewModel.geoMedia.collectAsStateWithLifecycle()
-                LocationsScreen(
-                    metadataState = metadataState,
-                    locations = locations,
-                    geoMedia = geoMedia,
-                    initialMediaId = initialMediaId
-                )
-            }
-
-            composable(
                 route = Screen.AddCategoryScreen()
             ) {
                 AddCategoryScreen(
@@ -1131,37 +1105,6 @@ fun NavigationComp(
                 TutorialDetailScreen(tipId = tipId)
             }
 
-            composable(Screen.LocationTimelineScreen.location()) { backStackEntry ->
-                val gpsLocationNameCity: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCity", "null").toString()
-                }
-                val gpsLocationNameCountry: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCountry", "null").toString()
-                }
-
-                val locationsViewModel =
-                    hiltViewModel<LocationsViewModel, LocationsViewModel.Factory>(
-                        key = "LocationViewModel",
-                        creationCallback = { factory ->
-                            factory.create(gpsLocationNameCity, gpsLocationNameCountry)
-                        }
-                    )
-                val mediaState = locationsViewModel.mediaState.collectAsStateWithLifecycle()
-                val latestGeoMedia by locationsViewModel.latestGeoMedia.collectAsStateWithLifecycle()
-
-                LocationTimelineScreen(
-                    gpsLocationNameCity = gpsLocationNameCity,
-                    gpsLocationNameCountry = gpsLocationNameCountry,
-                    mediaState = mediaState,
-                    latestGeoMedia = latestGeoMedia,
-                    metadataState = metadataState,
-                    paddingValues = paddingValues,
-                    isScrolling = isScrolling,
-                    sharedTransitionScope = this@SharedTransitionLayout,
-                    animatedContentScope = this
-                )
-            }
-
             composable(
                 route = Screen.MetadataViewScreen.uriAndType(),
                 arguments = listOf(
@@ -1188,43 +1131,6 @@ fun NavigationComp(
                 }
                 MetadataViewScreen(
                     state = metadataViewState
-                )
-            }
-
-            composable(Screen.MediaViewScreen.idAndLocation()) { backStackEntry ->
-                val mediaId: Long = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("mediaId")?.toLongOrNull() ?: -1
-                }
-                val gpsLocationNameCity: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCity", "null").toString()
-                }
-                val gpsLocationNameCountry: String = remember(backStackEntry) {
-                    backStackEntry.arguments?.getString("gpsLocationNameCountry", "null").toString()
-                }
-                val parentEntry = remember(backStackEntry) {
-                    navController.getBackStackEntry(Screen.LocationTimelineScreen.location())
-                }
-
-                val locationsViewModel =
-                    hiltViewModel<LocationsViewModel, LocationsViewModel.Factory>(
-                        viewModelStoreOwner = parentEntry,
-                        key = "LocationViewModel",
-                        creationCallback = { factory ->
-                            factory.create(gpsLocationNameCity, gpsLocationNameCountry)
-                        }
-                    )
-                val mediaState = locationsViewModel.mediaState.collectAsStateWithLifecycle()
-
-                MediaViewScreenRoute(
-                    toggleRotate = toggleRotate,
-                    paddingValues = paddingValues,
-                    mediaId = mediaId,
-                    mediaState = mediaState,
-                    metadataState = metadataState,
-                    albumsState = albumsState,
-                    target = "location_${gpsLocationNameCity}_$gpsLocationNameCountry",
-                    sharedTransitionScope = this@SharedTransitionLayout,
-                    animatedContentScope = this
                 )
             }
 

@@ -657,9 +657,6 @@
     <string name="classification_unwanted_summary2"><![CDATA[If you would like to opt-out from this feature, you can disable it from here. If you however change your mind, you can always enable it back from Settings > Smart Features]]></string>
     <string name="categories_settings">Categories Settings</string>
     <string name="categories_settings_subtitle">Manage scanning, categories and classification</string>
-    <string name="locations_count">%1$d locations</string>
-    <string name="no_locations_found">No locations found</string>
-    <string name="locations">Locations</string>
     <string name="no_categories_found">No categories found</string>
 
     <!-- Dynamic search carousels -->

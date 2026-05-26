@@ -261,54 +261,6 @@ class DataProcessingBenchmark {
     }
 
     // ==========================================================================
-    // 4. Issue #8: locationsMediaFlow — sortedBy per group vs pre-built Map
-    // ==========================================================================
-
-    @Test
-    fun test5_locationsMedia_sortedFindVsMapLookup() {
-        logSection("Issue #8: Locations — sorted+find per group vs Map lookup")
-
-        data class LocationItem(val mediaId: Long, val location: String)
-
-        val media = generateMedia(MEDIA_COUNT)
-        val locationGroups = List(LOCATION_GROUP_COUNT) { i ->
-            LocationItem(
-                mediaId = Random.nextLong(0, MEDIA_COUNT.toLong()),
-                location = "City_${i % 50}, Country_${i % 20}"
-            )
-        }.groupBy { it.location }
-
-        logInfo("media: ${media.size}, location groups: ${locationGroups.size}")
-
-        // CURRENT: sortedByDescending + find per group
-        val current = benchmark(
-            name = "CURRENT  — sortedByDescending+find per group",
-            iterations = 10
-        ) {
-            locationGroups.mapNotNull { (location, items) ->
-                val found = media
-                    .sortedByDescending { it.definedTimestamp }
-                    .find { it.id == items.first().mediaId }
-                found?.let { location to it }
-            }
-        }
-
-        // OPTIMIZED: pre-built Map, O(1) lookup per group
-        val optimized = benchmark(
-            name = "OPTIMIZED — pre-built Map, O(1) lookup",
-            iterations = 10
-        ) {
-            val mediaMap = HashMap<Long, Media.UriMedia>(media.size)
-            for (m in media) { mediaMap[m.id] = m }
-            locationGroups.mapNotNull { (location, items) ->
-                mediaMap[items.first().mediaId]?.let { location to it }
-            }
-        }
-
-        logComparison("Map vs sorted+find", current, optimized)
-    }
-
-    // ==========================================================================
     // 5. Issue #3: Album isPinned — N individual DB queries vs batch Set
     // ==========================================================================
 

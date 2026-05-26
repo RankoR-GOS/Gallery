@@ -1,7 +1,5 @@
 import com.android.build.api.dsl.ApplicationBuildType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.io.FileInputStream
-import java.util.Properties
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -60,8 +58,6 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             configureProvider()
-            buildConfigField("Boolean", "ALLOW_ALL_FILES_ACCESS", "$allowAllFilesAccess")
-            buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
             buildConfigField("Boolean", "ENABLE_INDEXING", "false")
         }
         getByName("release") {
@@ -75,8 +71,6 @@ android {
                 )
             )
             signingConfig = signingConfigs.getByName("release")
-            buildConfigField("Boolean", "ALLOW_ALL_FILES_ACCESS", "$allowAllFilesAccess")
-            buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
             buildConfigField("Boolean", "ENABLE_INDEXING", "true")
         }
         create("staging") {
@@ -88,7 +82,6 @@ android {
             versionNameSuffix = "-staging"
             configureProvider()
             buildConfigField("Boolean", "ENABLE_INDEXING", "true")
-            buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
         }
 
         // Use to manually check performance with release config, but debug signing
@@ -100,7 +93,6 @@ android {
             signingConfig = signingConfigs.getByName("debug")
             configureProvider()
             buildConfigField("Boolean", "ENABLE_INDEXING", "true")
-            buildConfigField("Boolean", "MAPS_ENABLED", "$includeMaps")
         }
     }
 
@@ -133,12 +125,6 @@ android {
             }
             if (!isBundleBuild) {
                 assets.srcDirs("src/main/assets", "../ml-models/src/main/assets")
-            }
-            // Conditional maps/nomaps source set
-            if (includeMaps) {
-                kotlin.srcDir("src/maps/kotlin")
-            } else {
-                kotlin.srcDir("src/nomaps/kotlin")
             }
         }
 
@@ -307,11 +293,6 @@ dependencies {
     implementation(libs.haze)
     implementation(libs.haze.materials)
 
-    // MapLibre Native SDK
-    if (includeMaps) {
-        implementation(libs.maplibre.native)
-    }
-
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
@@ -319,28 +300,3 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
     debugRuntimeOnly(libs.compose.ui.test.manifest)
 }
-
-val includeMaps: Boolean
-    get() {
-        val fl = rootProject.file("app.properties")
-        return try {
-            val properties = Properties()
-            properties.load(FileInputStream(fl))
-            properties.getProperty("INCLUDE_MAPS", "true").toBoolean()
-        } catch (_: Exception) {
-            true
-        }
-    }
-
-val allowAllFilesAccess: Boolean
-    get() {
-        val fl = rootProject.file("app.properties")
-
-        return try {
-            val properties = Properties()
-            properties.load(FileInputStream(fl))
-            properties.getProperty("ALL_FILES_ACCESS", "true").toBoolean()
-        } catch (_: Exception) {
-            true
-        }
-    }
