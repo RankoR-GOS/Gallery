@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.presentation.exif
 
 import android.os.Build
 import android.os.Environment
+import android.provider.MediaStore
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,8 +21,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
-import com.dot.gallery.feature_node.presentation.albums.components.AlbumGroupComponent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Search
@@ -46,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -60,10 +60,12 @@ import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.SecurityInfoSheet
 import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.util.volume
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
+import com.dot.gallery.feature_node.presentation.albums.components.AlbumGroupComponent
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
@@ -83,6 +85,12 @@ fun <T: Media> CopyMediaSheet(
     onFinish: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val hasFullMediaAccess = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        Environment.isExternalStorageManager() || MediaStore.canManageMedia(context)
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        Environment.isExternalStorageManager()
+    } else true
     val viewModel: CopyMediaViewModel = hiltViewModel()
     val progress by viewModel.progress.collectAsState()
     val isActive by viewModel.isActive.collectAsState()
@@ -255,20 +263,24 @@ fun <T: Media> CopyMediaSheet(
                     val filteredGroups = remember(allGroups, query) {
                         if (query.isEmpty()) allGroups
                         else allGroups.mapNotNull { g ->
-                            val matched = g.albums.filter { it.label.contains(query, ignoreCase = true) }
+                            val matched = g.albums.filter {
+                                it.label.contains(other = query, ignoreCase = true)
+                            }
                             if (matched.isNotEmpty()) g.copy(albums = matched)
-                            else if (g.group.label.contains(query, ignoreCase = true)) g
+                            else if (g.group.label.contains(other = query, ignoreCase = true)) g
                             else null
                         }
                     }
                     val filteredUngroupedAlbums = remember(allUngroupedAlbums, query) {
                         if (query.isEmpty()) allUngroupedAlbums
-                        else allUngroupedAlbums.filter { it.label.contains(query, ignoreCase = true) }
+                        else allUngroupedAlbums.filter {
+                            it.label.contains(other = query, ignoreCase = true)
+                        }
                     }
                     val filteredGroupAlbums = remember(liveSelectedGroup, query) {
                         val albums = liveSelectedGroup?.albums ?: emptyList()
                         if (query.isEmpty()) albums
-                        else albums.filter { it.label.contains(query, ignoreCase = true) }
+                        else albums.filter { it.label.contains(other = query, ignoreCase = true) }
                     }
 
                     LazyVerticalGrid(
@@ -309,15 +321,12 @@ fun <T: Media> CopyMediaSheet(
                                         "Android/media/",
                                         "allow"
                                     ) ?: albumOwnership
-                                val isStorageManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Environment.isExternalStorageManager() else true
                                 AlbumComponent(
                                     modifier = Modifier.animateItem(),
                                     album = item,
-                                    isEnabled = isStorageManager || (item.volume == mediaVolume
+                                    isEnabled = hasFullMediaAccess || (item.volume == mediaVolume
                                             && albumOwnership == "allow"
-                                            && mediaOwnership == "allow"
-                                            && (item.relativePath.contains("Pictures")
-                                            || item.relativePath.contains("DCIM"))),
+                                            && mediaOwnership == "allow"),
                                     onItemClick = { album ->
                                         if (album.isLocked) {
                                             if (!biometricState.isSupported) {
@@ -371,14 +380,11 @@ fun <T: Media> CopyMediaSheet(
                                         "Android/media/",
                                         "allow"
                                     ) ?: albumOwnership
-                                val isStorageManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Environment.isExternalStorageManager() else true
                                 AlbumComponent(
                                     album = item,
-                                    isEnabled = isStorageManager || (item.volume == mediaVolume
+                                    isEnabled = hasFullMediaAccess || (item.volume == mediaVolume
                                             && albumOwnership == "allow"
-                                            && mediaOwnership == "allow"
-                                            && (item.relativePath.contains("Pictures")
-                                            || item.relativePath.contains("DCIM"))),
+                                            && mediaOwnership == "allow"),
                                     onItemClick = { album ->
                                         if (album.isLocked) {
                                             if (!biometricState.isSupported) {
@@ -405,7 +411,7 @@ fun <T: Media> CopyMediaSheet(
     AddAlbumSheet(
         sheetState = newAlbumSheetState,
         onFinish = { newAlbum ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
+            if (hasFullMediaAccess) {
                 copyMedia(newAlbum)
             } else {
                 copyMedia("Pictures/$newAlbum")
