@@ -90,6 +90,11 @@ class MediaViewViewModel @Inject constructor(
         }
         if (media.id == currentMotionMediaId) return
 
+        // Release any playing motion player before switching to a new media item,
+        // otherwise the old player + progress loop keeps running and its surface
+        // overlays the next page's image (black screen bug).
+        releaseMotionPlayer()
+
         extractionJob?.cancel()
         val oldFile = _motionPhotoExtraction.value.videoFile
 

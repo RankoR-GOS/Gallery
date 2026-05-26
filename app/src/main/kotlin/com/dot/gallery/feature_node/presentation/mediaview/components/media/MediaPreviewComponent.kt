@@ -100,7 +100,7 @@ fun <T : Media> MediaPreviewComponent(
                     )
                 }
 
-                if (!media.isVideo && motionPhotoState != null) {
+                if (!media.isVideo && isMotionPhoto && motionPhotoState != null) {
                     MotionPhotoSurface(state = motionPhotoState)
                 }
 
