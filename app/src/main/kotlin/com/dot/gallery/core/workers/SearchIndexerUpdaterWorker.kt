@@ -9,6 +9,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.core.ml.ModelManager
+import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.getUri
@@ -22,6 +23,7 @@ import com.github.panpf.sketch.sketch
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
@@ -40,8 +42,9 @@ class SearchIndexerUpdaterWorker @AssistedInject constructor(
     override suspend fun doWork(): Result = runCatching {
         setProgress(workDataOf("progress" to -1f))
         if (!BuildConfig.ENABLE_INDEXING) return Result.success()
-        if (!modelManager.isReady) {
-            printInfo("ML models not installed, skipping indexing")
+        val modelStatus = modelManager.status.first { status -> status != ModelStatus.CHECKING }
+        if (modelStatus != ModelStatus.READY) {
+            printInfo("ML models unavailable, skipping indexing")
             return Result.success()
         }
         if (!currentCoroutineContext().isActive) return Result.success()

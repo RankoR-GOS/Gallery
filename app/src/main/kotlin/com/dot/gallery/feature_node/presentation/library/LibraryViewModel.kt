@@ -39,8 +39,6 @@ class LibraryViewModel @Inject constructor(
     private val modelManager: ModelManager
 ) : ViewModel() {
 
-    val hasInternetPermission: Boolean get() = modelManager.hasInternetPermission
-
     val modelStatus: StateFlow<ModelStatus> = modelManager.status
 
     val indicatorState = combine(

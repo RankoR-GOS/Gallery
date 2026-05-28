@@ -361,7 +361,7 @@ class SearchViewModel @Inject constructor(
                             hasSearched = true,
                             isSearching = false,
                             progress = 1f,
-                            results = MediaState(error = context.getString(R.string.ai_models_not_installed), isLoading = false)
+                            results = MediaState(error = context.getString(R.string.ai_models_unavailable), isLoading = false)
                         )
                     )
                     return@launch

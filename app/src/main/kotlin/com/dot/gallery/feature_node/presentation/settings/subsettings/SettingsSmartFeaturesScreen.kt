@@ -32,7 +32,7 @@ import com.dot.gallery.feature_node.presentation.util.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsSmartFeaturesScreen(
-    viewModel: SmartFeaturesViewModel = hiltViewModel()
+    viewModel: SmartFeaturesViewModel = hiltViewModel(),
 ) {
     val handler = LocalEventHandler.current
     val modelStatus by viewModel.modelStatus.collectAsStateWithLifecycle()
@@ -50,26 +50,18 @@ fun SettingsSmartFeaturesScreen(
                 navigationIcon = { NavigationBackButton() },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
-                )
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
+                ),
             )
         }
     ) { padding ->
         // Resolve strings outside the non-composable settings{} DSL
         val smartFeaturesHeader = stringResource(R.string.ai_category)
-        val aiModelsManagerTitle = stringResource(R.string.ai_models_manager)
-        val modelSummary = when (modelStatus) {
-            ModelStatus.READY -> stringResource(R.string.ai_models_ready_summary)
-            ModelStatus.NOT_INSTALLED -> stringResource(R.string.ai_models_copy_summary)
-            ModelStatus.DOWNLOADING -> stringResource(R.string.ai_models_downloading)
-            ModelStatus.COPYING -> stringResource(R.string.ai_models_copying)
-            ModelStatus.ERROR -> stringResource(R.string.ai_models_error)
-        }
         val categoriesTitle = stringResource(R.string.categories)
-        val categoriesSummary = if (modelStatus == ModelStatus.READY) {
-            stringResource(R.string.categorise_your_media)
-        } else {
-            stringResource(R.string.ai_models_unavailable)
+        val categoriesSummary = when (modelStatus) {
+            ModelStatus.CHECKING -> stringResource(R.string.ai_models_checking)
+            ModelStatus.READY -> stringResource(R.string.categorise_your_media)
+            ModelStatus.ERROR -> stringResource(R.string.ai_models_unavailable)
         }
         val databaseHeader = stringResource(R.string.database)
         val refreshMetadataTitle = stringResource(R.string.refresh_metadata)
@@ -91,23 +83,17 @@ fun SettingsSmartFeaturesScreen(
                 start = padding.calculateStartPadding(LocalLayoutDirection.current),
                 end = padding.calculateEndPadding(LocalLayoutDirection.current),
                 top = 16.dp + padding.calculateTopPadding(),
-                bottom = padding.calculateBottomPadding()
-            )
+                bottom = padding.calculateBottomPadding(),
+            ),
         ) {
             settings {
                 Header(smartFeaturesHeader)
 
                 Preference(
-                    title = aiModelsManagerTitle,
-                    summary = modelSummary,
-                    onClick = { handler.navigate(Screen.AIModelsManagerScreen()) }
-                )
-
-                Preference(
                     title = categoriesTitle,
                     summary = categoriesSummary,
                     enabled = modelStatus == ModelStatus.READY,
-                    onClick = { handler.navigate(Screen.CategoriesScreen()) }
+                    onClick = { handler.navigate(Screen.CategoriesScreen()) },
                 )
 
                 Header(databaseHeader)
@@ -116,7 +102,7 @@ fun SettingsSmartFeaturesScreen(
                     title = refreshMetadataTitle,
                     summary = metadataSummary,
                     enabled = !isMetadataWorkerRunning,
-                    onClick = { viewModel.refreshMetadata() }
+                    onClick = { viewModel.refreshMetadata() },
                 )
 
                 Header(storageHeader)
@@ -124,7 +110,7 @@ fun SettingsSmartFeaturesScreen(
                 Preference(
                     title = editBackupsTitle,
                     summary = editBackupsSummary,
-                    onClick = { handler.navigate(Screen.EditBackupsViewerScreen()) }
+                    onClick = { handler.navigate(Screen.EditBackupsViewerScreen()) },
                 )
             }
         }

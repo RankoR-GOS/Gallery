@@ -372,51 +372,9 @@
     <string name="classification_unwanted">I don\'t want this</string>
     <string name="classification_unwanted_summary">I don\'t want this, please remove it.\n(It can be enabled again in the settings)</string>
     
-    <!-- AI Model Management -->
-    <string name="ai_models_not_installed">AI models are not installed. Download them from Settings > Smart Features.</string>
-    <string name="ai_models_manager">AI Models Manager</string>
-    <string name="ai_models_manager_summary">Manage AI models for image search and classification</string>
-    <string name="ai_models_copy">Copy AI Models</string>
-    <string name="ai_models_copy_summary">Copy bundled AI models for image search and classification (~147 MB)</string>
-    <string name="ai_models_copying">Copying AI Models...</string>
-    <string name="ai_models_download">Download AI Models</string>
-    <string name="ai_models_download_summary">Download AI models for image search and classification (~147 MB)</string>
-    <string name="ai_models_downloading">Downloading AI Models…</string>
-    <string name="ai_models_ready">AI Models Installed</string>
-    <string name="ai_models_ready_summary">AI-powered search and classification are available</string>
-    <string name="ai_models_error">AI Model Error</string>
-    <string name="ai_models_delete">Delete AI Models</string>
-    <string name="ai_models_delete_summary">Remove installed AI models to free up storage</string>
-    <string name="ai_models_delete_confirm_bundled">Are you sure you want to delete the AI models? You can copy them back from bundled app assets to use AI features.</string>
-    <string name="ai_models_delete_confirm">Are you sure you want to delete the AI models? You will need to download them again to use AI features.</string>
-    <string name="ai_models_size">Model size: %s</string>
-    <string name="ai_models_unavailable">Unavailable — Requires AI Models Feature</string>
-    <string name="ai_models_status">Status</string>
-    <string name="ai_models_actions">Actions</string>
-    <string name="ai_models_custom">Custom Models</string>
-    <string name="ai_models_description">AI models enable intelligent image search and automatic media classification. The app uses CLIP (Contrastive Language-Image Pretraining) models in ONNX format to understand the content of your photos.</string>
-    <string name="ai_models_custom_description">You can replace the default models with custom ONNX CLIP models. Place the following files in your app\'s internal storage under <b>models/clip/</b>:</string>
-    <string name="ai_models_custom_visual">visual_quant.onnx — Vision encoder (processes images)</string>
-    <string name="ai_models_custom_textual">textual_quant.onnx — Text encoder (processes search queries)</string>
-    <string name="ai_models_custom_vocab">vocab.json — Tokenizer vocabulary</string>
-    <string name="ai_models_custom_merges">merges.txt — Tokenizer merge rules</string>
-    <string name="ai_models_custom_note">Models must be quantized CLIP models compatible with ONNX Runtime. The default models are downloaded from the Gallery repository.</string>
-    <string name="ai_models_privacy">Data Privacy</string>
-    <string name="ai_models_privacy_description">All AI processing is performed entirely on your device. No images, search queries, or classification data ever leave your phone. The models run locally using ONNX Runtime and do not require an internet connection once downloaded. Your media remains fully private.</string>
-    <string name="ai_models_source">Source</string>
-    <string name="ai_models_source_url">github.com/IacobIonut01/ReFra</string>
-    <string name="ai_models_files">Model Files</string>
-    <string name="ai_models_checksum">SHA-256 Verified</string>
-    <string name="ai_models_speed">%s/s</string>
-    <string name="ai_models_eta">%s remaining</string>
-    <string name="ai_models_cancel_download">Cancel Download</string>
-    <string name="ai_models_features">Features</string>
-    <string name="ai_models_feature_search">Search by Description</string>
-    <string name="ai_models_feature_search_summary">Find photos by describing what\'s in them</string>
-    <string name="ai_models_feature_categories">Automatic Categories</string>
-    <string name="ai_models_feature_categories_summary">Photos sorted into groups like Nature, Food, People</string>
-    <string name="ai_models_feature_private">100% On-Device</string>
-    <string name="ai_models_feature_private_summary">No cloud, no tracking — everything stays on your phone</string>
+    <!-- AI Model Availability -->
+    <string name="ai_models_checking">Preparing AI features…</string>
+    <string name="ai_models_unavailable">Bundled AI models are unavailable in this build.</string>
 
     <!-- New Category System -->
     <string name="add_category">Add category</string>
@@ -496,7 +454,6 @@
     <string name="categories">Categories</string>
     <string name="classified_media">%1$s classified media</string>
     <string name="scan_for_new_categories">Scan for new categories</string>
-    <string name="ai_models_not_available">AI models are not downloaded. Download them from Settings → Smart Features.</string>
     <string name="scanning_media">Scanning media...</string>
     <string name="date_header_title">Date Header</string>
     <string name="media_view">Media View</string>

@@ -130,7 +130,6 @@ fun LibraryScreen(
     val noCategoriesFound by rememberedDerivedState { topCategories.isEmpty() }
 
     val modelStatus by viewModel.modelStatus.collectAsStateWithLifecycle()
-    val hasInternet = viewModel.hasInternetPermission
     var noClassification by rememberNoClassification()
 
     Scaffold(
@@ -279,7 +278,7 @@ fun LibraryScreen(
                     }
                 }
 
-                if (hasInternet && !noClassification) {
+                if (!noClassification) {
                     if (!noCategoriesFound) {
                         // "See all categories" header below carousel
                         item(

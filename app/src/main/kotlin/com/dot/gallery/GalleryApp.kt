@@ -121,9 +121,9 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
                 .build()
         )
 
-        // Initialize ML models (copies from assets on withML, checks presence on noML)
+        // Initial bundled-model availability probe; UI and workers observe this result.
         appScope.launch {
-            modelManager.initializeModels()
+            modelManager.refreshStatus()
         }
     }
 

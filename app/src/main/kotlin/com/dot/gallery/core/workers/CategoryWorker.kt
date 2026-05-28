@@ -22,6 +22,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.ml.ModelManager
+import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.util.ProgressThrottler
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.domain.model.Category
@@ -34,6 +35,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.isActive
 
@@ -67,8 +69,9 @@ class CategoryWorker @AssistedInject constructor(
             return Result.success()
         }
 
-        if (!modelManager.isReady) {
-            printInfo("CategoryWorker: ML models not installed, skipping")
+        val modelStatus = modelManager.status.first { status -> status != ModelStatus.CHECKING }
+        if (modelStatus != ModelStatus.READY) {
+            printInfo("CategoryWorker: ML models unavailable, skipping")
             return Result.success()
         }
 

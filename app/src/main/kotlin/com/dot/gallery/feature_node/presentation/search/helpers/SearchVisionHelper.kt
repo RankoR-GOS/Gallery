@@ -19,8 +19,12 @@ import java.util.EnumSet
 class SearchVisionHelper(private val modelManager: ModelManager) {
     private val tokenizer by lazy {
         ClipTokenizer(
-            vocabFile = modelManager.getModelFile("vocab.json"),
-            mergesFile = modelManager.getModelFile("merges.txt")
+            vocabInputStreamProvider = {
+                modelManager.openBundledModelInputStream(name = "vocab.json")
+            },
+            mergesInputStreamProvider = {
+                modelManager.openBundledModelInputStream(name = "merges.txt")
+            },
         )
     }
     private val ortEnv = OrtEnvironment.getEnvironment()
@@ -68,9 +72,9 @@ class SearchVisionHelper(private val modelManager: ModelManager) {
             printDebug("Using optimized CPU inference for quantized model: $modelName")
         }
 
-        // Load model from filesDir using path-based API (memory-mapped, avoids OOM)
-        val modelFile = modelManager.getModelFile(modelName)
-        return ortEnv.createSession(modelFile.absolutePath, options)
+        return modelManager.withMappedBundledModel(name = modelName) { modelBuffer ->
+            ortEnv.createSession(modelBuffer, options)
+        }
     }
 
     fun getTextEmbedding(session: OrtSession, text: String): FloatArray {

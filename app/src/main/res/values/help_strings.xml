@@ -69,7 +69,7 @@
     <string name="help_tip_nav_search_p1_title">Search your media</string>
     <string name="help_tip_nav_search_p1_desc">Tap the search bar at the top of the timeline to find photos. Basic search matches filenames using fuzzy matching, so you don\'t need to remember exact names. Your recent searches are saved for quick access. Results update as you type.</string>
     <string name="help_tip_nav_search_p2_title">AI vision search</string>
-    <string name="help_tip_nav_search_p2_desc">With AI models installed, search becomes much more powerful — describe what you\'re looking for in plain language like \"sunset at the beach\", \"birthday cake\", or \"dog playing in snow\". Gallery uses on-device CLIP models to understand image content, so your photos never leave your device. To enable this, go to Settings > Smart features and install the AI models.</string>
+    <string name="help_tip_nav_search_p2_desc">AI vision search lets you describe what you\'re looking for in plain language like \"sunset at the beach\", \"birthday cake\", or \"dog playing in snow\". Gallery uses bundled on-device CLIP models to understand image content, so your photos never leave your device. After Gallery indexes your photos in the background, matching results appear from your local library.</string>
     <string name="help_tip_nav_old_navbar_title">Classic navigation bar</string>
     <string name="help_tip_nav_old_navbar_subtitle">Switch between modern and classic navigation styles</string>
     <string name="help_tip_nav_old_navbar_p1_title">Navigation bar styles</string>
@@ -435,13 +435,13 @@
     <string name="help_tip_search_ai_p1_title">Vision search</string>
     <string name="help_tip_search_ai_p1_desc">Search using natural language descriptions like \"sunset at the beach\", \"birthday cake\", \"dog playing in snow\", or \"red car\". The AI understands image content, not just filenames, so you can find photos based on what\'s actually in them. All processing happens on your device — your photos are never sent to the cloud.</string>
     <string name="help_tip_search_ai_p2_title">How it works</string>
-    <string name="help_tip_search_ai_p2_desc">Gallery uses CLIP (Contrastive Language-Image Pretraining) models that run entirely on your phone. When indexing is enabled, Gallery analyzes each photo in the background and creates a compact \'understanding\' of its content. When you search, your text query is matched against these understandings to find the most relevant photos.</string>
+    <string name="help_tip_search_ai_p2_desc">Gallery uses CLIP (Contrastive Language-Image Pretraining) models that run entirely on your phone. During background indexing, Gallery analyzes each photo and creates a compact \'understanding\' of its content. When you search, your text query is matched against these understandings to find the most relevant photos.</string>
     <string name="help_tip_search_ai_p3_title">Get started</string>
-    <string name="help_tip_search_ai_p3_desc">AI search requires ML models to be downloaded first (about 150 MB). Once installed, Gallery automatically indexes your photos in the background when the device is idle. The initial indexing may take some time depending on how many photos you have, but subsequent updates are fast.</string>
-    <string name="help_tip_search_ai_p3_s1">Go to Settings > Smart features</string>
-    <string name="help_tip_search_ai_p3_s2">Download the AI models (~150 MB)</string>
-    <string name="help_tip_search_ai_p3_s3">Wait for background indexing to complete</string>
-    <string name="help_tip_search_ai_p3_s4">Search with descriptions like \'sunset\' or \'birthday\'</string>
+    <string name="help_tip_search_ai_p3_desc">AI search uses bundled ML models included with Gallery. Gallery indexes your photos in the background when the device is idle. The initial indexing may take some time depending on how many photos you have, but subsequent updates are fast.</string>
+    <string name="help_tip_search_ai_p3_s1">Open Search</string>
+    <string name="help_tip_search_ai_p3_s2">Let Gallery finish background indexing</string>
+    <string name="help_tip_search_ai_p3_s3">Search with descriptions like \'sunset\' or \'birthday\'</string>
+    <string name="help_tip_search_ai_p3_s4">Open a matching result from your library</string>
     <string name="help_tip_search_history_title">Search history</string>
     <string name="help_tip_search_history_subtitle">Quickly access your recent searches</string>
     <string name="help_tip_search_history_p1_title">Search history</string>
@@ -449,7 +449,7 @@
     <string name="help_tip_search_indexing_title">Background indexing</string>
     <string name="help_tip_search_indexing_subtitle">How Gallery indexes your photos for fast search</string>
     <string name="help_tip_search_indexing_p1_title">Search indexing</string>
-    <string name="help_tip_search_indexing_p1_desc">Gallery processes your photos in the background to enable fast AI-powered search. Indexing runs automatically when AI models are installed and the device is idle. The first index may take a while for large libraries (thousands of photos), but once complete, new photos are indexed quickly. You can check indexing progress from the timeline — a small status indicator shows when indexing is active.</string>
+    <string name="help_tip_search_indexing_p1_desc">Gallery processes your photos in the background to enable fast AI-powered search. Indexing runs automatically with the bundled AI models when the device is idle. The first index may take a while for large libraries (thousands of photos), but once complete, new photos are indexed quickly. You can check indexing progress from the timeline — a small status indicator shows when indexing is active.</string>
 
     <!-- AI FEATURES -->
     <string name="help_tip_ai_categories_title">Auto-categorize photos</string>
@@ -475,20 +475,10 @@
     <string name="help_tip_ai_create_category_p2_s3">Name your category</string>
     <string name="help_tip_ai_create_category_p2_s4">Adjust the confidence threshold if needed</string>
     <string name="help_tip_ai_create_category_p2_s5">The AI will start classifying photos automatically</string>
-    <string name="help_tip_ai_models_title">Manage AI models</string>
-    <string name="help_tip_ai_models_subtitle">Download or manage on-device AI models</string>
-    <string name="help_tip_ai_models_p1_title">AI models</string>
-    <string name="help_tip_ai_models_p1_desc">AI features (smart search and auto-categorization) require machine learning models that run entirely on your device — no internet connection needed after download, and your photos are never sent anywhere. The models are about 150 MB and are downloaded once.</string>
-    <string name="help_tip_ai_models_p2_title">Model management</string>
-    <string name="help_tip_ai_models_p2_desc">Check whether models are installed, download them if needed, or remove them to free up space. After downloading, Gallery automatically starts indexing your photos in the background. You can monitor the model status at any time from this screen.</string>
-    <string name="help_tip_ai_models_p2_s1">Go to Settings > Smart features</string>
-    <string name="help_tip_ai_models_p2_s2">Check the AI models status</string>
-    <string name="help_tip_ai_models_p2_s3">Tap \'Download\' if not yet installed</string>
-    <string name="help_tip_ai_models_p2_s4">Wait for indexing to complete after download</string>
     <string name="help_tip_ai_indexing_title">How indexing works</string>
     <string name="help_tip_ai_indexing_subtitle">Background processing for AI features</string>
     <string name="help_tip_ai_indexing_p1_title">AI indexing</string>
-    <string name="help_tip_ai_indexing_p1_desc">Once AI models are installed, Gallery processes your photo library in the background to build an index that powers smart search and auto-categorization. This is a one-time process for existing photos, and new photos are indexed automatically as you take them.</string>
+    <string name="help_tip_ai_indexing_p1_desc">Gallery uses bundled AI models to process your photo library in the background and build an index that powers smart search and auto-categorization. This is a one-time process for existing photos, and new photos are indexed automatically as you take them.</string>
     <string name="help_tip_ai_indexing_p2_title">Indexing details</string>
     <string name="help_tip_ai_indexing_p2_desc">Indexing is designed to be unobtrusive — it runs when your device is idle to avoid impacting performance. A small progress indicator appears in the timeline during active indexing. For large libraries (10,000+ photos), the initial index may take several hours but only needs to happen once.</string>
 
@@ -702,15 +692,6 @@
     <string name="help_tip_settings_selection_actions_p2_s4">Toggle actions on/off to show/hide</string>
 
     <!-- SETTINGS: SMART -->
-    <string name="help_tip_settings_ai_models_title">AI models manager</string>
-    <string name="help_tip_settings_ai_models_subtitle">Download and manage AI model status</string>
-    <string name="help_tip_settings_ai_models_p1_title">AI models</string>
-    <string name="help_tip_settings_ai_models_p1_desc">View the current status of AI models: whether they\'re installed, downloading, or not yet set up. The models are required for AI-powered search and auto-categorization. They\'re downloaded once (~150 MB) and run entirely on your device.</string>
-    <string name="help_tip_settings_ai_models_p2_title">Model management</string>
-    <string name="help_tip_settings_ai_models_p2_desc">Download models to enable AI features, check their status, or remove them to free storage. After downloading, Gallery automatically begins indexing your photos in the background. If models are already bundled with your app version, they\'ll be copied from assets on first launch.</string>
-    <string name="help_tip_settings_ai_models_p2_s1">Go to Settings > Smart features</string>
-    <string name="help_tip_settings_ai_models_p2_s2">Tap \'AI models manager\'</string>
-    <string name="help_tip_settings_ai_models_p2_s3">Download, verify, or remove models</string>
     <string name="help_tip_settings_edit_backups_title">Edit backups viewer</string>
     <string name="help_tip_settings_edit_backups_subtitle">View and manage edit backup storage</string>
     <string name="help_tip_settings_edit_backups_p1_title">Edit backups</string>

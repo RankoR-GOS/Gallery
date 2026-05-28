@@ -10,23 +10,22 @@ package com.dot.gallery.feature_node.presentation.search.tokenizer
 
 import android.util.JsonReader
 import java.io.BufferedReader
-import java.io.File
-import java.io.FileInputStream
+import java.io.InputStream
 import java.io.InputStreamReader
 import kotlin.io.useLines
 import kotlin.use
 
 class ClipTokenizer(
-    private val vocabFile: File,
-    private val mergesFile: File,
+    private val vocabInputStreamProvider: () -> InputStream,
+    private val mergesInputStreamProvider: () -> InputStream,
 ) {
 
     private val encoder: Map<String, Int> = getVocab()
 
     private fun getVocab(): Map<String, Int> {
         val vocab = hashMapOf<String, Int>().apply {
-            FileInputStream(vocabFile).use {
-                val vocabReader = JsonReader(InputStreamReader(it, "UTF-8"))
+            vocabInputStreamProvider().use { inputStream ->
+                val vocabReader = JsonReader(InputStreamReader(inputStream, Charsets.UTF_8))
                 vocabReader.beginObject()
                 while (vocabReader.hasNext()) {
                     val key = vocabReader.nextName().replace("</w>", " ")
@@ -44,8 +43,8 @@ class ClipTokenizer(
 
     private fun getMerges(): HashMap<Pair<String, String>, Int> {
         val merges = hashMapOf<Pair<String, String>, Int>().apply {
-            FileInputStream(mergesFile).use {
-                val mergesReader = BufferedReader(InputStreamReader(it))
+            mergesInputStreamProvider().use { inputStream ->
+                val mergesReader = BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8))
                 mergesReader.useLines { seq ->
                     seq.drop(1).forEachIndexed { i, s ->
                         val list = s.split(" ")

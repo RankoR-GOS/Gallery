@@ -106,7 +106,6 @@ import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsNa
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSelectionActionsScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsTimelineAlbumsScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.EditBackupsViewerScreen
-import com.dot.gallery.feature_node.presentation.settings.subsettings.AIModelsManagerScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSmartFeaturesScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSecurityScreen
 import com.dot.gallery.feature_node.presentation.setup.SetupScreen
@@ -1043,9 +1042,6 @@ fun NavigationComp(
             }
             composable(Screen.SettingsSecurityScreen()) {
                 SettingsSecurityScreen()
-            }
-            composable(Screen.AIModelsManagerScreen()) {
-                AIModelsManagerScreen()
             }
             composable(Screen.SettingsAppearanceScreen()) {
                 ColorPaletteScreen()

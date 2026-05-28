@@ -7,7 +7,6 @@ package com.dot.gallery.feature_node.presentation.help.data
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.Collections
 import androidx.compose.material.icons.outlined.Contrast
 import androidx.compose.material.icons.outlined.Draw
@@ -392,11 +391,10 @@ object HelpRepository {
             )),
         HelpTip(id = "search_ai", title = R.string.help_tip_search_ai_title, subtitle = R.string.help_tip_search_ai_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.ImageSearch), category = HelpCategory.SEARCH,
-            deepLink = Screen.AIModelsManagerScreen(),
             pages = listOf(
                 TutorialPage(title = R.string.help_tip_search_ai_p1_title, description = R.string.help_tip_search_ai_p1_desc, previewType = PreviewType.AI_SEARCH),
                 TutorialPage(title = R.string.help_tip_search_ai_p2_title, description = R.string.help_tip_search_ai_p2_desc, previewType = PreviewType.AI_SEARCH),
-                TutorialPage(title = R.string.help_tip_search_ai_p3_title, description = R.string.help_tip_search_ai_p3_desc, steps = listOf(R.string.help_tip_search_ai_p3_s1, R.string.help_tip_search_ai_p3_s2, R.string.help_tip_search_ai_p3_s3, R.string.help_tip_search_ai_p3_s4), actionLabel = R.string.help_action_open_settings, previewType = PreviewType.AI_SEARCH)
+                TutorialPage(title = R.string.help_tip_search_ai_p3_title, description = R.string.help_tip_search_ai_p3_desc, steps = listOf(R.string.help_tip_search_ai_p3_s1, R.string.help_tip_search_ai_p3_s2, R.string.help_tip_search_ai_p3_s3, R.string.help_tip_search_ai_p3_s4), previewType = PreviewType.AI_SEARCH)
             )),
         HelpTip(id = "search_history", title = R.string.help_tip_search_history_title, subtitle = R.string.help_tip_search_history_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.ImageSearch), category = HelpCategory.SEARCH,
@@ -421,13 +419,6 @@ object HelpRepository {
             pages = listOf(
                 TutorialPage(title = R.string.help_tip_ai_create_category_p1_title, description = R.string.help_tip_ai_create_category_p1_desc, previewType = PreviewType.AI_CATEGORIES),
                 TutorialPage(title = R.string.help_tip_ai_create_category_p2_title, description = R.string.help_tip_ai_create_category_p2_desc, steps = listOf(R.string.help_tip_ai_create_category_p2_s1, R.string.help_tip_ai_create_category_p2_s2, R.string.help_tip_ai_create_category_p2_s3, R.string.help_tip_ai_create_category_p2_s4, R.string.help_tip_ai_create_category_p2_s5), previewType = PreviewType.AI_CATEGORIES)
-            )),
-        HelpTip(id = "ai_models", title = R.string.help_tip_ai_models_title, subtitle = R.string.help_tip_ai_models_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.CloudDownload), category = HelpCategory.AI_FEATURES,
-            deepLink = Screen.AIModelsManagerScreen(),
-            pages = listOf(
-                TutorialPage(title = R.string.help_tip_ai_models_p1_title, description = R.string.help_tip_ai_models_p1_desc),
-                TutorialPage(title = R.string.help_tip_ai_models_p2_title, description = R.string.help_tip_ai_models_p2_desc, steps = listOf(R.string.help_tip_ai_models_p2_s1, R.string.help_tip_ai_models_p2_s2, R.string.help_tip_ai_models_p2_s3, R.string.help_tip_ai_models_p2_s4), actionLabel = R.string.help_action_open_settings)
             )),
         HelpTip(id = "ai_indexing", title = R.string.help_tip_ai_indexing_title, subtitle = R.string.help_tip_ai_indexing_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.AutoAwesome), category = HelpCategory.AI_FEATURES,
@@ -582,13 +573,6 @@ object HelpRepository {
     )
 
     private val SETTINGS_SMART_TIPS = listOf(
-        HelpTip(id = "settings_ai_models", title = R.string.help_tip_settings_ai_models_title, subtitle = R.string.help_tip_settings_ai_models_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.AutoAwesome), category = HelpCategory.SETTINGS_SMART,
-            deepLink = Screen.AIModelsManagerScreen(),
-            pages = listOf(
-                TutorialPage(title = R.string.help_tip_settings_ai_models_p1_title, description = R.string.help_tip_settings_ai_models_p1_desc),
-                TutorialPage(title = R.string.help_tip_settings_ai_models_p2_title, description = R.string.help_tip_settings_ai_models_p2_desc, steps = listOf(R.string.help_tip_settings_ai_models_p2_s1, R.string.help_tip_settings_ai_models_p2_s2, R.string.help_tip_settings_ai_models_p2_s3), actionLabel = R.string.help_action_open_settings)
-            )),
         HelpTip(id = "settings_edit_backups", title = R.string.help_tip_settings_edit_backups_title, subtitle = R.string.help_tip_settings_edit_backups_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.SettingsBackupRestore), category = HelpCategory.SETTINGS_SMART,
             deepLink = Screen.EditBackupsViewerScreen(),

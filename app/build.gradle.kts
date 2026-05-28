@@ -108,6 +108,9 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    androidResources {
+        noCompress += listOf("json", "onnx", "txt")
+    }
 
     assetPacks += listOf(":ml-models")
 

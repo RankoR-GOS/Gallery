@@ -44,6 +44,11 @@ fun CategoriesSettingsScreen() {
     val categoriesWithCount by viewModel.categoriesWithCount.collectAsStateWithLifecycle()
     val modelStatus by viewModel.modelStatus.collectAsStateWithLifecycle()
     val isModelReady = modelStatus == ModelStatus.READY
+    val modelSummary = when (modelStatus) {
+        ModelStatus.CHECKING -> stringResource(R.string.ai_models_checking)
+        ModelStatus.READY -> null
+        ModelStatus.ERROR -> stringResource(R.string.ai_models_unavailable)
+    }
 
     var noClassification by rememberNoClassification()
 
@@ -64,9 +69,7 @@ fun CategoriesSettingsScreen() {
                             stringResource(R.string.scanning_media)
                         else
                             stringResource(R.string.scan_for_new_categories),
-                        summary = if (!isModelReady)
-                            stringResource(R.string.ai_models_not_available)
-                        else null,
+                        summary = modelSummary,
                         icon = Icons.Outlined.Scanner,
                         screenPosition = if (categoriesWithCount.isNotEmpty() && !isCategoryWorkerRunning)
                             Position.Top else Position.Alone
