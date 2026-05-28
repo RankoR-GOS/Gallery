@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,10 +34,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -58,64 +54,62 @@ fun SetupWizard(
     subtitle: String,
     contentPadding: Dp = 32.dp,
     content: @Composable () -> Unit,
-    bottomBar: @Composable RowScope.() -> Unit
-) = SetupWizard(
-    modifier = modifier,
-    iconComponent = { modifier, color ->
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = modifier,
-            tint = color
-        )
-    },
-    title = title,
-    subtitle = subtitle,
-    contentPadding = contentPadding,
-    content = content,
-    bottomBar = bottomBar
-)
+    bottomBar: @Composable RowScope.() -> Unit,
+) {
+    SetupWizardContent(
+        modifier = modifier,
+        iconComponent = { iconModifier, color ->
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = iconModifier,
+                tint = color,
+            )
+        },
+        title = title,
+        subtitle = subtitle,
+        contentPadding = contentPadding,
+        content = content,
+        bottomBar = bottomBar,
+    )
+}
 
 @Composable
 fun SetupWizard(
     modifier: Modifier = Modifier,
-    painter: Painter,
     title: String,
     subtitle: String,
     contentPadding: Dp = 32.dp,
     content: @Composable () -> Unit,
-    bottomBar: @Composable RowScope.() -> Unit
-) = SetupWizard(
-    modifier = modifier,
-    iconComponent = { modifier, color ->
-        Image(
-            painter = painter,
-            contentDescription = null,
-            modifier = modifier,
-            contentScale = ContentScale.Crop,
-            colorFilter = ColorFilter.tint(color)
-        )
-    },
-    title = title,
-    subtitle = subtitle,
-    contentPadding = contentPadding,
-    content = content,
-    bottomBar = bottomBar
-)
+    bottomBar: @Composable RowScope.() -> Unit,
+) {
+    SetupWizardContent(
+        modifier = modifier,
+        iconComponent = null,
+        title = title,
+        subtitle = subtitle,
+        contentPadding = contentPadding,
+        content = content,
+        bottomBar = bottomBar,
+    )
+}
 
 @Composable
-fun SetupWizard(
+private fun SetupWizardContent(
     modifier: Modifier = Modifier,
-    iconComponent: @Composable (Modifier, Color) -> Unit,
+    iconComponent: (@Composable (Modifier, Color) -> Unit)?,
     title: String,
     subtitle: String,
     contentPadding: Dp = 32.dp,
     content: @Composable () -> Unit,
-    bottomBar: @Composable RowScope.() -> Unit
+    bottomBar: @Composable RowScope.() -> Unit,
 ) {
     val colorPrimary = MaterialTheme.colorScheme.primaryContainer
     val colorTertiary = MaterialTheme.colorScheme.tertiaryContainer
     val containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+    val hasIcon = iconComponent != null
+    val topPadding = if (hasIcon) 24.dp else 16.dp
+    val verticalSpacing = if (hasIcon) 32.dp else 24.dp
 
     val transition = rememberInfiniteTransition()
     val fraction by transition.animateFloat(
@@ -165,15 +159,17 @@ fun SetupWizard(
                 .background(Color.Transparent)
                 .fillMaxWidth()
                 .padding(paddingValues)
-                .padding(top = 24.dp)
+                .padding(top = topPadding)
                 .verticalScroll(state = rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(32.dp),
+            verticalArrangement = Arrangement.spacedBy(verticalSpacing),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            iconComponent(
-                Modifier.size(64.dp),
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-            )
+            if (iconComponent != null) {
+                iconComponent(
+                    Modifier.size(64.dp),
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                )
+            }
             Text(
                 modifier = Modifier.padding(horizontal = 24.dp),
                 text = buildAnnotatedString {

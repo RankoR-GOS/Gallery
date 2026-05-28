@@ -15,7 +15,6 @@ import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.PermMedia
 import androidx.compose.material.icons.rounded.VideoFile
-import com.dot.gallery.core.presentation.components.SetupButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +32,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -41,6 +39,7 @@ import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Misc.rememberIsMediaManager
+import com.dot.gallery.core.presentation.components.SetupButton
 import com.dot.gallery.core.presentation.components.SetupWizard
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionLayout
@@ -77,7 +76,6 @@ fun SetupScreen(
     }
 
     SetupWizard(
-        painter = painterResource(R.drawable.ic_launcher_foreground_monochrome),
         title = stringResource(id = R.string.welcome),
         subtitle = appName,
         contentPadding = 0.dp,
