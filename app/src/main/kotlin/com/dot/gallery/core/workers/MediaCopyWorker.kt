@@ -112,6 +112,11 @@ class MediaCopyWorker @AssistedInject constructor(
         }
 
         val results = copyJobs.map { it.await() }
+        // Notify the Files URI so ContentObservers re-query and copied
+        // items appear, including copies to external volumes (SD cards).
+        appContext.contentResolver.notifyChange(
+            MediaStore.Files.getContentUri("external"), null
+        )
         when {
             results.all { it } -> {
                 if (isActive) {

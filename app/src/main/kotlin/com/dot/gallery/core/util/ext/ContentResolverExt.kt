@@ -344,18 +344,33 @@ suspend fun <T : Media> Context.renameMedia(media: T, newName: String): Boolean 
 
 suspend fun <T : Media> Context.updateMedia(
     media: T,
-    contentValues: ContentValues
-): Boolean = withContext(Dispatchers.IO) {
-    runCatching {
-        contentResolver.update(media.getUri(), contentValues, null) > 0
-    }.onSuccess {
-        MediaScannerConnection.scanFile(
-            this@updateMedia, arrayOf(media.path.removeSuffix(media.label)),
-            arrayOf(media.mimeType), null
-        )
-    }.getOrElse {
-        printWarning(it.message.toString())
-        false
+    contentValues: ContentValues,
+): Boolean {
+    return withContext(Dispatchers.IO) {
+        runCatching {
+            contentResolver.update(media.getUri(), contentValues, null, null) > 0
+        }.onSuccess { updated ->
+            if (updated) {
+                // If RELATIVE_PATH changed, scan the new file location.
+                val newRelativePath =
+                    contentValues.getAsString(MediaStore.MediaColumns.RELATIVE_PATH)
+                val scanPath = if (newRelativePath != null) {
+                    val volumePrefix = media.path.substringBeforeLast("/")
+                        .removeSuffix(media.relativePath.removeSuffix("/"))
+                        .trimEnd('/')
+                    "${volumePrefix}/${newRelativePath.trimEnd('/')}/${media.label}"
+                } else {
+                    media.path
+                }
+                MediaScannerConnection.scanFile(
+                    this@updateMedia, arrayOf(scanPath),
+                    arrayOf(media.mimeType), null
+                )
+            }
+        }.getOrElse {
+            printWarning(it.message.toString())
+            false
+        }
     }
 }
 

@@ -105,9 +105,10 @@ fun <T: Media> MoveMediaSheet(
             val done = async {
                 mediaList.forEachIndexed { index, it ->
                     if (handler.moveMedia(media = it, newPath = newPath)) {
+                        val movedFilePath = newPath.trimEnd('/') + "/" + it.label
                         MediaScannerConnection.scanFile(
                             context,
-                            arrayOf(newPath),
+                            arrayOf(movedFilePath),
                             arrayOf(it.mimeType),
                             null
                         )
@@ -119,6 +120,9 @@ fun <T: Media> MoveMediaSheet(
                 return@async true
             }
             if (done.await()) {
+                context.contentResolver.notifyChange(
+                    MediaStore.Files.getContentUri("external"), null
+                )
                 sheetState.hide()
                 onFinish()
             } else {
