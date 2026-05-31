@@ -234,7 +234,8 @@ fun <T : Media> MediaViewScreen(
     // Use pagerMedia for paging (only representatives when grouped, otherwise all media)
     val pagerItems by rememberedDerivedState(mediaState.value) {
         val pager = mediaState.value.pagerMedia
-        if (pager.isNotEmpty()) pager else mediaState.value.media
+        val items = pager.ifEmpty { mediaState.value.media }
+        items.distinctBy { it.id }
     }
 
     // Use only primitive ids/sizes as saveable keys (avoid passing full media list object)
