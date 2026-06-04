@@ -5,11 +5,13 @@
 
 package com.dot.gallery.feature_node.presentation.classifier
 
-import ai.onnxruntime.OrtSession
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.ml.ManagedOrtSession
+import com.dot.gallery.core.ml.ModelInferenceException
 import com.dot.gallery.feature_node.domain.model.Category
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.model.Media
@@ -78,7 +80,7 @@ class AddCategoryViewModel @Inject constructor(
     private val _saveSuccess = MutableStateFlow(false)
     val saveSuccess: StateFlow<Boolean> = _saveSuccess.asStateFlow()
 
-    private var textSession: OrtSession? = null
+    private var textSession: ManagedOrtSession? = null
     private var searchJob: Job? = null
 
     // Image embeddings cache
@@ -185,6 +187,10 @@ class AddCategoryViewModel @Inject constructor(
                 
                 _previewMediaState.value = mediaState
             }
+        } catch (e: ModelInferenceException) {
+            Log.w(TAG, "Model inference failed: ${e.message}", e)
+            _previewMediaState.value = MediaState()
+            _previewCount.value = 0
         } finally {
             _isLoading.value = false
         }
@@ -225,5 +231,9 @@ class AddCategoryViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         textSession?.close()
+    }
+
+    private companion object {
+        private const val TAG = "AddCategoryViewModel"
     }
 }

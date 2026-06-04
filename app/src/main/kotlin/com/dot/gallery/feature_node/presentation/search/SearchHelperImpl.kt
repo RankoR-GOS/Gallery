@@ -1,7 +1,7 @@
 package com.dot.gallery.feature_node.presentation.search
 
-import ai.onnxruntime.OrtSession
 import android.graphics.Bitmap
+import com.dot.gallery.core.ml.ManagedOrtSession
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.feature_node.presentation.search.helpers.SearchVisionHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
@@ -21,7 +21,7 @@ class SearchHelperImpl @Inject constructor(
     override fun sortByCosineDistance(
         searchEmbedding: FloatArray,
         imageEmbeddingsList: List<FloatArray>,
-        imageIdxList: List<Long>
+        imageIdxList: List<Long>,
     ): List<Pair<Long, Float>> {
         val distances = LinkedHashMap<Long, Float>()
         for (i in imageEmbeddingsList.indices) {
@@ -29,24 +29,32 @@ class SearchHelperImpl @Inject constructor(
             distances[imageIdxList[i]] = dist
         }
         return distances.toList()
-            .filter { it.second >= SearchVisionHelper.threshold }
-            .sortedByDescending { (k, v) -> v }
+            .filter { it.second >= SearchVisionHelper.THRESHOLD }
+            .sortedByDescending { it.second }
             .map {
                 printDebug(it)
                 it
             }
     }
 
-    override fun setupTextSession(): OrtSession = helper.setupTextSession()
-
-    override suspend fun getTextEmbedding(session: OrtSession, text: String): FloatArray = withContext(Dispatchers.IO) {
-        helper.getTextEmbedding(session, text)
+    override fun setupTextSession(): ManagedOrtSession {
+        return helper.setupTextSession()
     }
 
-    override fun setupVisionSession(): OrtSession = helper.setupVisionSession()
+    override suspend fun getTextEmbedding(session: ManagedOrtSession, text: String): FloatArray {
+        return withContext(Dispatchers.IO) {
+            helper.getTextEmbedding(session = session, text = text)
+        }
+    }
 
-    override suspend fun getImageEmbedding(session: OrtSession, bitmap: Bitmap): FloatArray = withContext(Dispatchers.IO) {
-        helper.getImageEmbedding(session, bitmap)
+    override fun setupVisionSession(): ManagedOrtSession {
+        return helper.setupVisionSession()
+    }
+
+    override suspend fun getImageEmbedding(session: ManagedOrtSession, bitmap: Bitmap): FloatArray {
+        return withContext(Dispatchers.IO) {
+            helper.getImageEmbedding(session = session, bitmap = bitmap)
+        }
     }
 
 }

@@ -5,11 +5,15 @@
 
 package com.dot.gallery.feature_node.presentation.classifier
 
-import ai.onnxruntime.OrtSession
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.ml.ManagedOrtSession
+import com.dot.gallery.core.ml.ModelInferenceException
+import com.dot.gallery.core.workers.startCategoryClassification
 import com.dot.gallery.feature_node.domain.model.Category
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.model.Media
@@ -18,8 +22,6 @@ import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.search.SearchHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
-import androidx.work.WorkManager
-import com.dot.gallery.core.workers.startCategoryClassification
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -57,10 +59,10 @@ class EditCategoryViewModel @Inject constructor(
     ).stateIn(viewModelScope, SharingStarted.Eagerly, Constants.WEEKLY_DATE_FORMAT)
 
     private val _categoryId = MutableStateFlow<Long?>(null)
-    
+
     private val _category = MutableStateFlow<Category?>(null)
     val category: StateFlow<Category?> = _category.asStateFlow()
-    
+
     private val _categoryName = MutableStateFlow("")
     val categoryName: StateFlow<String> = _categoryName.asStateFlow()
 
@@ -75,21 +77,22 @@ class EditCategoryViewModel @Inject constructor(
 
     private val _previewCount = MutableStateFlow(0)
     val previewCount: StateFlow<Int> = _previewCount.asStateFlow()
-    
+
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-    
+
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
 
-    private var textSession: OrtSession? = null
+    private var textSession: ManagedOrtSession? = null
     private var searchJob: Job? = null
 
     // Image embeddings cache
     private var imageEmbeddings: List<ImageEmbedding> = emptyList()
+
     // Media cache for building MediaState
     private var allMedia: List<Media.UriMedia> = emptyList()
-    
+
     fun loadCategory(categoryId: Long) {
         _categoryId.value = categoryId
         viewModelScope.launch(Dispatchers.IO) {
@@ -99,7 +102,7 @@ class EditCategoryViewModel @Inject constructor(
                 imageEmbeddings = repository.getImageEmbeddings().first()
                 val mediaResource = repository.getMedia().first()
                 allMedia = mediaResource.data?.filterIsInstance<Media.UriMedia>() ?: emptyList()
-                
+
                 // Load category details
                 val cat = repository.getCategoryAsync(categoryId)
                 if (cat != null) {
@@ -107,7 +110,7 @@ class EditCategoryViewModel @Inject constructor(
                     _categoryName.value = cat.name
                     _searchTerms.value = cat.searchTerms
                     _threshold.value = cat.threshold
-                    
+
                     // Trigger initial preview search
                     searchPreview(cat.searchTerms)
                 }
@@ -116,11 +119,11 @@ class EditCategoryViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun updateCategoryName(name: String) {
         _categoryName.value = name
     }
-    
+
     fun updateSearchTerms(terms: String) {
         _searchTerms.value = terms
         // Trigger preview search with debounce
@@ -130,7 +133,7 @@ class EditCategoryViewModel @Inject constructor(
             searchPreview(terms)
         }
     }
-    
+
     fun updateThreshold(value: Float) {
         _threshold.value = value
         // Re-run preview with new threshold
@@ -161,7 +164,7 @@ class EditCategoryViewModel @Inject constructor(
 
                 // Get text embedding for search terms
                 val textEmbedding = searchHelper.getTextEmbedding(session, terms)
-                
+
                 // Find matching images
                 val matches = mutableListOf<Pair<Long, Float>>()
                 val currentThreshold = _threshold.value
@@ -176,13 +179,13 @@ class EditCategoryViewModel @Inject constructor(
                 // Sort by similarity
                 val sortedMatches = matches.sortedByDescending { it.second }
                 val matchingIds = sortedMatches.map { it.first }.toSet()
-                
+
                 // Get the actual media objects
                 val matchingMedia = allMedia.filter { it.id in matchingIds }
                     .sortedByDescending { media ->
                         sortedMatches.find { it.first == media.id }?.second ?: 0f
                     }
-                
+
                 _previewCount.value = sortedMatches.size
 
                 // Build MediaState
@@ -196,21 +199,25 @@ class EditCategoryViewModel @Inject constructor(
                     extendedDateFormat = extendedDateFormat.value,
                     weeklyDateFormat = weeklyDateFormat.value
                 )
-                
+
                 _previewMediaState.value = mediaState
             }
+        } catch (e: ModelInferenceException) {
+            Log.w(TAG, "Model inference failed: ${e.message}", e)
+            _previewMediaState.value = MediaState()
+            _previewCount.value = 0
         } catch (e: Exception) {
             // Handle error silently
         }
     }
-    
+
     fun saveCategory(onComplete: () -> Unit) {
         val categoryId = _categoryId.value ?: return
         val name = _categoryName.value.trim()
         val terms = _searchTerms.value.trim()
-        
+
         if (name.isBlank()) return
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             _isSaving.value = true
             try {
@@ -236,10 +243,10 @@ class EditCategoryViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun deleteCategory(onComplete: () -> Unit) {
         val categoryId = _categoryId.value ?: return
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             _isSaving.value = true
             try {
@@ -256,5 +263,9 @@ class EditCategoryViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         textSession?.close()
+    }
+
+    private companion object {
+        private const val TAG = "EditCategoryViewModel"
     }
 }

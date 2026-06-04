@@ -374,6 +374,7 @@
     
     <!-- AI Model Availability -->
     <string name="ai_models_checking">Preparing AI features…</string>
+    <string name="ai_model_inference_failed">AI model inference failed.</string>
     <string name="ai_models_unavailable">Bundled AI models are unavailable in this build.</string>
 
     <!-- New Category System -->

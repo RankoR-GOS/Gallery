@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.presentation.search
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import androidx.work.WorkManager
 import com.dot.gallery.R
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.ml.ModelInferenceException
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.feature_node.domain.model.Media
@@ -398,6 +400,19 @@ class SearchViewModel @Inject constructor(
                         )
                     )
                 }
+            } catch (exception: ModelInferenceException) {
+                Log.w(TAG, "Image search inference failed", exception)
+                _searchResultsState.tryEmit(
+                    SearchResultsState(
+                        hasSearched = true,
+                        isSearching = false,
+                        progress = 1f,
+                        results = MediaState(
+                            error = context.getString(R.string.ai_model_inference_failed),
+                            isLoading = false,
+                        ),
+                    )
+                )
             } catch (e: Exception) {
                 _searchResultsState.tryEmit(
                     SearchResultsState(
@@ -597,6 +612,7 @@ class SearchViewModel @Inject constructor(
                 )
             )
             val allMedia = allMedia.value.media
+            var modelInferenceFailed = false
 
             if (query.matches(Regex("^[a-zA-Z0-9!#$&^_.+-]+/[a-zA-Z0-9!#$&-^_.+*]*$"))) {
                 setMimeTypeQuery(query)
@@ -637,35 +653,40 @@ class SearchViewModel @Inject constructor(
                 )
             }
             if (searchHelper.isAvailable) {
-                searchHelper.setupTextSession().use { session ->
-                    val textEmbedding = searchHelper.getTextEmbedding(session, query)
-                    val searchResultsPair = searchHelper.sortByCosineDistance(
-                        searchEmbedding = textEmbedding,
-                        imageEmbeddingsList = imageRecords.value.map { it.embedding },
-                        imageIdxList = imageRecords.value.map { it.id }
-                    )
-                    val searchResultsMedia = searchResultsPair.mapNotNull { (id, score) ->
-                        val media = allMedia.find { it.id == id }
-                        if (media != null) score to media else null
-                    }
-
-                    results.mergeWithHighestScore(searchResultsMedia)
-                    _searchResultsState.tryEmit(
-                        SearchResultsState(
-                            hasSearched = true,
-                            isSearching = false,
-                            isRelevanceSearch = true,
-                            progress = 0.5f,
-                            results = mapMediaToItem(
-                                data = results.map { it.second },
-                                error = "",
-                                albumId = -1L,
-                                defaultDateFormat = dateFormats.value.first,
-                                extendedDateFormat = dateFormats.value.second,
-                                weeklyDateFormat = dateFormats.value.third
-                            )
+                try {
+                    searchHelper.setupTextSession().use { session ->
+                        val textEmbedding = searchHelper.getTextEmbedding(session, query)
+                        val searchResultsPair = searchHelper.sortByCosineDistance(
+                            searchEmbedding = textEmbedding,
+                            imageEmbeddingsList = imageRecords.value.map { it.embedding },
+                            imageIdxList = imageRecords.value.map { it.id },
                         )
-                    )
+                        val searchResultsMedia = searchResultsPair.mapNotNull { (id, score) ->
+                            val media = allMedia.find { it.id == id }
+                            if (media != null) score to media else null
+                        }
+
+                        results.mergeWithHighestScore(searchResultsMedia)
+                        _searchResultsState.tryEmit(
+                            SearchResultsState(
+                                hasSearched = true,
+                                isSearching = false,
+                                isRelevanceSearch = true,
+                                progress = 0.5f,
+                                results = mapMediaToItem(
+                                    data = results.map { it.second },
+                                    error = "",
+                                    albumId = -1L,
+                                    defaultDateFormat = dateFormats.value.first,
+                                    extendedDateFormat = dateFormats.value.second,
+                                    weeklyDateFormat = dateFormats.value.third,
+                                ),
+                            ),
+                        )
+                    }
+                } catch (exception: ModelInferenceException) {
+                    modelInferenceFailed = true
+                    Log.w(TAG, "Text search inference failed", exception)
                 }
             }
             val fuzzySearchResults = allMedia.parseFuzzySearch(query)
@@ -692,7 +713,14 @@ class SearchViewModel @Inject constructor(
                         hasSearched = true,
                         isSearching = false,
                         progress = 1f,
-                        results = MediaState(error = "No results found", isLoading = false)
+                        results = MediaState(
+                            error = if (modelInferenceFailed) {
+                                context.getString(R.string.ai_model_inference_failed)
+                            } else {
+                                "No results found"
+                            },
+                            isLoading = false,
+                        ),
                     )
                 )
             }
@@ -730,4 +758,7 @@ class SearchViewModel @Inject constructor(
     }
 
 
+    private companion object {
+        private const val TAG = "SearchViewModel"
+    }
 }

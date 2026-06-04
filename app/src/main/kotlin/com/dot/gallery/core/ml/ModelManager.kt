@@ -141,3 +141,8 @@ class ModelsNotAvailableException(
     message: String = "ML models are unavailable in this build.",
     cause: Throwable? = null,
 ) : RuntimeException(message, cause)
+
+class ModelInferenceException(
+    message: String,
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

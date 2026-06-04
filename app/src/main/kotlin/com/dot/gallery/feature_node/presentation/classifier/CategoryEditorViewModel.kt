@@ -5,11 +5,15 @@
 
 package com.dot.gallery.feature_node.presentation.classifier
 
-import ai.onnxruntime.OrtSession
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings
+import com.dot.gallery.core.ml.ManagedOrtSession
+import com.dot.gallery.core.ml.ModelInferenceException
+import com.dot.gallery.core.workers.startCategoryClassification
 import com.dot.gallery.feature_node.domain.model.Category
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.model.Media
@@ -18,8 +22,6 @@ import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.search.SearchHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
-import androidx.work.WorkManager
-import com.dot.gallery.core.workers.startCategoryClassification
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -113,7 +115,7 @@ class CategoryEditorViewModel @Inject constructor(
 
     // ============ Internal ============
 
-    private var textSession: OrtSession? = null
+    private var textSession: ManagedOrtSession? = null
     private var searchJob: Job? = null
     private var imageEmbeddings: List<ImageEmbedding> = emptyList()
 
@@ -304,6 +306,11 @@ class CategoryEditorViewModel @Inject constructor(
 
                 _previewMediaState.value = mediaState
             }
+        } catch (e: ModelInferenceException) {
+            Log.w(TAG, "Model inference failed: ${e.message}", e)
+            _previewMedia.value = emptyList()
+            _previewMediaState.value = MediaState()
+            _previewCount.value = 0
         } finally {
             _isLoading.value = false
         }
@@ -376,5 +383,9 @@ class CategoryEditorViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         textSession?.close()
+    }
+
+    private companion object {
+        private const val TAG = "CategoryEditorViewModel"
     }
 }
