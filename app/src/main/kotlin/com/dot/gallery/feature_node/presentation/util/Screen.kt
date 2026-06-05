@@ -49,7 +49,6 @@ sealed class Screen(val route: String) {
     data object SettingsGeneralScreen : Screen("settings_general_screen")
     data object SettingsSmartFeaturesScreen : Screen("settings_smart_features_screen")
     data object SettingsSecurityScreen : Screen("settings_security_screen")
-    data object EditBackupsViewerScreen : Screen("edit_backups_viewer_screen")
     data object SettingsAppearanceScreen : Screen("settings_appearance_screen")
     data object SettingsTimelineAlbumsScreen : Screen("settings_timeline_albums_screen")
     data object SettingsMediaViewerScreen : Screen("settings_media_viewer_screen")

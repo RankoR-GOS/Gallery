@@ -34,8 +34,6 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Crop
 import androidx.compose.material.icons.outlined.Flip
 import androidx.compose.material.icons.outlined.GridOn
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -104,9 +102,6 @@ import dev.chrisbanes.haze.hazeSource
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun EditScreen2(
-    hasOriginalBackup: Boolean = false,
-    isReverting: Boolean = false,
-    canOverride: Boolean = false,
     canSave: Boolean = true,
     isChanged: Boolean = false,
     isSaving: Boolean = false,
@@ -126,7 +121,6 @@ fun EditScreen2(
     currentPathProperty: PathProperties,
     currentPath: Path,
     onClose: () -> Unit,
-    onOverride: () -> Unit,
     onSaveCopy: () -> Unit,
     onAdjustItemLongClick: (VariableFilterTypes) -> Unit,
     onAdjustmentChange: (Adjustment) -> Unit,
@@ -147,7 +141,6 @@ fun EditScreen2(
     undoLastPath: () -> Unit,
     redoLastPath: () -> Unit,
     clearDrawing: () -> Unit = {},
-    onRevertToOriginal: () -> Unit = {},
     canUndo: Boolean = false,
     canRedo: Boolean = false,
     onRedo: () -> Unit = {},
@@ -193,8 +186,6 @@ fun EditScreen2(
         wasDrawing = isMarkupDrawing
     }
 
-    var showRevertDialog by remember { mutableStateOf(false) }
-
     // Track which tab is currently selected for the tab bar highlight
     var selectedTab by remember { mutableStateOf<EditorItems?>(EditorItems.Lighting) }
     val showingEditorScreen by rememberedDerivedState {
@@ -225,12 +216,9 @@ fun EditScreen2(
     }
 
     val animatedBlurRadius by animateDpAsState(
-        if (isSaving || isReverting || cropState.isCropping || requestMarkupApply) 50.dp else 0.dp,
+        if (isSaving || cropState.isCropping || requestMarkupApply) 50.dp else 0.dp,
         label = "animatedBlurRadius"
     )
-
-    // 3-dot menu state
-    var showMenu by remember { mutableStateOf(false) }
 
     // Aspect ratio state for crop
     var selectedAspectRatio by remember { mutableStateOf(AspectRatio.Original) }
@@ -248,7 +236,7 @@ fun EditScreen2(
             modifier = Modifier
                 .hazeSource(LocalHazeState.current)
                 .fillMaxSize()
-                .then(if (isSaving || isReverting || cropState.isCropping || requestMarkupApply) Modifier.blur(animatedBlurRadius) else Modifier)
+                .then(if (isSaving || cropState.isCropping || requestMarkupApply) Modifier.blur(animatedBlurRadius) else Modifier)
                 .background(Color.Black)
                 .systemBarsPadding()
         ) {
@@ -355,78 +343,6 @@ fun EditScreen2(
                             )
                         }
                     }
-                    // Only show 3-dot menu if there are actions available
-                    val hasMenuActions = (isChanged && canOverride) || isChanged || hasOriginalBackup
-                    AnimatedVisibility(
-                        visible = hasMenuActions,
-                        enter = enterAnimation,
-                        exit = exitAnimation
-                    ) {
-                    Box {
-                        IconButton(
-                            onClick = { showMenu = true },
-                            enabled = !isProcessing,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.MoreVert,
-                                contentDescription = stringResource(R.string.editor_more_options),
-                                tint = Color.White,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            if (isChanged && canOverride) {
-                                DropdownMenuItem(
-                                    text = {
-                                        Column {
-                                            Text(stringResource(R.string.override))
-                                            Text(
-                                                text = stringResource(R.string.editor_save_subtitle),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    },
-                                    onClick = {
-                                        showMenu = false
-                                        onOverride()
-                                    }
-                                )
-                            }
-                            if (isChanged) {
-                                DropdownMenuItem(
-                                    text = {
-                                        Column {
-                                            Text(stringResource(R.string.save_copy))
-                                            Text(
-                                                text = stringResource(R.string.editor_save_copy_subtitle),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    },
-                                    onClick = {
-                                        showMenu = false
-                                        onSaveCopy()
-                                    }
-                                )
-                            }
-                            if (hasOriginalBackup) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.revert_to_original)) },
-                                    onClick = {
-                                        showMenu = false
-                                        showRevertDialog = true
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    } // end AnimatedVisibility for 3-dot menu
                 }
             }
             } // end AnimatedVisibility for top bar
@@ -900,7 +816,7 @@ fun EditScreen2(
 
         // Loading overlay
         AnimatedVisibility(
-            visible = isSaving || isReverting || requestMarkupApply,
+            visible = isSaving || requestMarkupApply,
             enter = enterAnimation,
             exit = exitAnimation
         ) {
@@ -931,30 +847,6 @@ fun EditScreen2(
                 },
                 onRemove = {
                     showTextOverlay = false
-                }
-            )
-        }
-
-        // Revert dialog
-        if (showRevertDialog) {
-            AlertDialog(
-                onDismissRequest = { showRevertDialog = false },
-                title = { Text(stringResource(R.string.revert_to_original)) },
-                text = { Text(stringResource(R.string.revert_to_original_confirmation)) },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            showRevertDialog = false
-                            onRevertToOriginal()
-                        }
-                    ) {
-                        Text(stringResource(R.string.action_revert))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showRevertDialog = false }) {
-                        Text(stringResource(R.string.action_cancel))
-                    }
                 }
             )
         }

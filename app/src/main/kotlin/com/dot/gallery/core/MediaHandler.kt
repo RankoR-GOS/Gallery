@@ -54,15 +54,6 @@ interface MediaHandler {
         displayName: String
     ): Uri?
 
-    suspend fun overrideImage(
-        uri: Uri,
-        bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
-        mimeType: String,
-        relativePath: String,
-        displayName: String
-    ): Boolean
-
     suspend fun getCategoryForMediaId(mediaId: Long): String?
 
     fun getClassifiedMediaCountAtCategory(category: String): Flow<Int>

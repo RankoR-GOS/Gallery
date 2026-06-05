@@ -15,7 +15,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.dot.gallery.core.EditBackupManager
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.Media.UriMedia
@@ -38,13 +37,9 @@ import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Vign
 import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.VariableFilterTypes
 import com.dot.gallery.feature_node.presentation.util.overlayBitmaps
 import com.dot.gallery.feature_node.presentation.util.applyColorMatrix
-import com.dot.gallery.core.workers.EditBackupWorker
-import com.dot.gallery.core.workers.revertEditBackup
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printError
 import dagger.hilt.android.lifecycle.HiltViewModel
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,8 +55,6 @@ import javax.inject.Inject
 class EditViewModel @Inject constructor(
     private val repository: MediaRepository,
     private val mediaHandler: MediaHandler,
-    private val editBackupManager: EditBackupManager,
-    private val workManager: WorkManager,
 ) : ViewModel() {
 
     private val _originalBitmap = MutableStateFlow<Bitmap?>(null)
@@ -94,15 +87,6 @@ class EditViewModel @Inject constructor(
 
     private val _isSaving = MutableStateFlow(true)
     val isSaving = _isSaving.asStateFlow()
-
-    private val _canOverride = MutableStateFlow(false)
-    val canOverride = _canOverride.asStateFlow()
-
-    private val _hasOriginalBackup = MutableStateFlow(false)
-    val hasOriginalBackup = _hasOriginalBackup.asStateFlow()
-
-    private val _isReverting = MutableStateFlow(false)
-    val isReverting = _isReverting.asStateFlow()
 
     private val _isProcessing = MutableStateFlow(false)
     val isProcessing = _isProcessing.asStateFlow()
@@ -363,10 +347,8 @@ class EditViewModel @Inject constructor(
             val mediaList =
                 repository.getMediaListByUris(listOf(uri), reviewMode = false, onlyMatching = true).firstOrNull()?.data
                     ?: emptyList()
-            _canOverride.value = mediaList.isNotEmpty()
             if (mediaList.isNotEmpty()) {
                 activeMedia.value = mediaList.first()
-                _hasOriginalBackup.value = editBackupManager.hasOriginalBackup(mediaList.first().id)
             } else {
                 activeMedia.value = Media.createFromUri(context, uri)
             }
@@ -764,91 +746,4 @@ class EditViewModel @Inject constructor(
         }
     }
 
-    fun saveOverride(
-        saveFormat: SaveFormat? = null,
-        onSuccess: () -> Unit = {},
-        onFail: () -> Unit = {}
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _isSaving.value = true
-            val format = saveFormat ?: bestSaveFormat()
-            // Flatten any pending matrix adjustments into the bitmap before saving
-            flattenComposedMatrix()
-            val media = activeMedia.value!!
-            lastRealBitmap()?.let { bitmap ->
-                try {
-                    // Backup original before overriding (preserves first original)
-                    editBackupManager.backupOriginal(
-                        mediaId = media.id,
-                        uri = media.uri,
-                        mimeType = media.mimeType
-                    )
-
-                    if (mediaHandler.overrideImage(
-                            uri = media.uri,
-                            bitmap = bitmap,
-                            format = format.format,
-                            relativePath = Environment.DIRECTORY_PICTURES + "/Edited",
-                            displayName = media.label,
-                            mimeType = format.mimeType
-                        )
-                    ) {
-                        _hasOriginalBackup.value = true
-                        onSuccess().also { _isSaving.value = false }
-                    } else {
-                        onFail().also { _isSaving.value = false }
-                    }
-                } catch (e: Exception) {
-                    onFail().also { _isSaving.value = false }
-                }
-            } ?: onFail().also { _isSaving.value = false }
-        }
-    }
-
-    fun revertToOriginal(
-        onSuccess: () -> Unit = {},
-        onFail: () -> Unit = {}
-    ) {
-        viewModelScope.launch {
-            _isReverting.value = true
-            val media = activeMedia.value
-            if (media == null) {
-                _isReverting.value = false
-                onFail()
-                return@launch
-            }
-            try {
-                val workId = workManager.revertEditBackup(media.id)
-                workManager.getWorkInfoByIdFlow(workId).collect { info ->
-                    if (info == null) return@collect
-                    when (info.state) {
-                        WorkInfo.State.SUCCEEDED -> {
-                            val success = info.outputData.getBoolean(
-                                EditBackupWorker.KEY_SUCCESS, false
-                            )
-                            if (success) {
-                                _hasOriginalBackup.value = false
-                                _isReverting.value = false
-                                onSuccess()
-                            } else {
-                                _isReverting.value = false
-                                onFail()
-                            }
-                            return@collect
-                        }
-                        WorkInfo.State.FAILED, WorkInfo.State.CANCELLED -> {
-                            _isReverting.value = false
-                            onFail()
-                            return@collect
-                        }
-                        else -> { /* ENQUEUED, RUNNING, BLOCKED – keep waiting */ }
-                    }
-                }
-            } catch (e: Exception) {
-                printError("Failed to revert: ${e.message}")
-                _isReverting.value = false
-                onFail()
-            }
-        }
-    }
 }

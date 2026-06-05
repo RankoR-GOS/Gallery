@@ -17,7 +17,6 @@ import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Panorama
-import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.material.icons.outlined.ZoomIn
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.presentation.util.Screen
@@ -40,7 +39,7 @@ object HelpRepository {
     fun getExploreMoreCategories() = listOf(
         HelpCategory.FAVORITES_TRASH, HelpCategory.METADATA,
         HelpCategory.SETTINGS_APPEARANCE, HelpCategory.SETTINGS_GENERAL, HelpCategory.SETTINGS_NAVIGATION,
-        HelpCategory.SETTINGS_SMART, HelpCategory.GESTURES, HelpCategory.SELECTION_ACTIONS,
+        HelpCategory.GESTURES, HelpCategory.SELECTION_ACTIONS,
         HelpCategory.ACCESSIBILITY
     )
 
@@ -366,17 +365,9 @@ object HelpRepository {
             )),
         HelpTip(id = "edit_save", title = R.string.help_tip_edit_save_title, subtitle = R.string.help_tip_edit_save_subtitle,
             icon = HelpIcon.ofVector(Icons.Outlined.Edit), category = HelpCategory.EDITING,
-            deepLink = Screen.EditBackupsViewerScreen(),
             pages = listOf(
                 TutorialPage(title = R.string.help_tip_edit_save_p1_title, description = R.string.help_tip_edit_save_p1_desc),
                 TutorialPage(title = R.string.help_tip_edit_save_p2_title, description = R.string.help_tip_edit_save_p2_desc, steps = listOf(R.string.help_tip_edit_save_p2_s1, R.string.help_tip_edit_save_p2_s2, R.string.help_tip_edit_save_p2_s3, R.string.help_tip_edit_save_p2_s4))
-            )),
-        HelpTip(id = "edit_backups", title = R.string.help_tip_edit_backups_title, subtitle = R.string.help_tip_edit_backups_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.SettingsBackupRestore), category = HelpCategory.EDITING,
-            deepLink = Screen.EditBackupsViewerScreen(),
-            pages = listOf(
-                TutorialPage(title = R.string.help_tip_edit_backups_p1_title, description = R.string.help_tip_edit_backups_p1_desc),
-                TutorialPage(title = R.string.help_tip_edit_backups_p2_title, description = R.string.help_tip_edit_backups_p2_desc, steps = listOf(R.string.help_tip_edit_backups_p2_s1, R.string.help_tip_edit_backups_p2_s2, R.string.help_tip_edit_backups_p2_s3, R.string.help_tip_edit_backups_p2_s4))
             ))
     )
     // endregion
@@ -572,15 +563,6 @@ object HelpRepository {
             ))
     )
 
-    private val SETTINGS_SMART_TIPS = listOf(
-        HelpTip(id = "settings_edit_backups", title = R.string.help_tip_settings_edit_backups_title, subtitle = R.string.help_tip_settings_edit_backups_subtitle,
-            icon = HelpIcon.ofVector(Icons.Outlined.SettingsBackupRestore), category = HelpCategory.SETTINGS_SMART,
-            deepLink = Screen.EditBackupsViewerScreen(),
-            pages = listOf(
-                TutorialPage(title = R.string.help_tip_settings_edit_backups_p1_title, description = R.string.help_tip_settings_edit_backups_p1_desc),
-                TutorialPage(title = R.string.help_tip_settings_edit_backups_p2_title, description = R.string.help_tip_settings_edit_backups_p2_desc, steps = listOf(R.string.help_tip_settings_edit_backups_p2_s1, R.string.help_tip_settings_edit_backups_p2_s2, R.string.help_tip_settings_edit_backups_p2_s3))
-            ))
-    )
     // endregion
 
     // region Gestures & Selection
@@ -644,7 +626,7 @@ object HelpRepository {
         TIMELINE_ALBUM_TIPS + VIEWING_TIPS + VIEWER_ACTION_TIPS + VIEWER_SETTINGS_TIPS +
         EDITING_TIPS + SEARCH_TIPS + AI_TIPS + ALBUM_TIPS +
         FAV_TRASH_TIPS + METADATA_TIPS +
-        SETTINGS_APPEARANCE_TIPS + SETTINGS_GENERAL_TIPS + SETTINGS_NAV_TIPS + SETTINGS_SMART_TIPS +
+        SETTINGS_APPEARANCE_TIPS + SETTINGS_GENERAL_TIPS + SETTINGS_NAV_TIPS +
         GESTURE_TIPS + SELECTION_TIPS + ACCESSIBILITY_TIPS
 
     // endregion

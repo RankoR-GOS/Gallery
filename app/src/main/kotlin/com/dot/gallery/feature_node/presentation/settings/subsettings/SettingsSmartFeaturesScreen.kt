@@ -73,10 +73,6 @@ fun SettingsSmartFeaturesScreen(
             else ->
                 stringResource(R.string.metadata_idle)
         }
-        val storageHeader = stringResource(R.string.edit_backups_storage)
-        val editBackupsTitle = stringResource(R.string.edit_backups)
-        val editBackupsSummary = stringResource(R.string.edit_backups_summary)
-
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
@@ -103,14 +99,6 @@ fun SettingsSmartFeaturesScreen(
                     summary = metadataSummary,
                     enabled = !isMetadataWorkerRunning,
                     onClick = { viewModel.refreshMetadata() },
-                )
-
-                Header(storageHeader)
-
-                Preference(
-                    title = editBackupsTitle,
-                    summary = editBackupsSummary,
-                    onClick = { handler.navigate(Screen.EditBackupsViewerScreen()) },
                 )
             }
         }

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "980e54bf3ba9fba7a835d123ed1fa2b8",
+    "identityHash": "66c6e0b789c1eb61556e62126e9e5534",
     "entities": [
       {
         "tableName": "pinned_table",
@@ -764,48 +764,6 @@
         ]
       },
       {
-        "tableName": "edited_media",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mediaId` INTEGER NOT NULL, `originalUri` TEXT NOT NULL, `backupPath` TEXT NOT NULL, `originalMimeType` TEXT NOT NULL, `editTimestamp` INTEGER NOT NULL, PRIMARY KEY(`mediaId`))",
-        "fields": [
-          {
-            "fieldPath": "mediaId",
-            "columnName": "mediaId",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "originalUri",
-            "columnName": "originalUri",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "backupPath",
-            "columnName": "backupPath",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "originalMimeType",
-            "columnName": "originalMimeType",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "editTimestamp",
-            "columnName": "editTimestamp",
-            "affinity": "INTEGER",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "mediaId"
-          ]
-        }
-      },
-      {
         "tableName": "locked_table",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
@@ -1111,7 +1069,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '980e54bf3ba9fba7a835d123ed1fa2b8')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '66c6e0b789c1eb61556e62126e9e5534')"
     ]
   }
 }

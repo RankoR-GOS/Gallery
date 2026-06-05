@@ -389,7 +389,6 @@ private fun EditorPreviewMini(modifier: Modifier = Modifier) {
             currentPathProperty = PathProperties(),
             currentPath = Path(),
             onClose = {},
-            onOverride = {},
             onSaveCopy = {},
             onAdjustItemLongClick = {},
             onAdjustmentChange = {},

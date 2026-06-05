@@ -119,15 +119,6 @@ class MediaHandlerImpl @Inject constructor(
         displayName: String
     ): Uri? = repository.saveImage(bitmap, format, mimeType, relativePath, displayName)
 
-    override suspend fun overrideImage(
-        uri: Uri,
-        bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
-        mimeType: String,
-        relativePath: String,
-        displayName: String
-    ): Boolean = repository.overrideImage(uri, bitmap, format, mimeType, relativePath, displayName)
-
     override suspend fun getCategoryForMediaId(mediaId: Long): String? =
         repository.getCategoryForMediaId(mediaId)
 

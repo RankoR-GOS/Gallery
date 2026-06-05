@@ -106,7 +106,6 @@ enum class HelpCategory {
     SETTINGS_APPEARANCE,
     SETTINGS_GENERAL,
     SETTINGS_NAVIGATION,
-    SETTINGS_SMART,
     GESTURES,
     SELECTION_ACTIONS,
     ACCESSIBILITY
@@ -130,7 +129,6 @@ fun HelpCategory.displayTitle(): String = when (this) {
     HelpCategory.SETTINGS_APPEARANCE -> stringResource(R.string.help_cat_settings_appearance)
     HelpCategory.SETTINGS_GENERAL -> stringResource(R.string.help_cat_settings_general)
     HelpCategory.SETTINGS_NAVIGATION -> stringResource(R.string.help_cat_settings_navigation)
-    HelpCategory.SETTINGS_SMART -> stringResource(R.string.help_cat_settings_smart)
     HelpCategory.GESTURES -> stringResource(R.string.help_cat_gestures)
     HelpCategory.SELECTION_ACTIONS -> stringResource(R.string.help_cat_selection_actions)
     HelpCategory.ACCESSIBILITY -> stringResource(R.string.help_cat_accessibility)
@@ -153,7 +151,6 @@ fun HelpCategory.icon(): ImageVector = when (this) {
     HelpCategory.SETTINGS_APPEARANCE -> Icons.Outlined.Colorize
     HelpCategory.SETTINGS_GENERAL -> Icons.Outlined.Settings
     HelpCategory.SETTINGS_NAVIGATION -> Icons.Outlined.Explore
-    HelpCategory.SETTINGS_SMART -> Icons.Outlined.AutoAwesome
     HelpCategory.GESTURES -> Icons.Outlined.Swipe
     HelpCategory.SELECTION_ACTIONS -> Icons.Outlined.ChecklistRtl
     HelpCategory.ACCESSIBILITY -> Icons.Outlined.AccessibilityNew

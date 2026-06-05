@@ -105,7 +105,6 @@ import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsMe
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsNavigationScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSelectionActionsScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsTimelineAlbumsScreen
-import com.dot.gallery.feature_node.presentation.settings.subsettings.EditBackupsViewerScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSmartFeaturesScreen
 import com.dot.gallery.feature_node.presentation.settings.subsettings.SettingsSecurityScreen
 import com.dot.gallery.feature_node.presentation.setup.SetupScreen
@@ -1057,9 +1056,6 @@ fun NavigationComp(
             }
             composable(Screen.SettingsSelectionActionsScreen()) {
                 SettingsSelectionActionsScreen()
-            }
-            composable(Screen.EditBackupsViewerScreen()) {
-                EditBackupsViewerScreen()
             }
 
             composable(Screen.SearchScreen()) {

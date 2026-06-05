@@ -139,15 +139,6 @@ interface MediaRepository {
         displayName: String
     ): Uri?
 
-    suspend fun overrideImage(
-        uri: Uri,
-        bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
-        mimeType: String,
-        relativePath: String,
-        displayName: String
-    ): Boolean
-
     fun getTimelineSettings(): Flow<TimelineSettings?>
 
     suspend fun updateTimelineSettings(settings: TimelineSettings)

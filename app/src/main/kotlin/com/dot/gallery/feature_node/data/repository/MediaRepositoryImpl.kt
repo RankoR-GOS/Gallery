@@ -25,7 +25,6 @@ import com.dot.gallery.core.util.MediaStoreBuckets
 import com.dot.gallery.core.util.ext.deleteGpsMetadata
 import com.dot.gallery.core.util.ext.deleteMetadata
 import com.dot.gallery.core.util.ext.mapAsResource
-import com.dot.gallery.core.util.ext.overrideImage
 import com.dot.gallery.core.util.ext.renameMedia
 import com.dot.gallery.core.util.ext.saveImage
 import com.dot.gallery.core.util.ext.updateImageDescription
@@ -498,15 +497,6 @@ class MediaRepositoryImpl(
         relativePath: String,
         displayName: String
     ) = contentResolver.saveImage(bitmap, format, mimeType, relativePath, displayName)
-
-    override suspend fun overrideImage(
-        uri: Uri,
-        bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
-        mimeType: String,
-        relativePath: String,
-        displayName: String
-    ) = contentResolver.overrideImage(uri, bitmap, format)
 
     override fun getTimelineSettings(): Flow<TimelineSettings?> =
         database.getMediaDao().getTimelineSettings()

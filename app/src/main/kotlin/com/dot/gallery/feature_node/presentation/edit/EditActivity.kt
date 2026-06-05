@@ -13,24 +13,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.core.view.WindowCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.feature_node.presentation.edit.adjustments.Crop
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
-import com.dot.gallery.feature_node.presentation.util.printError
-import com.dot.gallery.feature_node.presentation.util.launchWriteRequest
-import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
-import com.dot.gallery.feature_node.presentation.util.writeRequest
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
 import dev.chrisbanes.haze.LocalHazeStyle
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class EditActivity : ComponentActivity() {
@@ -72,9 +65,6 @@ class EditActivity : ComponentActivity() {
                     val currentImage by viewModel.currentBitmap.collectAsStateWithLifecycle()
                     val targetImage by viewModel.targetBitmap.collectAsStateWithLifecycle()
                     val uri by viewModel.uri.collectAsStateWithLifecycle()
-                    val canOverride by viewModel.canOverride.collectAsStateWithLifecycle()
-                    val hasOriginalBackup by viewModel.hasOriginalBackup.collectAsStateWithLifecycle()
-                    val isReverting by viewModel.isReverting.collectAsStateWithLifecycle()
                     val appliedAdjustments by viewModel.appliedAdjustments.collectAsStateWithLifecycle()
                     val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
                     val previewMatrix by viewModel.previewMatrix.collectAsStateWithLifecycle()
@@ -100,41 +90,7 @@ class EditActivity : ComponentActivity() {
                     val previewRotation90 by viewModel.previewRotation90.collectAsStateWithLifecycle()
                     val previewFlipH by viewModel.previewFlipH.collectAsStateWithLifecycle()
 
-                    val scope = rememberCoroutineScope { Dispatchers.IO }
-
-                    val doOverride: () -> Unit = {
-                        viewModel.saveOverride(
-                            onSuccess = {
-                                finish()
-                            },
-                            onFail = {
-                                printError("Failed to save override")
-                            }
-                        )
-                    }
-                    val overrideRequest = rememberActivityResult(
-                        onResultOk = doOverride
-                    )
-
-                    val doRevert: () -> Unit = {
-                        viewModel.revertToOriginal(
-                            onSuccess = {
-                                finish()
-                            },
-                            onFail = {
-                                printError("Failed to revert to original")
-                            }
-                        )
-                    }
-                    val revertRequest = rememberActivityResult(
-                        onResultOk = doRevert
-                    )
-
-
                     EditScreen2(
-                        hasOriginalBackup = hasOriginalBackup,
-                        isReverting = isReverting,
-                        canOverride = canOverride,
                         isChanged = appliedAdjustments.isNotEmpty(),
                         isSaving = isSaving,
                         isProcessing = isProcessing,
@@ -154,16 +110,6 @@ class EditActivity : ComponentActivity() {
                         currentPath = currentPath,
                         onClose = {
                             finish()
-                        },
-                        onOverride = {
-                            scope.launch {
-                                uri?.let { uri ->
-                                    overrideRequest.launchWriteRequest(
-                                        uri.writeRequest(contentResolver),
-                                        doOverride
-                                    )
-                                }
-                            }
                         },
                         onSaveCopy = {
                             viewModel.saveCopy(
@@ -196,16 +142,6 @@ class EditActivity : ComponentActivity() {
                         undoLastPath = viewModel::undoLastPath,
                         redoLastPath = viewModel::redoLastPath,
                         clearDrawing = viewModel::clearDrawingBoard,
-                        onRevertToOriginal = {
-                            scope.launch {
-                                uri?.let { uri ->
-                                    revertRequest.launchWriteRequest(
-                                        uri.writeRequest(contentResolver),
-                                        doRevert
-                                    )
-                                }
-                            }
-                        },
                         canUndo = canUndo,
                         canRedo = canRedo,
                         onRedo = viewModel::redoLast,

@@ -133,15 +133,6 @@ class MockedMediaHandler: MediaHandler {
         displayName: String
     ): Uri? = null
 
-    override suspend fun overrideImage(
-        uri: Uri,
-        bitmap: Bitmap,
-        format: Bitmap.CompressFormat,
-        mimeType: String,
-        relativePath: String,
-        displayName: String
-    ): Boolean = false
-
     override suspend fun getCategoryForMediaId(mediaId: Long): String? = null
     override fun getClassifiedMediaCountAtCategory(category: String): Flow<Int> = emptyFlow()
     override fun getClassifiedMediaThumbnailByCategory(category: String): Flow<Media.ClassifiedMedia?> = emptyFlow()

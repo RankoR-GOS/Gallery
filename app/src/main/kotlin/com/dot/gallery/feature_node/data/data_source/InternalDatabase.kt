@@ -15,7 +15,6 @@ import com.dot.gallery.feature_node.domain.model.Category
 import com.dot.gallery.feature_node.domain.model.Collection
 import com.dot.gallery.feature_node.domain.model.CollectionAlbum
 import com.dot.gallery.feature_node.domain.model.CollectionMedia
-import com.dot.gallery.feature_node.domain.model.EditedMedia
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.domain.model.LockedAlbum
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
@@ -46,7 +45,6 @@ import com.dot.gallery.feature_node.domain.util.Converters
         ImageEmbedding::class,
         Category::class,
         MediaCategory::class,
-        EditedMedia::class,
         LockedAlbum::class,
         AlbumGroup::class,
         AlbumGroupMember::class,
@@ -77,8 +75,6 @@ abstract class InternalDatabase : RoomDatabase() {
     abstract fun getImageEmbeddingDao(): ImageEmbeddingDao
 
     abstract fun getCategoryDao(): CategoryDao
-
-    abstract fun getEditHistoryDao(): EditHistoryDao
 
     abstract fun getLockedAlbumDao(): LockedAlbumDao
 

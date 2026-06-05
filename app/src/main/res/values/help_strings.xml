@@ -395,33 +395,23 @@
     <string name="help_tip_edit_markup_p2_title">Drawing modes</string>
     <string name="help_tip_edit_markup_p2_desc">Choose between Pen (solid lines), Highlighter (semi-transparent, great for emphasizing areas), and Eraser (to fix mistakes). Pick any color using the HSV color picker, and adjust the brush size with the slider. The floating toolbar keeps tools accessible while drawing.</string>
     <string name="help_tip_edit_markup_p3_title">How to draw</string>
-    <string name="help_tip_edit_markup_p3_desc">Zoom into the area you want to annotate for precision work. Drawing is fully reversible — use the eraser for small corrections or undo to remove the last stroke entirely. The original photo is always backed up before edits.</string>
+    <string name="help_tip_edit_markup_p3_desc">Zoom into the area you want to annotate for precision work. Drawing is fully reversible before saving — use the eraser for small corrections or undo to remove the last stroke entirely.</string>
     <string name="help_tip_edit_markup_p3_s1">Open a photo and tap edit</string>
     <string name="help_tip_edit_markup_p3_s2">Select the Markup adjustment</string>
     <string name="help_tip_edit_markup_p3_s3">Pinch to zoom into the area you want to draw on</string>
     <string name="help_tip_edit_markup_p3_s4">Choose your brush, color, and size</string>
     <string name="help_tip_edit_markup_p3_s5">Draw on the photo</string>
     <string name="help_tip_edit_markup_p3_s6">Use eraser or undo to correct mistakes</string>
-    <string name="help_tip_edit_save_title">Save formats and history</string>
-    <string name="help_tip_edit_save_subtitle">Choose save format and view edit history</string>
-    <string name="help_tip_edit_save_p1_title">Save formats</string>
-    <string name="help_tip_edit_save_p1_desc">When saving an edited photo, choose your preferred format. JPEG is the most compatible and produces smaller files. PNG is lossless (no quality loss) but creates larger files — great when quality is critical. WebP offers a good balance of quality and file size. You can also adjust the quality slider to control the file size vs. quality tradeoff.</string>
-    <string name="help_tip_edit_save_p2_title">Edit history</string>
-    <string name="help_tip_edit_save_p2_desc">Gallery automatically backs up the original photo before any edit, so you can always restore it later. You can view all your edit backups in a dedicated screen showing the original and edited versions side by side. This safety net means you can experiment freely with edits.</string>
-    <string name="help_tip_edit_save_p2_s1">Go to Settings > Smart features</string>
-    <string name="help_tip_edit_save_p2_s2">Tap \'Edit backups viewer\'</string>
-    <string name="help_tip_edit_save_p2_s3">View originals alongside edited versions</string>
-    <string name="help_tip_edit_save_p2_s4">Restore any original if needed</string>
-    <string name="help_tip_edit_backups_title">Manage edit backups</string>
-    <string name="help_tip_edit_backups_subtitle">View and restore previous versions of edited photos</string>
-    <string name="help_tip_edit_backups_p1_title">Edit backups</string>
-    <string name="help_tip_edit_backups_p1_desc">Every time you edit a photo, Gallery saves the original version automatically. This means you can always go back to the untouched photo, even after multiple rounds of editing. Backups are stored in the app\'s internal storage and don\'t clutter your gallery.</string>
-    <string name="help_tip_edit_backups_p2_title">Manage backups</string>
-    <string name="help_tip_edit_backups_p2_desc">The Edit Backups Viewer shows all your backed-up originals. You can compare the original with the edited version, restore an original to replace the edited photo, or delete old backups to free up storage space. If storage is a concern, periodically review and clean up backups you no longer need.</string>
-    <string name="help_tip_edit_backups_p2_s1">Go to Settings > Smart features</string>
-    <string name="help_tip_edit_backups_p2_s2">Tap \'Edit backups viewer\'</string>
-    <string name="help_tip_edit_backups_p2_s3">Browse your backup history</string>
-    <string name="help_tip_edit_backups_p2_s4">Restore originals or delete to free space</string>
+    <string name="help_tip_edit_save_title">Save edited copies</string>
+    <string name="help_tip_edit_save_subtitle">Keep originals unchanged when saving edits</string>
+    <string name="help_tip_edit_save_p1_title">Save copy</string>
+    <string name="help_tip_edit_save_p1_desc">The photo editor saves edits as a new image in the Edited folder. The original media item is not overwritten, so your timeline keeps both the untouched original and the edited result.</string>
+    <string name="help_tip_edit_save_p2_title">Before saving</string>
+    <string name="help_tip_edit_save_p2_desc">Undo and redo are available while you are editing. Once you save a copy and leave the editor, the saved result is a separate media file and further changes should be made by opening that copy again.</string>
+    <string name="help_tip_edit_save_p2_s1">Open a photo and tap edit</string>
+    <string name="help_tip_edit_save_p2_s2">Apply lighting, color, crop, filter, or markup changes</string>
+    <string name="help_tip_edit_save_p2_s3">Use undo or redo before saving if needed</string>
+    <string name="help_tip_edit_save_p2_s4">Tap Save Copy to create the edited file</string>
 
     <!-- SEARCH -->
     <string name="help_tip_search_text_title">Search by text</string>
@@ -690,17 +680,6 @@
     <string name="help_tip_settings_selection_actions_p2_s2">Tap \'Customize selection actions\'</string>
     <string name="help_tip_settings_selection_actions_p2_s3">Drag actions to reorder by priority</string>
     <string name="help_tip_settings_selection_actions_p2_s4">Toggle actions on/off to show/hide</string>
-
-    <!-- SETTINGS: SMART -->
-    <string name="help_tip_settings_edit_backups_title">Edit backups viewer</string>
-    <string name="help_tip_settings_edit_backups_subtitle">View and manage edit backup storage</string>
-    <string name="help_tip_settings_edit_backups_p1_title">Edit backups</string>
-    <string name="help_tip_settings_edit_backups_p1_desc">Every time you edit a photo, Gallery saves the original version. This screen shows all your backups with their size and date. You can compare originals with edited versions side by side to see exactly what changed.</string>
-    <string name="help_tip_settings_edit_backups_p2_title">Manage storage</string>
-    <string name="help_tip_settings_edit_backups_p2_desc">Backups can accumulate over time, especially if you edit many photos. Review your backups periodically and delete ones you no longer need to free storage. You can delete individual backups or clear them all at once. Restoring a backup replaces the edited photo with the original.</string>
-    <string name="help_tip_settings_edit_backups_p2_s1">Go to Settings > Smart features</string>
-    <string name="help_tip_settings_edit_backups_p2_s2">Tap \'Edit backups viewer\'</string>
-    <string name="help_tip_settings_edit_backups_p2_s3">Browse, compare, restore, or delete backups</string>
 
     <!-- GESTURES -->
     <string name="help_tip_gesture_pinch_grid_title">Pinch to zoom grid</string>
