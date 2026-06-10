@@ -15,13 +15,13 @@ import android.provider.MediaStore
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.core.app.ActivityOptionsCompat
-import com.dot.gallery.core.util.SdkCompat
 import androidx.datastore.preferences.core.Preferences
 import androidx.work.WorkManager
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.dataStore
 import com.dot.gallery.core.util.MediaStoreBuckets
+import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.util.ext.deleteGpsMetadata
 import com.dot.gallery.core.util.ext.deleteMetadata
 import com.dot.gallery.core.util.ext.mapAsResource
@@ -63,7 +63,6 @@ import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.domain.util.isImage
 import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.domain.util.mediaStoreVolumeName
 import com.dot.gallery.feature_node.domain.util.resolveMediaStoreVolume
@@ -83,6 +82,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration.Companion.milliseconds
 
 class MediaRepositoryImpl(
     private val context: Context,
@@ -104,10 +104,11 @@ class MediaRepositoryImpl(
     }
 
     private var updateDatabaseMutex = Mutex()
+
     override suspend fun updateInternalDatabase() {
         if (!updateDatabaseMutex.isLocked) {
             updateDatabaseMutex.withLock {
-                delay(5000) // Delay to ensure the database is not updated too frequently
+                delay(5000.milliseconds) // Delay to ensure the database is not updated too frequently
                 workManager.updateDatabase()
             }
         }
@@ -372,12 +373,14 @@ class MediaRepositoryImpl(
     ): Boolean {
         return withContext(Dispatchers.IO) {
             val cr = context.contentResolver
+            var destinationUri: Uri? = null
+            var destinationPublished = false
             try {
                 val srcUri = media.getUri()
                 val mediaType = cr.getType(srcUri) ?: return@withContext false
                 val isVideo = mediaType.startsWith("video")
 
-                val targetUri = cr.insert(
+                destinationUri = cr.insert(
                     if (isVideo) MediaStore.Video.Media.getContentUri(destVolume)
                     else MediaStore.Images.Media.getContentUri(destVolume),
                     ContentValues().apply {
@@ -385,20 +388,23 @@ class MediaRepositoryImpl(
                         put(MediaStore.MediaColumns.MIME_TYPE, media.mimeType)
                         put(MediaStore.MediaColumns.RELATIVE_PATH, destRelPath)
                         put(MediaStore.MediaColumns.IS_PENDING, 1)
-                    }
+                    },
                 ) ?: return@withContext false
 
-                cr.openInputStream(srcUri)?.use { input ->
-                    cr.openOutputStream(targetUri)?.use { output ->
+                val copied = cr.openInputStream(srcUri)?.use { input ->
+                    cr.openOutputStream(destinationUri)?.use { output ->
                         input.copyTo(output)
+                        true
                     }
-                } ?: run {
-                    cr.delete(targetUri, null, null)
+                } == true
+
+                if (!copied) {
+                    cr.delete(destinationUri, null, null)
                     return@withContext false
                 }
 
-                cr.update(
-                    targetUri,
+                val publishedRows = cr.update(
+                    destinationUri,
                     ContentValues().apply {
                         put(MediaStore.MediaColumns.IS_PENDING, 0)
                         put(
@@ -408,11 +414,20 @@ class MediaRepositoryImpl(
                     },
                     null, null
                 )
+                if (publishedRows <= 0) {
+                    cr.delete(destinationUri, null, null)
+                    return@withContext false
+                }
+                destinationPublished = true
 
-                cr.delete(srcUri, null, null)
-                true
-            } catch (e: Exception) {
-                printWarning("Cross-volume move failed: ${e.message}")
+                cr.delete(srcUri, null, null) > 0
+            } catch (exception: Exception) {
+                if (!destinationPublished) {
+                    destinationUri?.let { uri ->
+                        cr.delete(uri, null, null)
+                    }
+                }
+                printWarning("Cross-volume move failed: ${exception.message}")
                 false
             }
         }
