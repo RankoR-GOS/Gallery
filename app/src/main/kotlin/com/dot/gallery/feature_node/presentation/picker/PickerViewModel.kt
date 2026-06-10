@@ -54,7 +54,7 @@ open class PickerViewModel @Inject constructor(
                 ) { blacklisted, lockedAlbums, mediaResult ->
                     val lockedIds = lockedAlbums.mapTo(HashSet()) { it.id }
                     val data = (mediaResult.data ?: emptyList()).toMutableList().apply {
-                        removeAll { media -> blacklisted.any { it.matchesMedia(media) && it.hiddenInTimeline } }
+                        removeAll { media -> blacklisted.any { it.shouldIgnore(media) } }
                         if (value == -1L) {
                             removeAll { media -> media.albumID in lockedIds }
                         }
