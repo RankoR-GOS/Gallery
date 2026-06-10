@@ -37,6 +37,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Client for [IsolatedMetadataService].
@@ -367,12 +368,17 @@ class IsolatedMetadataParser(private val context: Context) {
     // ── IPC internals ─────────────────────────────────────────────────────
 
     private suspend fun sendAndReceive(what: Int, data: Bundle): Bundle? {
-        val messenger = serviceMessenger ?: return null
+        val messenger = serviceMessenger
+        if (messenger == null) {
+            closeRequestFileDescriptor(data = data)
+            return null
+        }
+
         return sendAndReceive(messenger, what, data)
     }
 
     private suspend fun sendAndReceive(messenger: Messenger, what: Int, data: Bundle): Bundle? {
-        return withTimeoutOrNull(SERVICE_TIMEOUT_MS) {
+        return withTimeoutOrNull(serviceTimeout) {
             suspendCancellableCoroutine { cont ->
                 val replyHandler = Handler(Looper.getMainLooper()) { msg ->
                     val result = msg.data
@@ -397,9 +403,13 @@ class IsolatedMetadataParser(private val context: Context) {
 
                 try {
                     messenger.send(msg)
-                } catch (e: Exception) {
-                    printWarning("IsolatedMetadataParser: send failed: ${e.message}")
-                    if (cont.isActive) cont.resume(null)
+                } catch (exception: Exception) {
+                    printWarning("IsolatedMetadataParser: send failed: ${exception.message}")
+                    if (cont.isActive) {
+                        cont.resume(null)
+                    }
+                } finally {
+                    closeRequestFileDescriptor(data = data)
                 }
 
                 cont.invokeOnCancellation {
@@ -407,6 +417,11 @@ class IsolatedMetadataParser(private val context: Context) {
                 }
             }
         }
+    }
+
+    private fun closeRequestFileDescriptor(data: Bundle) {
+        data.classLoader = ParcelFileDescriptor::class.java.classLoader
+        data.getParcelable(KEY_PFD, ParcelFileDescriptor::class.java)?.close()
     }
 
     private fun unbundleRawMetadata(bundle: Bundle): List<MetadataDirectory> {
@@ -423,6 +438,6 @@ class IsolatedMetadataParser(private val context: Context) {
     }
 
     companion object {
-        private const val SERVICE_TIMEOUT_MS = 30_000L
+        private val serviceTimeout = 30_000.milliseconds
     }
 }

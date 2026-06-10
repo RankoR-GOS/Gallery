@@ -196,10 +196,12 @@ class IsolatedImageDecoder(private val context: Context) {
         }
     }
 
-    @Suppress("DEPRECATION")
     private fun readBitmapFromResult(bundle: Bundle): Bitmap? {
         bundle.classLoader = SharedMemory::class.java.classLoader
-        val outputSharedMemory = bundle.getParcelable<SharedMemory>(KEY_OUTPUT_SHM) ?: return null
+        val outputSharedMemory = bundle
+            .getParcelable(KEY_OUTPUT_SHM, SharedMemory::class.java)
+            ?: return null
+
         val width = bundle.getInt(KEY_DECODED_WIDTH, 0)
         val height = bundle.getInt(KEY_DECODED_HEIGHT, 0)
         val byteCount = bundle.getInt(KEY_DECODED_BYTE_COUNT, 0)

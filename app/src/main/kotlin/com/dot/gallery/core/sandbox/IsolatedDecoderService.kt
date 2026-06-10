@@ -58,29 +58,33 @@ class IsolatedDecoderService : Service() {
                 reply.data = errorBundle(message = exception.message ?: "Unknown decode error")
             }
 
-            runCatching {
+            try {
                 replyTo.send(reply)
+            } catch (_: Exception) {
+                // Client is gone.
+            } finally {
+                closeOutputSharedMemory(data = reply.data)
             }
         }
     }
 
-    @Suppress("DEPRECATION")
     private fun readInputBytes(input: Bundle): ByteArray? {
-        val inputSharedMemory = input.getParcelable<SharedMemory>(KEY_INPUT_SHM) ?: return null
+        val inputSharedMemory = input
+            .getParcelable(KEY_INPUT_SHM, SharedMemory::class.java)
+            ?: return null
+
         val byteCount = input.getInt(KEY_BYTE_COUNT, 0)
         if (byteCount <= 0) {
             inputSharedMemory.close()
             return null
         }
 
-        return try {
+        return inputSharedMemory.use { inputSharedMemory ->
             val inputBuffer = inputSharedMemory.mapReadOnly()
             val encodedBytes = ByteArray(byteCount)
             inputBuffer.get(encodedBytes)
             SharedMemory.unmap(inputBuffer)
             encodedBytes
-        } finally {
-            inputSharedMemory.close()
         }
     }
 
@@ -124,6 +128,11 @@ class IsolatedDecoderService : Service() {
         }.also {
             bitmap.recycle()
         }
+    }
+
+    private fun closeOutputSharedMemory(data: Bundle) {
+        data.classLoader = SharedMemory::class.java.classLoader
+        data.getParcelable(KEY_OUTPUT_SHM, SharedMemory::class.java)?.close()
     }
 
     private fun getImageSize(bytes: ByteArray, mimeType: String): AndroidSize? {

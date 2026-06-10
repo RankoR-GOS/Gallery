@@ -15,6 +15,9 @@ import android.os.Looper
 import android.os.Message
 import android.os.Messenger
 import android.os.ParcelFileDescriptor
+import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion.MSG_PARSE_IMAGE
+import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion.MSG_PARSE_RAW_METADATA
+import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion.MSG_PARSE_VIDEO
 import com.drew.imaging.ImageMetadataReader
 import com.drew.metadata.exif.ExifIFD0Directory
 import com.drew.metadata.exif.ExifSubIFDDirectory
@@ -78,10 +81,11 @@ class IsolatedMetadataService : Service() {
 
     // ── Image EXIF/XMP parsing (metadata-extractor) ───────────────────────
 
-    @Suppress("DEPRECATION")
     private fun parseImageMetadata(input: Bundle): Bundle {
-        val pfd = input.getParcelable<ParcelFileDescriptor>(KEY_PFD)
+        val pfd = input
+            .getParcelable(KEY_PFD, ParcelFileDescriptor::class.java)
             ?: return Bundle().apply { putBoolean(KEY_ERROR, true) }
+
         val label = input.getString(KEY_LABEL, "")
 
         return pfd.use { fd ->
@@ -217,9 +221,9 @@ class IsolatedMetadataService : Service() {
 
     // ── Video metadata parsing (MediaMetadataRetriever) ───────────────────
 
-    @Suppress("DEPRECATION")
     private fun parseVideoMetadata(input: Bundle): Bundle {
-        val pfd = input.getParcelable<ParcelFileDescriptor>(KEY_PFD)
+        val pfd = input
+            .getParcelable(KEY_PFD, ParcelFileDescriptor::class.java)
             ?: return Bundle().apply { putBoolean(KEY_ERROR, true) }
 
         return pfd.use { fd ->
@@ -256,10 +260,11 @@ class IsolatedMetadataService : Service() {
 
     // ── Raw metadata for the "View all metadata" screen ───────────────────
 
-    @Suppress("DEPRECATION")
     private fun parseRawMetadata(input: Bundle): Bundle {
-        val pfd = input.getParcelable<ParcelFileDescriptor>(KEY_PFD)
+        val pfd = input
+            .getParcelable(KEY_PFD, ParcelFileDescriptor::class.java)
             ?: return Bundle().apply { putBoolean(KEY_ERROR, true) }
+
         val isVideo = input.getBoolean(KEY_IS_VIDEO, false)
 
         return pfd.use { fd ->
