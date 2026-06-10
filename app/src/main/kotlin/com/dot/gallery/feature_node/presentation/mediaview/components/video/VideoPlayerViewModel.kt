@@ -207,6 +207,7 @@ class VideoPlayerViewModel @AssistedInject constructor(
         if (player.isPlaying) player.pause() else player.play()
     }
 
+    @OptIn(UnstableApi::class)
     fun pause() {
         if (player.isReleased) return
         player.playWhenReady = false

@@ -608,7 +608,7 @@ internal class MediaRepositoryImpl(
         } catch (exception: Exception) {
             Log.w(TAG, "Could not launch media mutation", exception)
             withContext(Dispatchers.Main.immediate) {
-                Toast.makeText(context, R.string.media_mutation_failed, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, R.string.error_toast, Toast.LENGTH_LONG).show()
             }
             false
         }
