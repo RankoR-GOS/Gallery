@@ -207,6 +207,13 @@ class VideoPlayerViewModel @AssistedInject constructor(
         if (player.isPlaying) player.pause() else player.play()
     }
 
+    fun pause() {
+        if (player.isReleased) return
+        player.playWhenReady = false
+        player.pause()
+        _state.update { it.copy(isPlaying = false) }
+    }
+
     fun seekTo(positionMs: Long) {
         player.seekTo(positionMs)
         _state.update { it.copy(positionMs = positionMs) }
