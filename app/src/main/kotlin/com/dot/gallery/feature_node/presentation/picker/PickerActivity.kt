@@ -40,7 +40,7 @@ import javax.inject.Inject
 
 class PickerActivityContract(
     private val mediaType: String = "*/*",
-    private val allowMultiple: Boolean = true
+    private val allowMultiple: Boolean = true,
 ) : ActivityResultContract<Any?, List<String>>() {
 
     override fun createIntent(context: Context, input: Any?): Intent {
@@ -81,7 +81,7 @@ class PickerActivity : FragmentActivity() {
     val mediaSelector: MediaSelector = MediaSelectorImpl()
 
     private val exportAsMedia by lazy {
-        intent.getBooleanExtra(EXPORT_AS_MEDIA, false)
+        callingPackage == packageName && intent.getBooleanExtra(EXPORT_AS_MEDIA, false)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
