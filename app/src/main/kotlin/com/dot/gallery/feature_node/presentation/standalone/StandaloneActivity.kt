@@ -151,6 +151,7 @@ class StandaloneActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         applyShowWhenLockedForIntent(reviewIntent = intent)
+        viewModelStore.clear()
         recreate()
     }
 
