@@ -142,7 +142,7 @@ class SearchVisionHelper(private val modelManager: ModelManager) {
                         "input_ids" to inputIdsTensor,
                         "attention_mask" to attentionMaskTensor,
                     )
-                    session.session.run(inputMap).use { result ->
+                    session.run(inputs = inputMap) { result ->
                         normalizeL2(extractSingleFloatOutput(result = result))
                     }
                 }
@@ -163,7 +163,7 @@ class SearchVisionHelper(private val modelManager: ModelManager) {
 
         try {
             return OnnxTensor.createTensor(session.environment, imgData, inputShape).use { inputTensor ->
-                session.session.run(mapOf(inputName to inputTensor)).use { result ->
+                session.run(inputs = mapOf(inputName to inputTensor)) { result ->
                     normalizeL2(extractSingleFloatOutput(result = result))
                 }
             }

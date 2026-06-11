@@ -229,8 +229,10 @@ class AddCategoryViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     override fun onCleared() {
-        super.onCleared()
+        searchJob?.cancel()
         textSession?.close()
+        textSession = null
+        super.onCleared()
     }
 
     private companion object {

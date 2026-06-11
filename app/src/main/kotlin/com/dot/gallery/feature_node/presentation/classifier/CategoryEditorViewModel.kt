@@ -381,8 +381,10 @@ class CategoryEditorViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        super.onCleared()
+        searchJob?.cancel()
         textSession?.close()
+        textSession = null
+        super.onCleared()
     }
 
     private companion object {
