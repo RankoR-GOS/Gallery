@@ -23,7 +23,18 @@ class ParseTimestampFromFilenameTest {
     }
 
     @Test
+    fun parsesCameraFilenamesWithMilliseconds() {
+        // Pixel Camera appends a 3-digit millisecond suffix.
+        assertNotNull("PXL_20250317_002200191.jpg".parseTimestampFromFilename())
+        assertNotNull("PXL_20251106_155541857.NIGHT.jpg".parseTimestampFromFilename())
+        assertNotNull("IMG_20200614_155431892.jpg".parseTimestampFromFilename())
+    }
+
+    @Test
     fun ignoresDigitsEmbeddedInLongerNumericRuns() {
+        assertNull("9920180508_213737.jpg".parseTimestampFromFilename())
+        assertNull("IMG_20180508_2137371234.jpg".parseTimestampFromFilename())
+        assertNull("20180508_21373799.jpg".parseTimestampFromFilename())
         // Facebook export style filenames: long numeric IDs separated by underscores.
         // None of these should yield a (future) date.
         assertNull("462051234_101601234567890_1234567890123456789_n.jpg".parseTimestampFromFilename())

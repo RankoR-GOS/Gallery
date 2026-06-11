@@ -17,7 +17,11 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlinx.parcelize.Parcelize
 
-private val FILENAME_DATE_REGEX = Regex("""(\d{4})(\d{2})(\d{2})[_-](\d{2})(\d{2})(\d{2})""")
+// The optional 3-digit run is the millisecond suffix Pixel and Motorola cameras append
+// (PXL_20250317_002200191.jpg); it is matched so it can be discarded. Anything longer stays
+// rejected, so long numeric IDs (bug #920: Facebook exports) are still rejected.
+private val FILENAME_DATE_REGEX =
+    Regex("""(?<!\d)(\d{4})(\d{2})(\d{2})[_-](\d{2})(\d{2})(\d{2})(?:\d{3})?(?!\d)""")
 
 fun Long.getDateExt(): DateExt {
     val mediaDate = Calendar.getInstance(ComposeLocale.getCurrentAndroid())
