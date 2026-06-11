@@ -673,7 +673,7 @@ fun <T : Media> MediaViewScreen(
                             MediaPreviewComponent(
                                 modifier = Modifier
                                     .mediaSharedElement(
-                                        allowAnimation = canAnimateContent,
+                                        allowAnimation = canAnimateContent && index == currentPage,
                                         media = sharedElementMedia,
                                         animatedVisibilityScope = animatedContentScope
                                     ),
