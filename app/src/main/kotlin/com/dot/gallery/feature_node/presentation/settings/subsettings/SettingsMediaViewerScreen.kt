@@ -5,6 +5,8 @@
 
 package com.dot.gallery.feature_node.presentation.settings.subsettings
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.activity.compose.BackHandler
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.animateColorAsState
@@ -116,6 +118,7 @@ private const val DETAIL_AUTO_PLAY = "auto_play"
 @Composable
 fun SettingsMediaViewerScreen() {
     var detailKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val listState = rememberLazyListState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -219,6 +222,7 @@ fun SettingsMediaViewerScreen() {
         }
         else -> {
             MediaViewerListScreen(
+                listState = listState,
                 fullBrightnessView = fullBrightnessView,
                 onBrightnessChange = { fullBrightnessView = it },
                 showMediaDateHeader = showMediaDateHeader,
@@ -247,6 +251,7 @@ fun SettingsMediaViewerScreen() {
 
 @Composable
 private fun MediaViewerListScreen(
+    listState: LazyListState,
     fullBrightnessView: Boolean,
     onBrightnessChange: (Boolean) -> Unit,
     showMediaDateHeader: Boolean,
@@ -374,6 +379,7 @@ private fun MediaViewerListScreen(
     }
 
     BaseSettingsScreen(
+        listState = listState,
         title = stringResource(R.string.settings_media_viewer),
         settingsList = settings(),
     )

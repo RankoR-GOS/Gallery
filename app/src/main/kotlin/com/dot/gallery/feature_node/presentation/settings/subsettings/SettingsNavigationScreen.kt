@@ -5,6 +5,8 @@
 
 package com.dot.gallery.feature_node.presentation.settings.subsettings
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -77,6 +79,7 @@ private const val DETAIL_SELECTION_TITLES = "selection_titles"
 @Composable
 fun SettingsNavigationScreen() {
     var detailKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val listState = rememberLazyListState()
 
     var lastScreen by rememberLastScreen()
     var forcedLastScreen by rememberForcedLastScreen()
@@ -162,6 +165,7 @@ fun SettingsNavigationScreen() {
         }
         else -> {
             NavigationListScreen(
+                listState = listState,
                 lastScreen = lastScreen,
                 forcedLastScreen = forcedLastScreen,
                 showOldNavbar = showOldNavbar,
@@ -369,6 +373,7 @@ private fun OldNavbarPreview(isChecked: Boolean) {
 
 @Composable
 private fun NavigationListScreen(
+    listState: LazyListState,
     lastScreen: String,
     forcedLastScreen: Boolean,
     showOldNavbar: Boolean,
@@ -485,6 +490,7 @@ private fun NavigationListScreen(
     }
 
     BaseSettingsScreen(
+        listState = listState,
         title = stringResource(R.string.settings_navigation),
         settingsList = settings(),
     )

@@ -1,5 +1,7 @@
 package com.dot.gallery.feature_node.presentation.settings.subsettings
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -51,6 +53,7 @@ private const val DETAIL_VIBRATIONS = "vibrations"
 @Composable
 fun SettingsGeneralScreen() {
     var detailKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val listState = rememberLazyListState()
 
     var trashCanEnabled by Settings.Misc.rememberTrashEnabled()
     var trashConfirmationEnabled by rememberTrashConfirmationEnabled()
@@ -97,6 +100,7 @@ fun SettingsGeneralScreen() {
         }
         else -> {
             GeneralListScreen(
+                listState = listState,
                 trashCanEnabled = trashCanEnabled,
                 onTrashChange = { trashCanEnabled = it },
                 trashConfirmationEnabled = trashConfirmationEnabled,
@@ -113,6 +117,7 @@ fun SettingsGeneralScreen() {
 
 @Composable
 private fun GeneralListScreen(
+    listState: LazyListState,
     trashCanEnabled: Boolean,
     onTrashChange: (Boolean) -> Unit,
     trashConfirmationEnabled: Boolean,
@@ -193,6 +198,7 @@ private fun GeneralListScreen(
     }
 
     BaseSettingsScreen(
+        listState = listState,
         title = stringResource(R.string.settings_general),
         settingsList = settings(),
     )

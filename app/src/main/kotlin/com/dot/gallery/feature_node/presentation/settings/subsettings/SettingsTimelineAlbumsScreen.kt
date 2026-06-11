@@ -5,6 +5,8 @@
 
 package com.dot.gallery.feature_node.presentation.settings.subsettings
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -88,6 +90,7 @@ private const val DETAIL_FAV_ICON = "fav_icon"
 @Composable
 fun SettingsTimelineAlbumsScreen() {
     var detailKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val listState = rememberLazyListState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val eventHandler = LocalEventHandler.current
@@ -222,6 +225,7 @@ fun SettingsTimelineAlbumsScreen() {
         }
         else -> {
             TimelineAlbumsListScreen(
+                listState = listState,
                 groupByMonth = groupByMonth,
                 onGroupByMonthChange = {
                     scope.launch {
@@ -249,6 +253,7 @@ fun SettingsTimelineAlbumsScreen() {
 
 @Composable
 private fun TimelineAlbumsListScreen(
+    listState: LazyListState,
     groupByMonth: Boolean,
     onGroupByMonthChange: (Boolean) -> Unit,
     timelineLayoutType: String,
@@ -388,6 +393,7 @@ private fun TimelineAlbumsListScreen(
     }
 
     BaseSettingsScreen(
+        listState = listState,
         title = stringResource(R.string.settings_timeline_albums),
         settingsList = settings(),
     )
