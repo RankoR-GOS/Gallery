@@ -299,7 +299,7 @@ fun <T : Media> MediaViewScreen(
         ensureMetadataAvailable(currentMedia, metadataState.value)
     }
 
-    LaunchedEffect(initialPage, mediaState.value.isLoading) {
+    LaunchedEffect(mediaId, initialPage, mediaState.value.isLoading) {
         if (!mediaState.value.isLoading && !initialPageSetup) {
             if (pagerState.currentPage != initialPage) {
                 pagerState.scrollToPage(initialPage)
