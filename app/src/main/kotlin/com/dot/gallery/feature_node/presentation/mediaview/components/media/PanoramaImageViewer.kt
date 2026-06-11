@@ -102,7 +102,9 @@ private fun PanoramaCompass(
 ) {
     val arcDeg = cameraState.arcDegrees
     val totalH = if (cameraState.projectionType == ProjectionType.SPHERE) 360f else arcDeg
-    val fovFraction = (cameraState.fov / totalH).coerceIn(0.01f, 1f)
+    // Use the horizontal FOV so the visible-span arc reflects the actual on-screen
+    // width and updates correctly when rotating between portrait and landscape.
+    val fovFraction = (cameraState.horizontalFov / totalH).coerceIn(0.01f, 1f)
 
     // Normalize yaw to [0, totalH] range
     val yawNorm = if (cameraState.projectionType == ProjectionType.SPHERE) {

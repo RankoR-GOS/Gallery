@@ -5,6 +5,8 @@
 
 package com.dot.gallery.libs.panoramaviewer
 
+import kotlin.math.atan
+import kotlin.math.tan
 import android.graphics.Bitmap
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
@@ -121,6 +123,31 @@ internal class PanoramaRenderer(
     var viewportHeight = 1
         private set
 
+    /**
+     * Invoked on the GL thread whenever the viewport size changes (e.g. when the
+     * device rotates between portrait and landscape). Allows the hosting view to
+     * re-emit camera state and reload the visible detail region for the new aspect.
+     */
+    @Volatile
+    var onViewportChanged: (() -> Unit)? = null
+
+    /**
+     * Effective horizontal field-of-view in degrees, derived from the vertical
+     * [fov] and the current viewport aspect ratio.
+     *
+     * [Matrix.perspectiveM] treats [fov] as the vertical FOV, so the horizontal
+     * span depends on the aspect ratio and changes when the device rotates. Overlay
+     * UI (e.g. the compass) should use this value to reflect the visible horizontal
+     * extent in both orientations.
+     */
+    val horizontalFov: Float
+        get() {
+            val aspect = viewportWidth.toFloat() / viewportHeight.toFloat()
+            val halfV = Math.toRadians((fov / 2.0))
+            val halfH = atan(tan(halfV) * aspect)
+            return (Math.toDegrees(halfH) * 2.0).toFloat()
+        }
+
     // ──────────────────────────────────────────────────────────────────────
     // GLSurfaceView.Renderer callbacks
     // ──────────────────────────────────────────────────────────────────────
@@ -154,6 +181,7 @@ internal class PanoramaRenderer(
         viewportWidth = width
         viewportHeight = height
         PanoramaLog.d("onSurfaceChanged() ${width}x${height}")
+        onViewportChanged?.invoke()
     }
 
     override fun onDrawFrame(gl: GL10?) {

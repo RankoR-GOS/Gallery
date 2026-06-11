@@ -134,6 +134,16 @@ internal class PanoramaGLSurfaceView(
         setEGLContextClientVersion(2)
         setRenderer(renderer)
         renderMode = RENDERMODE_CONTINUOUSLY
+        // On viewport size changes (e.g. device rotation) the visible horizontal span
+        // changes with the aspect ratio. Re-emit camera state so overlays (compass)
+        // update, and reload the detail region for the new aspect.
+        renderer.onViewportChanged = {
+            post {
+                lastDetailFov = Float.MAX_VALUE
+                notifyCameraChanged()
+                scheduleDetailLoad()
+            }
+        }
         PanoramaLog.d("init() projectionType=$projectionType gyroscope=$gyroscopeEnabled")
     }
 
@@ -500,6 +510,7 @@ internal class PanoramaGLSurfaceView(
                 yaw = renderer.yaw,
                 pitch = renderer.pitch,
                 fov = renderer.fov,
+                horizontalFov = renderer.horizontalFov,
                 arcDegrees = renderer.cylinderArcDegrees,
                 projectionType = projectionType
             )
