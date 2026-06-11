@@ -182,7 +182,7 @@ fun String.parseTimestampFromFilename(): Long? {
             set(yearValue, monthValue - 1, dayValue, hourValue, minuteValue, secondValue)
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
-    }.getOrNull()
+    }.getOrNull()?.takeIf { timestamp -> timestamp <= System.currentTimeMillis() }
 }
 
 @Parcelize
