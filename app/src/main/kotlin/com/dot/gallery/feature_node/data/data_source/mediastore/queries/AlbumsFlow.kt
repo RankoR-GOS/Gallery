@@ -143,12 +143,12 @@ class AlbumsFlow(
                         val albumId = it.getLong(albumIdIndex)
                         val id = it.getLong(idIndex)
                         val label = it.tryGetString(labelIndex, Build.MODEL)
-                        val thumbnailPath = it.getString(thumbnailPathIndex)
-                        val thumbnailRelativePath = it.getString(thumbnailRelativePathIndex)
+                        val thumbnailPath = it.tryGetString(thumbnailPathIndex).orEmpty()
+                        val thumbnailRelativePath = it.tryGetString(thumbnailRelativePathIndex).orEmpty()
                         val thumbnailDateTaken = it.getLongOrNull(thumbnailDateTakenIndex)
                         val thumbnailDate = it.getLong(thumbnailDateIndex)
                         val size = it.getLong(sizeIndex)
-                        val mimeType = it.getString(mimeTypeIndex)
+                        val mimeType = it.tryGetString(mimeTypeIndex).orEmpty()
                         val contentUri = if (mimeType.contains("image"))
                             MediaStore.Images.Media.EXTERNAL_CONTENT_URI
                         else
