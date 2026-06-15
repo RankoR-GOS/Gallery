@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -36,6 +37,9 @@ import com.dot.gallery.core.util.SetupMediaProviders
 import com.dot.gallery.feature_node.domain.model.UIEvent
 import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreenRoute
+import com.dot.gallery.feature_node.presentation.exif.MetadataViewScreen
+import com.dot.gallery.feature_node.presentation.exif.MetadataViewViewModel
+import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
 import com.dot.gallery.ui.theme.GalleryTheme
@@ -93,13 +97,28 @@ class StandaloneActivity : AppCompatActivity() {
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     )
                 ) {
+                    var metadataArgs by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
                     LaunchedEffect(Unit) {
-                        eventHandler.navigateUpAction = { finish() }
+                        eventHandler.navigateUpAction = {
+                            when {
+                                metadataArgs != null -> metadataArgs = null
+                                else -> finish()
+                            }
+                        }
                     }
                     LaunchedEffect(eventHandler) {
-                        eventHandler.updaterFlow.collect {
-                            if (it == UIEvent.NavigationUpEvent) {
-                                finish()
+                        eventHandler.updaterFlow.collect { event ->
+                            when (event) {
+                                UIEvent.NavigationUpEvent -> eventHandler.navigateUpAction()
+                                is UIEvent.NavigationRouteEvent -> {
+                                    val parsed = Uri.parse(event.route)
+                                    if (parsed.path == Screen.MetadataViewScreen.route) {
+                                        parsed.getQueryParameter("mediaUri")?.takeIf { it.isNotBlank() }?.let { uri ->
+                                            metadataArgs = uri to (parsed.getQueryParameter("isVideo") == "true")
+                                        }
+                                    }
+                                }
+                                else -> Unit
                             }
                         }
                     }
@@ -115,13 +134,12 @@ class StandaloneActivity : AppCompatActivity() {
                             val metadataState =
                                 viewModel.metadataState.collectAsStateWithLifecycle()
                             val mediaId by viewModel.mediaId.collectAsStateWithLifecycle()
-                            val staticState by remember { mutableStateOf(true) }
                             SharedTransitionLayout {
                                 AnimatedContent(
-                                    targetState = staticState,
+                                    targetState = metadataArgs,
                                     label = "standalone"
-                                ) { staticState ->
-                                    if (staticState) {
+                                ) { args ->
+                                    if (args == null) {
                                         MediaViewScreenRoute(
                                             toggleRotate = ::toggleOrientation,
                                             paddingValues = paddingValues,
@@ -134,12 +152,20 @@ class StandaloneActivity : AppCompatActivity() {
                                             sharedTransitionScope = this@SharedTransitionLayout,
                                             animatedContentScope = this
                                         )
+                                    } else {
+                                        val (uri, isVideo) = args
+                                        val metadataViewModel = hiltViewModel<MetadataViewViewModel>()
+                                        val state by metadataViewModel.state.collectAsStateWithLifecycle()
+                                        LaunchedEffect(uri, isVideo) {
+                                            metadataViewModel.loadMetadata(mediaUri = uri, isVideo = isVideo)
+                                        }
+                                        MetadataViewScreen(state = state)
                                     }
                                 }
                             }
                         }
                         BackHandler {
-                            finish()
+                            eventHandler.navigateUpAction()
                         }
                     }
                 }

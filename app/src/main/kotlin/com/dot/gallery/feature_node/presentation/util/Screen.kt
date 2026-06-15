@@ -5,6 +5,8 @@
 
 package com.dot.gallery.feature_node.presentation.util
 
+import android.net.Uri
+
 sealed class Screen(val route: String) {
     data object TimelineScreen : Screen("timeline_screen")
     data object AlbumsScreen : Screen("albums_screen")
@@ -141,8 +143,9 @@ sealed class Screen(val route: String) {
 
         fun uriAndType() = "$route?mediaUri={mediaUri}&isVideo={isVideo}"
 
-        fun uriAndType(mediaUri: String, isVideo: Boolean) =
-            "$route?mediaUri=$mediaUri&isVideo=$isVideo"
+        fun uriAndType(mediaUri: String, isVideo: Boolean): String {
+            return "$route?mediaUri=${Uri.encode(mediaUri)}&isVideo=$isVideo"
+        }
     }
 
     data object HelpScreen : Screen("help_screen")

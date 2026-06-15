@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.presentation.exif
 
-import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -15,6 +14,9 @@ import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import java.util.UUID
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,8 +47,11 @@ class MetadataViewViewModel @Inject constructor(
     private val _state = MutableStateFlow(MetadataViewState())
     val state: StateFlow<MetadataViewState> = _state
 
+    private var metadataJob: Job? = null
+
     fun loadMetadata(mediaUri: String, isVideo: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
+        metadataJob?.cancel()
+        metadataJob = viewModelScope.launch(Dispatchers.IO) {
             _state.value = MetadataViewState(isLoading = true)
             val uri = Uri.parse(mediaUri)
             val directories = runCatching {
@@ -54,12 +59,15 @@ class MetadataViewViewModel @Inject constructor(
                     .firstOrNull() ?: Settings.Security.DEFAULT_METADATA_ISOLATION_MODE
                 val usePerFile = mode != Settings.Security.METADATA_ISOLATION_SHARED
                 if (usePerFile) {
-                    val mediaId = ContentUris.parseId(uri)
+                    val mediaId = uri.lastPathSegment?.toLongOrNull() ?: UUID.randomUUID().mostSignificantBits
                     isolatedParser.parseRawMetadataPerFile(uri, isVideo, mediaId)
                 } else {
                     isolatedParser.parseRawMetadata(uri, isVideo)
                 }
-            }.getOrElse { emptyList() }
+            }.getOrElse { exception ->
+                if (exception is CancellationException) throw exception
+                emptyList()
+            }
             _state.value = MetadataViewState(
                 isLoading = false,
                 directories = directories
