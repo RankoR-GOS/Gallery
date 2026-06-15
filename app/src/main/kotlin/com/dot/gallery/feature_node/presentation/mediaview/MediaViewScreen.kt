@@ -5,6 +5,9 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview
 
+import androidx.compose.ui.zIndex
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -14,7 +17,6 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.view.PixelCopy
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContentScope
@@ -362,10 +364,6 @@ fun <T : Media> MediaViewScreen(
     val newRotationValue = rememberSaveable(currentMedia?.id ?: -1L) { mutableIntStateOf(0) }
     val showRotationHelper = rememberSaveable(currentMedia?.id ?: -1L) { mutableStateOf(false) }
 
-    BackHandler(!showUI) {
-        windowInsetsController.toggleSystemBars(show = true)
-        eventHandler.navigateUp()
-    }
     val activity = LocalActivity.current
     val window = LocalWindowInfo.current
     val density = LocalDensity.current
@@ -422,6 +420,16 @@ fun <T : Media> MediaViewScreen(
 
     val userScrollEnabled by rememberedDerivedState { sheetState.currentDetent != FullyExpanded }
     var isLocked by rememberSaveable { mutableStateOf(false) }
+    var isDismissing by remember(mediaId) { mutableStateOf(false) }
+    fun dismissViewer() {
+        if (isDismissing) return
+        isDismissing = true
+        windowInsetsController.toggleSystemBars(show = true)
+        eventHandler.navigateUp()
+    }
+    BackHandler(!showUI) {
+        dismissViewer()
+    }
     // Override back button/gesture when locked
     BackHandler(enabled = isLocked) { }
 
@@ -436,7 +444,7 @@ fun <T : Media> MediaViewScreen(
         snapshotFlow { pagerState.currentPage }.collectLatest { page ->
             if (!mediaState.value.isLoading && pagerItems.isEmpty() && !isStandalone) {
                 windowInsetsController.toggleSystemBars(show = true)
-                eventHandler.navigateUp()
+                dismissViewer()
             }
             if (!mediaState.value.isLoading) {
                 currentPage = page
@@ -693,11 +701,11 @@ fun <T : Media> MediaViewScreen(
                                 playWhenReady = canPlay,
                                 onSwipeDown = {
                                     if (!isLocked) {
-                                        windowInsetsController.toggleSystemBars(show = true)
-                                        runCatching {
-                                            (activity as ComponentActivity).onBackPressedDispatcher.onBackPressed()
-                                        }.getOrElse {
-                                            eventHandler.navigateUp()
+                                        when {
+                                            sheetProgress > 0f -> scope.launch {
+                                                sheetState.animateTo(imageOnlyDetent)
+                                            }
+                                            else -> dismissViewer()
                                         }
                                     }
                                 },
@@ -724,11 +732,18 @@ fun <T : Media> MediaViewScreen(
                                     modifier = Modifier.fillMaxSize()
                                 ) {
                                     val hideUiOnPlay by rememberAutoHideOnVideoPlay()
-                                    LaunchedEffect(isPlaying.value, hideUiOnPlay) {
+                                    LaunchedEffect(isPlaying.value, hideUiOnPlay, showUI, imageOnlyDetent) {
                                         if (isPlaying.value && showUI && hideUiOnPlay) {
-                                            delay(2.seconds)
-                                            showUI = false
-                                            windowInsetsController.toggleSystemBars(false)
+                                            val sheetMoved = withTimeoutOrNull(2.seconds) {
+                                                snapshotFlow { sheetState.progress(imageOnlyDetent, expandedDetent) }
+                                                    .first { it > 0f }
+                                            }
+                                            if (sheetMoved == null && sheetState.currentDetent == imageOnlyDetent &&
+                                                sheetState.progress(imageOnlyDetent, expandedDetent) == 0f
+                                            ) {
+                                                showUI = false
+                                                windowInsetsController.toggleSystemBars(show = false)
+                                            }
                                         }
                                     }
                                     val resources = LocalResources.current
@@ -763,8 +778,7 @@ fun <T : Media> MediaViewScreen(
                                                 }
                                             )
                                             .swipe(onOffset = { offset = it }) {
-                                                windowInsetsController.toggleSystemBars(show = true)
-                                                eventHandler.navigateUp()
+                                                if (!isLocked) dismissViewer()
                                             }
                                     )
 
@@ -797,8 +811,7 @@ fun <T : Media> MediaViewScreen(
                                                 }
                                             )
                                             .swipe(onOffset = { offset = it }) {
-                                                windowInsetsController.toggleSystemBars(show = true)
-                                                eventHandler.navigateUp()
+                                                if (!isLocked) dismissViewer()
                                             }
                                     )
 
@@ -845,49 +858,51 @@ fun <T : Media> MediaViewScreen(
             }
 
             val allowShowingDate by rememberShowMediaViewDateHeader()
-            MediaViewAppBar(
-                showUI = showUI,
-                showInfo = showInfo,
-                showDate = remember(currentMedia, allowShowingDate) {
-                    currentMedia?.timestamp != 0L && allowShowingDate
-                },
-                isLocked = isLocked,
-                currentDate = currentDate,
-                paddingValues = paddingValues,
-                currentMedia = currentMedia,
-                showRotationHelper = showRotationHelper,
-                isImageDark = isTopDark,
-                autoContrast = autoContrast,
-                isMotionPhoto = motionPhotoState.isDetected,
-                isMotionPlaying = motionPhotoState.isPlaying,
-                onToggleMotionPhoto = { motionPhotoState.togglePlayback() },
-                rotateImage = {
-                    rotateImage(currentMedia!!, newRotationValue.intValue)
-                },
-                onShowInfo = {
-                    scope.launch {
-                        if (showUI) {
-                            if (sheetState.currentDetent == imageOnlyDetent) {
-                                sheetState.animateTo(FullyExpanded)
-                            } else {
-                                sheetState.animateTo(imageOnlyDetent)
+            Box(modifier = Modifier.zIndex(1f)) {
+                MediaViewAppBar(
+                    showUI = showUI,
+                    showInfo = showInfo,
+                    showDate = remember(currentMedia, allowShowingDate) {
+                        currentMedia?.timestamp != 0L && allowShowingDate
+                    },
+                    isLocked = isLocked,
+                    currentDate = currentDate,
+                    paddingValues = paddingValues,
+                    currentMedia = currentMedia,
+                    showRotationHelper = showRotationHelper,
+                    isImageDark = isTopDark,
+                    autoContrast = autoContrast,
+                    isMotionPhoto = motionPhotoState.isDetected,
+                    isMotionPlaying = motionPhotoState.isPlaying,
+                    onToggleMotionPhoto = { motionPhotoState.togglePlayback() },
+                    rotateImage = {
+                        rotateImage(currentMedia!!, newRotationValue.intValue)
+                    },
+                    onShowInfo = {
+                        scope.launch {
+                            if (showUI) {
+                                if (sheetState.currentDetent == imageOnlyDetent) {
+                                    sheetState.animateTo(FullyExpanded)
+                                } else {
+                                    sheetState.animateTo(imageOnlyDetent)
+                                }
                             }
                         }
-                    }
-                },
-                onGoBack = {
-                    scope.launch {
-                        if (sheetState.currentDetent == FullyExpanded) {
-                            sheetState.animateTo(imageOnlyDetent)
-                        } else {
-                            eventHandler.navigateUp()
+                    },
+                    onGoBack = {
+                        scope.launch {
+                            if (sheetState.currentDetent == FullyExpanded) {
+                                sheetState.animateTo(imageOnlyDetent)
+                            } else {
+                                dismissViewer()
+                            }
                         }
+                    },
+                    onLock = {
+                        isLocked = !isLocked
                     }
-                },
-                onLock = {
-                    isLocked = !isLocked
-                }
-            )
+                )
+            }
 
             // Floating filmstrip overlay (positioned like video seekbar)
             AnimatedVisibility(
@@ -1090,7 +1105,7 @@ fun <T : Media> MediaViewScreen(
                                 MediaViewQuickBottomBar(
                                     currentMedia = currentMedia,
                                     showDeleteButton = !isReadOnly,
-                                    enabled = showUI,
+                                    enabled = showUI && sheetProgress == 0f && !isDismissing,
                                     isImageDark = isBottomDark,
                                     autoContrast = autoContrast
                                 )
