@@ -41,8 +41,16 @@ fun AdjustScrubber(
     }
     DisposableEffect(Unit) {
         onDispose {
-            if (currentAdjustment != appliedAdjustments.findLast { it.name.equals(adjustment.name, ignoreCase = true) } as VariableFilter?
-                && currentAdjustment != adjustment.createDefaultFilter()) {
+            val applied = appliedAdjustments.findLast {
+                it.name.equals(adjustment.name, ignoreCase = true)
+            } as VariableFilter?
+            // Commit when the value differs from what's currently applied. If an adjustment is
+            // already applied, scrubbing back to the default must still be committed so the
+            // effect is removed; previously this was skipped, leaving the old value (e.g. 100)
+            // in place. Only skip when nothing was applied and the value is still the default.
+            if (currentAdjustment != applied
+                && (applied != null || currentAdjustment != adjustment.createDefaultFilter())
+            ) {
                 onAdjustmentChange(currentAdjustment)
             }
         }
