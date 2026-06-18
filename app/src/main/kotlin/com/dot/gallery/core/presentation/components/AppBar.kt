@@ -64,14 +64,13 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dot.gallery.R
-import com.dot.gallery.core.Constants.Animation.enterAnimation
-import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideNavBar
 import com.dot.gallery.core.Settings.Misc.rememberOldNavbar
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.NavigationItem
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.feature_node.presentation.util.rememberBottomBarInset
 import com.dot.gallery.ui.core.icons.Albums
 import dev.chrisbanes.haze.LocalHazeStyle
 import dev.chrisbanes.haze.hazeEffect
@@ -120,101 +119,84 @@ fun AppBarContainer(
         mutableStateOf(windowSizeClass.widthSizeClass > WindowWidthSizeClass.Compact)
     }
     val useOldNavbar by rememberOldNavbar()
+    val hideNavBarSetting by rememberAutoHideNavBar()
+    val anySelectedRoute = remember(backStackEntry) {
+        bottomNavItems.any { it.route == navController.currentDestination?.route }
+    }
 
-    AnimatedVisibility(
-        visible = useOldNavbar,
-        enter = enterAnimation,
-        exit = exitAnimation
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            val anySelectedRoute = remember(backStackEntry) {
-                bottomNavItems.any { it.route == navController.currentDestination?.route }
+    // The classic nav rail only applies in the old-navbar layout on wide screens.
+    val showNavRail by remember(useOldNavbar, useNavRail, bottomBarState, anySelectedRoute) {
+        derivedStateOf { useOldNavbar && useNavRail && bottomBarState && anySelectedRoute }
+    }
+    val showClassicNavbar by remember(useOldNavbar, useNavRail, bottomBarState, isScrolling, hideNavBarSetting, anySelectedRoute) {
+        derivedStateOf {
+            useOldNavbar && !useNavRail && bottomBarState && (!isScrolling || !hideNavBarSetting) && anySelectedRoute
+        }
+    }
+    val showMaterialNavbar by remember(useOldNavbar, bottomBarState, isScrolling, hideNavBarSetting, anySelectedRoute) {
+        derivedStateOf {
+            !useOldNavbar && bottomBarState && (!isScrolling || !hideNavBarSetting) && anySelectedRoute
+        }
+    }
+    val animatedPadding by animateDpAsState(
+        targetValue = if (showNavRail) 80.dp else 0.dp,
+        label = "animatedPadding"
+    )
+
+    // Render the content exactly once. Toggling "use material navigation" must only swap the
+    // navigation bars below, not the whole app content. Previously content() was nested inside
+    // both the useOldNavbar and !useOldNavbar AnimatedVisibility blocks, so flipping the setting
+    // cross-faded (and recomposed) the entire screen, making it blink (#973).
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.padding(start = animatedPadding)) {
+            content()
+        }
+        // Old-navbar layout: classic rail (wide) or classic bottom bar (compact)
+        AnimatedVisibility(
+            visible = showNavRail,
+            enter = slideInHorizontally { it * -2 },
+            exit = slideOutHorizontally { it * -2 }
+        ) {
+            ClassicNavigationRail(
+                backStackEntry = backStackEntry,
+                navigationItems = bottomNavItems,
+                onClick = { navigate(navController, it) }
+            )
+        }
+        AnimatedVisibility(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            visible = showClassicNavbar,
+            enter = slideInVertically { it * 2 },
+            exit = slideOutVertically { it * 2 },
+            content = {
+                ClassicNavBar(
+                    backStackEntry = backStackEntry,
+                    navigationItems = bottomNavItems,
+                    onClick = { navigate(navController, it) },
+                )
             }
-            val showNavRail by remember(useNavRail, bottomBarState, anySelectedRoute) {
-                derivedStateOf {
-                    useNavRail && bottomBarState && anySelectedRoute
+        )
+        // Material (new) navbar: floating bar
+        AnimatedVisibility(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = rememberBottomBarInset(paddingValues)),
+            visible = showMaterialNavbar,
+            enter = slideInVertically { it * 2 },
+            exit = slideOutVertically { it * 2 },
+            content = {
+                val modifier = remember(useNavRail) {
+                    if (useNavRail) Modifier.requiredWidth((110 * bottomNavItems.size).dp)
+                    else Modifier.fillMaxWidth()
                 }
-            }
-            AnimatedVisibility(
-                visible = showNavRail,
-                enter = slideInHorizontally { it * -2 },
-                exit = slideOutHorizontally { it * -2 }
-            ) {
-                ClassicNavigationRail(
+                GalleryNavBar(
+                    modifier = modifier,
                     backStackEntry = backStackEntry,
                     navigationItems = bottomNavItems,
                     onClick = { navigate(navController, it) }
                 )
             }
-            val animatedPadding by animateDpAsState(
-                targetValue = remember(showNavRail) {
-                    if (showNavRail) 80.dp else 0.dp
-                },
-                label = "animatedPadding"
-            )
-            Box(
-                modifier = Modifier.padding(start = animatedPadding)
-            ) {
-                content()
-            }
-            val hideNavBarSetting by rememberAutoHideNavBar()
-            val showClassicNavbar by remember(useNavRail, bottomBarState, isScrolling, hideNavBarSetting, anySelectedRoute) {
-                derivedStateOf {
-                    !useNavRail && bottomBarState && (!isScrolling || !hideNavBarSetting) && anySelectedRoute
-                }
-            }
-            AnimatedVisibility(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                visible = showClassicNavbar,
-                enter = slideInVertically { it * 2 },
-                exit = slideOutVertically { it * 2 },
-                content = {
-                    ClassicNavBar(
-                        backStackEntry = backStackEntry,
-                        navigationItems = bottomNavItems,
-                        onClick = { navigate(navController, it) },
-                    )
-                }
-            )
-        }
-    }
-    AnimatedVisibility(
-        visible = !useOldNavbar,
-        enter = enterAnimation,
-        exit = exitAnimation
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            content()
-            val hideNavBarSetting by rememberAutoHideNavBar()
-            val anySelectedRoute = remember(backStackEntry) {
-                bottomNavItems.any { it.route == navController.currentDestination?.route }
-            }
-            val showNavbar by remember(bottomBarState, isScrolling, hideNavBarSetting, anySelectedRoute) {
-                derivedStateOf {
-                    bottomBarState && (!isScrolling || !hideNavBarSetting) && anySelectedRoute
-                }
-            }
-            AnimatedVisibility(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = paddingValues.calculateBottomPadding()),
-                visible = showNavbar,
-                enter = slideInVertically { it * 2 },
-                exit = slideOutVertically { it * 2 },
-                content = {
-                    val modifier = remember(useNavRail) {
-                        if (useNavRail) Modifier.requiredWidth((110 * bottomNavItems.size).dp)
-                        else Modifier.fillMaxWidth()
-                    }
-                    GalleryNavBar(
-                        modifier = modifier,
-                        backStackEntry = backStackEntry,
-                        navigationItems = bottomNavItems,
-                        onClick = { navigate(navController, it) }
-                    )
-                }
-            )
-        }
+        )
     }
 }
 

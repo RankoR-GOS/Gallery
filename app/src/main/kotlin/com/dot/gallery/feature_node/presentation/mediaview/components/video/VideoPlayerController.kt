@@ -15,6 +15,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -102,6 +109,10 @@ fun VideoPlayerController(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
+                .windowInsetsPadding(
+                    WindowInsets.navigationBars.union(WindowInsets.displayCutout)
+                        .only(WindowInsetsSides.Horizontal),
+                )
                 .padding(horizontal = 16.dp)
                 .padding(bottom = paddingValues.calculateBottomPadding() + 80.dp + extraNavPadding)
                 .fillMaxWidth(),

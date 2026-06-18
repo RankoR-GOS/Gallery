@@ -127,6 +127,7 @@ import com.dot.gallery.feature_node.presentation.util.mediaSharedElement
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import com.dot.gallery.feature_node.presentation.util.rememberGestureNavigationEnabled
 import com.dot.gallery.feature_node.presentation.util.rememberNavigationBarHeight
+import com.dot.gallery.feature_node.presentation.util.rememberNavigationBarOnSides
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
 import com.dot.gallery.feature_node.presentation.util.setHdrMode
 import com.dot.gallery.feature_node.presentation.util.shareMedia
@@ -383,42 +384,29 @@ fun <T : Media> MediaViewScreen(
     val isLandscape = remember(configuration) {
         configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     }
+    val onSides = rememberNavigationBarOnSides()
     val isGestureEnabled = rememberGestureNavigationEnabled()
-    // Extra padding for navigation bar with 3/2-buttons
-    val extraPaddingWithNavButtons by remember(isLandscape, isGestureEnabled) {
-        mutableStateOf(
-            if (!isGestureEnabled && !isLandscape) {
-                32.dp
-            } else 0.dp
-        )
+    val extraPaddingWithNavButtons = when {
+        !isGestureEnabled && !onSides -> 32.dp
+        else -> 0.dp
     }
+    val bottomBarHeightDefault = BOTTOM_BAR_HEIGHT
+    val bottomPadding = paddingValues.calculateBottomPadding()
     val navigationBarHeight = rememberNavigationBarHeight()
-    val bottomBarHeightDefault by remember(isGestureEnabled, isLandscape) {
-        mutableStateOf(
-            if (!isGestureEnabled && isLandscape) 84.dp
-            else BOTTOM_BAR_HEIGHT
+    val imageOnlyHeight = bottomBarHeightDefault + extraPaddingWithNavButtons + bottomPadding + 16.dp
+    val imageOnlyDetent = remember(imageOnlyHeight) { ImageOnly { imageOnlyHeight } }
+    val expandedDetent = remember { FullyExpanded }
+    // The sheet library captures detents once; recreate anchors when the inset height changes.
+    val sheetState = key(imageOnlyHeight) {
+        rememberBottomSheetState(
+            initialDetent = imageOnlyDetent,
+            detents = listOf(imageOnlyDetent, expandedDetent),
+            positionalThreshold = { it },
+            velocityThreshold = { 1000.dp },
         )
     }
 
-    val bottomPadding = remember(paddingValues) {
-        paddingValues.calculateBottomPadding()
-    }
-
-    val imageOnlyDetent =
-        remember(bottomBarHeightDefault, extraPaddingWithNavButtons, bottomPadding) {
-            ImageOnly { bottomBarHeightDefault + extraPaddingWithNavButtons + bottomPadding + 16.dp }
-        }
-
-    val expandedDetent = remember { FullyExpanded }
-
-    val sheetState = rememberBottomSheetState(
-        initialDetent = imageOnlyDetent,
-        detents = listOf(imageOnlyDetent, expandedDetent),
-        positionalThreshold = { it },
-        velocityThreshold = { 1000.dp }
-    )
-
-    val userScrollEnabled by rememberedDerivedState { sheetState.currentDetent != FullyExpanded }
+    val userScrollEnabled by rememberedDerivedState(sheetState) { sheetState.currentDetent != FullyExpanded }
     var isLocked by rememberSaveable { mutableStateOf(false) }
     var isDismissing by remember(mediaId) { mutableStateOf(false) }
     fun dismissViewer() {
@@ -433,7 +421,7 @@ fun <T : Media> MediaViewScreen(
     // Override back button/gesture when locked
     BackHandler(enabled = isLocked) { }
 
-    val sheetProgress by rememberedDerivedState {
+    val sheetProgress by rememberedDerivedState(sheetState, imageOnlyDetent, expandedDetent) {
         sheetState.progress(
             imageOnlyDetent,
             expandedDetent

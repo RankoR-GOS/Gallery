@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dot.gallery.feature_node.presentation.util.rememberBottomBarInset
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -169,7 +170,7 @@ fun AlbumsScreen(
                             columns = gridCells,
                             contentPadding = PaddingValues(
                                 top = innerPaddingValues.calculateTopPadding(),
-                                bottom = innerPaddingValues.calculateBottomPadding() + 16.dp + 64.dp
+                                bottom = rememberBottomBarInset(paddingValues = innerPaddingValues) + 16.dp + 64.dp
                             ),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -364,7 +365,7 @@ fun AlbumsScreen(
                             .fillMaxSize(),
                         contentPadding = PaddingValues(
                             top = innerPaddingValues.calculateTopPadding(),
-                            bottom = innerPaddingValues.calculateBottomPadding() + 16.dp + 64.dp
+                            bottom = rememberBottomBarInset(paddingValues = innerPaddingValues) + 16.dp + 64.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {

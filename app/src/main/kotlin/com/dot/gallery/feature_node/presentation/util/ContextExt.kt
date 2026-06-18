@@ -36,7 +36,9 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -78,17 +80,24 @@ data class FixedInsets(
     val navigationBarsPadding: PaddingValues = PaddingValues(),
 )
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProvideInsets(content: @Composable () -> Unit) {
-    val systemBarsPadding = WindowInsets.systemBars.asPaddingValues()
     val layoutDirection = LocalLayoutDirection.current
-    val fixedInsets = remember {
+    // Resolve lazy inset values before remembering so rotation updates hidden system bars too.
+    val statusPadding = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues()
+    val navigationPadding = WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
+    val statusTop = statusPadding.calculateTopPadding()
+    val navigationBottom = navigationPadding.calculateBottomPadding()
+    val navigationStart = navigationPadding.calculateStartPadding(layoutDirection)
+    val navigationEnd = navigationPadding.calculateEndPadding(layoutDirection)
+    val fixedInsets = remember(statusTop, navigationBottom, navigationStart, navigationEnd) {
         FixedInsets(
-            statusBarHeight = systemBarsPadding.calculateTopPadding(),
+            statusBarHeight = statusTop,
             navigationBarsPadding = PaddingValues(
-                bottom = systemBarsPadding.calculateBottomPadding(),
-                start = systemBarsPadding.calculateStartPadding(layoutDirection),
-                end = systemBarsPadding.calculateEndPadding(layoutDirection),
+                bottom = navigationBottom,
+                start = navigationStart,
+                end = navigationEnd,
             ),
         )
     }
@@ -139,6 +148,23 @@ fun rememberGestureNavigationEnabled(): Boolean {
 
     return remember(navigationBarHeight) {
         navigationBarHeight < 48.dp
+    }
+}
+
+@Composable
+fun rememberNavigationBarOnSides(): Boolean {
+    val padding = LocalFixedInsets.current.navigationBarsPadding
+    val layoutDirection = LocalLayoutDirection.current
+    return padding.calculateBottomPadding() == 0.dp &&
+        (padding.calculateStartPadding(layoutDirection) > 0.dp ||
+            padding.calculateEndPadding(layoutDirection) > 0.dp)
+}
+
+@Composable
+fun rememberBottomBarInset(paddingValues: PaddingValues): Dp {
+    return when {
+        rememberNavigationBarOnSides() -> 16.dp
+        else -> paddingValues.calculateBottomPadding()
     }
 }
 

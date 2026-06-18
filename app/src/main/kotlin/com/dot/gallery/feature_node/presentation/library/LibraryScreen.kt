@@ -67,6 +67,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.dot.gallery.feature_node.presentation.util.rememberBottomBarInset
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.LocalEventHandler
@@ -109,6 +110,7 @@ fun LibraryScreen(
     animatedContentScope: AnimatedContentScope,
 ) {
     val eventHandler = LocalEventHandler.current
+    val bottomBarInset = rememberBottomBarInset(paddingValues = paddingValues)
     val viewModel = hiltViewModel<LibraryViewModel>()
     var lastCellIndex by rememberAlbumGridSize()
 
@@ -204,7 +206,7 @@ fun LibraryScreen(
                 columns = gridCells,
                 contentPadding = PaddingValues(
                     top = it.calculateTopPadding(),
-                    bottom = paddingValues.calculateBottomPadding() + 128.dp
+                    bottom = bottomBarInset + 128.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
