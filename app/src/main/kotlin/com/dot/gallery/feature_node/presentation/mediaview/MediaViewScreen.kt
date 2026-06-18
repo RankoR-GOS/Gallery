@@ -997,8 +997,12 @@ fun <T : Media> MediaViewScreen(
                 groupMultiSelectMode = false
                 groupMultiSelectedIds = emptySet()
             }
+            // When the UI is hidden (e.g. tapping the image), always settle the info sheet back
+            // to the image-only detent. A partial drag interrupted by hiding the UI would
+            // otherwise freeze the sheet at a mid-offset and, since its alpha is tied to showUI,
+            // leave it invisible-but-still-interactive instead of dismissed (#964).
             LaunchedEffect(showUI) {
-                if (!showUI && (sheetState.currentDetent == FullyExpanded || sheetState.targetDetent == FullyExpanded)) {
+                if (!showUI && sheetState.progress(imageOnlyDetent, expandedDetent) > 0f) {
                     sheetState.animateTo(imageOnlyDetent)
                 }
             }
