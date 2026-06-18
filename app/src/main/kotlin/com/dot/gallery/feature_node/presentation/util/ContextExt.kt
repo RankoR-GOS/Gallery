@@ -151,9 +151,10 @@ fun rememberGestureNavigationEnabled(): Boolean {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun rememberNavigationBarOnSides(): Boolean {
-    val padding = LocalFixedInsets.current.navigationBarsPadding
+    val padding = WindowInsets.navigationBarsIgnoringVisibility.asPaddingValues()
     val layoutDirection = LocalLayoutDirection.current
     return padding.calculateBottomPadding() == 0.dp &&
         (padding.calculateStartPadding(layoutDirection) > 0.dp ||
