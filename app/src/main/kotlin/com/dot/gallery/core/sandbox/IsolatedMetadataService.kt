@@ -15,10 +15,16 @@ import android.os.Looper
 import android.os.Message
 import android.os.Messenger
 import android.os.ParcelFileDescriptor
+import android.system.ErrnoException
+import android.system.Os
+import android.system.OsConstants
 import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion.MSG_PARSE_IMAGE
 import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion.MSG_PARSE_RAW_METADATA
 import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion.MSG_PARSE_VIDEO
 import com.drew.imaging.ImageMetadataReader
+import com.drew.metadata.Metadata
+import com.drew.metadata.mov.media.QuickTimeVideoDirectory
+import com.drew.metadata.mp4.media.Mp4VideoDirectory
 import com.drew.metadata.exif.ExifIFD0Directory
 import com.drew.metadata.exif.ExifSubIFDDirectory
 import com.drew.metadata.exif.GpsDirectory
@@ -227,11 +233,11 @@ class IsolatedMetadataService : Service() {
             ?: return Bundle().apply { putBoolean(KEY_ERROR, true) }
 
         return pfd.use { fd ->
+            val result = Bundle()
             val retriever = MediaMetadataRetriever()
             try {
                 retriever.setDataSource(fd.fileDescriptor)
 
-                val result = Bundle()
                 retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
                     ?.toLongOrNull()?.let { result.putLong(KEY_DURATION_MS, it) }
                 retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
@@ -251,10 +257,32 @@ class IsolatedMetadataService : Service() {
                         }
                 frameRate?.let { result.putFloat(KEY_FRAME_RATE, it) }
 
-                result
+            } catch (exception: Exception) {
+                // Some MOV containers cannot be opened by the platform retriever.
             } finally {
                 retriever.release()
             }
+            if (!result.containsKey(KEY_VIDEO_WIDTH) || !result.containsKey(KEY_VIDEO_HEIGHT)) {
+                try {
+                    val metadata = readContainerMetadata(pfd = fd)
+                    val quickTime = metadata.getFirstDirectoryOfType(QuickTimeVideoDirectory::class.java)
+                    val mp4 = metadata.getFirstDirectoryOfType(Mp4VideoDirectory::class.java)
+                    val width = quickTime?.getInteger(QuickTimeVideoDirectory.TAG_WIDTH)
+                        ?: mp4?.getInteger(Mp4VideoDirectory.TAG_WIDTH)
+                    val height = quickTime?.getInteger(QuickTimeVideoDirectory.TAG_HEIGHT)
+                        ?: mp4?.getInteger(Mp4VideoDirectory.TAG_HEIGHT)
+                    if (!result.containsKey(KEY_VIDEO_WIDTH) && width != null && width > 0) {
+                        result.putInt(KEY_VIDEO_WIDTH, width)
+                    }
+                    if (!result.containsKey(KEY_VIDEO_HEIGHT) && height != null && height > 0) {
+                        result.putInt(KEY_VIDEO_HEIGHT, height)
+                    }
+                } catch (exception: Exception) {
+                    // Retain any fields the platform retriever could read.
+                }
+            }
+            if (result.isEmpty) result.putBoolean(KEY_ERROR, true)
+            result
         }
     }
 
@@ -276,35 +304,55 @@ class IsolatedMetadataService : Service() {
         }
     }
 
+    private fun readContainerMetadata(pfd: ParcelFileDescriptor): Metadata {
+        try {
+            Os.lseek(pfd.fileDescriptor, 0, OsConstants.SEEK_SET)
+        } catch (exception: ErrnoException) {
+            if (exception.errno != OsConstants.ESPIPE) throw exception
+        }
+        return ParcelFileDescriptor.AutoCloseInputStream(ParcelFileDescriptor.dup(pfd.fileDescriptor)).use { stream ->
+            ImageMetadataReader.readMetadata(stream)
+        }
+    }
+
+    private fun appendContainerTags(
+        pfd: ParcelFileDescriptor,
+        result: Bundle,
+        directoryNames: ArrayList<String>,
+    ) {
+        val metadata = readContainerMetadata(pfd = pfd)
+        var remainingTags = MAX_RAW_TAGS
+        for (directory in metadata.directories) {
+            if (directoryNames.size >= MAX_RAW_DIRECTORIES || remainingTags == 0) break
+            val tagNames = ArrayList<String>()
+            val tagDescriptions = ArrayList<String>()
+            for (tag in directory.tags) {
+                if (remainingTags == 0) break
+                val description = tag.description ?: continue
+                tagNames.add(tag.tagName.take(MAX_RAW_TEXT_LENGTH))
+                tagDescriptions.add(description.take(MAX_RAW_TEXT_LENGTH))
+                remainingTags--
+            }
+            if (tagNames.isEmpty()) continue
+            val directoryKey = "dir_${directoryNames.size}"
+            directoryNames.add(directory.name.take(MAX_RAW_TEXT_LENGTH))
+            result.putStringArrayList("${directoryKey}_names", tagNames)
+            result.putStringArrayList("${directoryKey}_descs", tagDescriptions)
+        }
+    }
+
     private fun parseRawImageMetadata(pfd: ParcelFileDescriptor): Bundle {
         val result = Bundle()
-        FileInputStream(pfd.fileDescriptor).use { stream ->
-            val metadata = ImageMetadataReader.readMetadata(stream)
-            val dirNames = ArrayList<String>()
-            var dirIndex = 0
-            for (directory in metadata.directories) {
-                val tags = directory.tags.filter { it.description != null }
-                if (tags.isEmpty()) continue
-                val dirKey = "dir_$dirIndex"
-                dirNames.add(directory.name)
-                val tagNames = ArrayList<String>(tags.size)
-                val tagDescs = ArrayList<String>(tags.size)
-                for (tag in tags) {
-                    tagNames.add(tag.tagName)
-                    tagDescs.add(tag.description)
-                }
-                result.putStringArrayList("${dirKey}_names", tagNames)
-                result.putStringArrayList("${dirKey}_descs", tagDescs)
-                dirIndex++
-            }
-            result.putStringArrayList(KEY_RAW_DIR_NAMES, dirNames)
-        }
+        val directoryNames = ArrayList<String>()
+        appendContainerTags(pfd = pfd, result = result, directoryNames = directoryNames)
+        result.putStringArrayList(KEY_RAW_DIR_NAMES, directoryNames)
         return result
     }
 
     @Suppress("DEPRECATION")
     private fun parseRawVideoMetadata(pfd: ParcelFileDescriptor): Bundle {
         val result = Bundle()
+        val directoryNames = ArrayList<String>()
         val retriever = MediaMetadataRetriever()
         try {
             retriever.setDataSource(pfd.fileDescriptor)
@@ -345,24 +393,36 @@ class IsolatedMetadataService : Service() {
             )
             for ((key, name) in keyMap) {
                 retriever.extractMetadata(key)?.let { value ->
-                    tagNames.add(name)
-                    tagDescs.add(value)
+                    tagNames.add(name.take(MAX_RAW_TEXT_LENGTH))
+                    tagDescs.add(value.take(MAX_RAW_TEXT_LENGTH))
                 }
             }
             if (tagNames.isNotEmpty()) {
-                result.putStringArrayList(KEY_RAW_DIR_NAMES, arrayListOf("Video Metadata"))
+                directoryNames.add("Video Metadata")
                 result.putStringArrayList("dir_0_names", tagNames)
                 result.putStringArrayList("dir_0_descs", tagDescs)
-            } else {
-                result.putStringArrayList(KEY_RAW_DIR_NAMES, arrayListOf())
             }
+        } catch (exception: Exception) {
+            // Continue with rich container tags if the platform cannot open the video.
         } finally {
             retriever.release()
         }
+        try {
+            appendContainerTags(pfd = pfd, result = result, directoryNames = directoryNames)
+        } catch (exception: Exception) {
+            // Keep platform tags when the container is unsupported or malformed.
+        }
+        result.putStringArrayList(KEY_RAW_DIR_NAMES, directoryNames)
         return result
     }
 
     companion object {
+        // Bound raw-tag replies below Binder's transaction limit, including rich MOV tags.
+        private const val MAX_RAW_DIRECTORIES = 32
+        private const val MAX_RAW_TAGS = 256
+        private const val MAX_RAW_TEXT_LENGTH = 512
+
+
         // Message types
         const val MSG_PARSE_IMAGE = 1
         const val MSG_PARSE_VIDEO = 2
