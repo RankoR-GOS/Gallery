@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package com.dot.gallery.injection
+package com.dot.gallery.injection.module.core
 
 import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.os.Build
 import androidx.room.Room
@@ -43,6 +44,11 @@ object AppModule {
     @Provides
     fun provideContentResolver(@ApplicationContext context: Context): ContentResolver =
         context.contentResolver
+
+    @Provides
+    fun providePackageManager(@ApplicationContext context: Context): PackageManager {
+        return context.packageManager
+    }
 
     @Provides
     @Singleton

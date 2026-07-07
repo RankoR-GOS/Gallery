@@ -191,6 +191,24 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".feature_node.presentation.edit.crop.CropActivity"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:exported="true"
+            android:theme="@style/Theme.Gallery">
+            <intent-filter android:label="@string/crop">
+                <action android:name="com.android.camera.action.CROP"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.ALTERNATIVE"/>
+                <category android:name="android.intent.category.SELECTED_ALTERNATIVE"/>
+
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:mimeType="image/*"/>
+            </intent-filter>
+        </activity>
+
         <!-- Widget Configuration Activity -->
         <activity
             android:name=".feature_node.presentation.widget.WidgetConfigActivity"

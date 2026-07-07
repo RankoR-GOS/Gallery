@@ -31,10 +31,12 @@ material = "1.13.0"
 material3 = "1.5.0-alpha18"
 media3Exoplayer = "1.10.0"
 metadataExtractor = "2.20.0"
+mockk = "1.14.11"
 navigation-runtime-ktx = "2.9.8"
 onnxruntimeAndroid = "1.25.1"
 profileinstaller = "1.4.1"
 room = "2.8.4"
+robolectric = "4.16"
 accompanist = "0.37.3"
 datastore = "1.2.1"
 sketch = "4.5.0-alpha03"
@@ -139,6 +141,7 @@ sketch-view = { module = "io.github.panpf.sketch4:sketch-view", version.ref = "s
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinCollectionsImmutable" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinCoroutinesVersion" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutinesVersion" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinCoroutinesVersion" }
 
 # View-based AndroidX
 material = { module = "com.google.android.material:material", version.ref = "material" }
@@ -157,6 +160,8 @@ zoomimage-compose-glide = { module = "io.github.panpf.zoomimage:zoomimage-compos
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }

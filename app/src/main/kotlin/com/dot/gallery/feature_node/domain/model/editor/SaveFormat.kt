@@ -5,28 +5,32 @@ import androidx.annotation.Keep
 
 @Keep
 sealed interface SaveFormat {
-    
-    val format: CompressFormat
+
+    val compressFormat: CompressFormat
+    val fileExtension: String
     val mimeType: String
-    
+
     data object PNG : SaveFormat {
-        override val format = CompressFormat.PNG
-        override val mimeType = "image/png"
+        override val compressFormat: CompressFormat = CompressFormat.PNG
+        override val fileExtension: String = "png"
+        override val mimeType: String = "image/png"
     }
-    
+
     data object JPEG : SaveFormat {
-        override val format = CompressFormat.JPEG
-        override val mimeType = "image/jpeg"
+        override val compressFormat: CompressFormat = CompressFormat.JPEG
+        override val fileExtension: String = "jpg"
+        override val mimeType: String = "image/jpeg"
     }
-    
+
     data object WEBP_LOSSLESS : SaveFormat {
-        override val format = CompressFormat.WEBP_LOSSLESS
-        override val mimeType = "image/webp"
+        override val compressFormat: CompressFormat = CompressFormat.WEBP_LOSSLESS
+        override val fileExtension: String = "webp"
+        override val mimeType: String = "image/webp"
     }
-    
+
     data object WEBP_LOSSY : SaveFormat {
-        override val format = CompressFormat.WEBP_LOSSY
-        override val mimeType = "image/webp"
+        override val compressFormat: CompressFormat = CompressFormat.WEBP_LOSSY
+        override val fileExtension: String = "webp"
+        override val mimeType: String = "image/webp"
     }
-    
 }

@@ -728,7 +728,7 @@ class EditViewModel @Inject constructor(
                 try {
                     if (mediaHandler.saveImage(
                             bitmap = bitmap,
-                            format = format.format,
+                            format = format.compressFormat,
                             relativePath = Environment.DIRECTORY_PICTURES + "/Edited",
                             displayName = media.label,
                             mimeType = format.mimeType

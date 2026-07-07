@@ -1,6 +1,7 @@
 package com.smarttoolfactory.cropper
 
 import android.content.res.Configuration
+import android.graphics.RectF
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
@@ -31,6 +32,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import com.smarttoolfactory.cropper.crop.CropAgent
@@ -38,6 +40,7 @@ import com.smarttoolfactory.cropper.draw.DrawingOverlay
 import com.smarttoolfactory.cropper.draw.ImageDrawCanvas
 import com.smarttoolfactory.cropper.image.ImageWithConstraints
 import com.smarttoolfactory.cropper.image.getScaledImageBitmap
+import com.smarttoolfactory.cropper.model.CropData
 import com.smarttoolfactory.cropper.model.CropOutline
 import com.smarttoolfactory.cropper.settings.CropDefaults
 import com.smarttoolfactory.cropper.settings.CropProperties
@@ -63,9 +66,11 @@ fun ImageCropper(
     filterQuality: FilterQuality = DrawScope.DefaultFilterQuality,
     crop: Boolean = false,
     cropEnabled: Boolean = true,
+    initialCropRect: RectF? = null,
     onCropStart: () -> Unit,
     onCropSuccess: (ImageBitmap) -> Unit,
-    onCropRect: ((android.graphics.RectF) -> Unit)? = null,
+    onCropRect: ((RectF) -> Unit)? = null,
+    onCropRectChanged: ((RectF) -> Unit)? = null,
     backgroundModifier: Modifier = Modifier
 ) {
 
@@ -146,6 +151,18 @@ fun ImageCropper(
             }
         }
 
+        LaunchedEffect(cropState) {
+            val restoredOverlayRect = initialCropRect?.toOverlayRect(
+                sourceRect = rect,
+                imageWidth = imageBitmap.width,
+                imageHeight = imageBitmap.height,
+                drawAreaRect = cropState.drawAreaRect,
+            )
+            if (restoredOverlayRect != null) {
+                cropState.snapOverlayRectTo(rect = restoredOverlayRect)
+            }
+        }
+
         val pressedStateColor = remember(cropStyle.backgroundColor) {
             cropStyle.backgroundColor
                 .copy(cropStyle.backgroundColor.alpha * .7f)
@@ -167,25 +184,36 @@ fun ImageCropper(
             onCropSuccess,
             onCropRect = onCropRect?.let { callback ->
                 { cropRect ->
-                    // cropRect is in scaledImageBitmap pixel coords.
-                    // scaledImageBitmap is a 1:1 pixel sub-region of imageBitmap at (rect.left, rect.top).
-                    // Normalize to 0-1 relative to the full input imageBitmap.
-                    val imgW = imageBitmap.width.toFloat()
-                    val imgH = imageBitmap.height.toFloat()
-                    val left = (rect.left + cropRect.left) / imgW
-                    val top = (rect.top + cropRect.top) / imgH
-                    val right = (rect.left + cropRect.right) / imgW
-                    val bottom = (rect.top + cropRect.bottom) / imgH
-                    callback(android.graphics.RectF(left, top, right, bottom))
+                    callback(
+                        cropRect.toNormalizedRect(
+                            sourceRect = rect,
+                            imageWidth = imageBitmap.width,
+                            imageHeight = imageBitmap.height,
+                        )
+                    )
                 }
             }
         )
+
+        val notifyCropRectChanged = onCropRectChanged?.let { callback ->
+            { cropData: CropData ->
+                callback(
+                    cropData.cropRect.toNormalizedRect(
+                        sourceRect = rect,
+                        imageWidth = imageBitmap.width,
+                        imageHeight = imageBitmap.height,
+                    )
+                )
+            }
+        }
 
         val imageModifier = Modifier
             .size(containerWidth, containerHeight)
             .crop(
                 keys = resetKeys,
-                cropState = cropState
+                cropState = cropState,
+                onUp = notifyCropRectChanged,
+                onGestureEnd = notifyCropRectChanged,
             )
 
         LaunchedEffect(key1 = cropProperties) {
@@ -218,6 +246,53 @@ fun ImageCropper(
             backgroundModifier = backgroundModifier
         )
     }
+}
+
+private fun Rect.toNormalizedRect(
+    sourceRect: IntRect,
+    imageWidth: Int,
+    imageHeight: Int,
+): RectF {
+    val sourceWidth = imageWidth.toFloat()
+    val sourceHeight = imageHeight.toFloat()
+    return RectF(
+        ((sourceRect.left + left) / sourceWidth).coerceIn(0f, 1f),
+        ((sourceRect.top + top) / sourceHeight).coerceIn(0f, 1f),
+        ((sourceRect.left + right) / sourceWidth).coerceIn(0f, 1f),
+        ((sourceRect.top + bottom) / sourceHeight).coerceIn(0f, 1f),
+    )
+}
+
+private fun RectF.toOverlayRect(
+    sourceRect: IntRect,
+    imageWidth: Int,
+    imageHeight: Int,
+    drawAreaRect: Rect,
+): Rect? {
+    if (drawAreaRect.isEmpty) {
+        return null
+    }
+
+    val scaledLeft = left * imageWidth - sourceRect.left
+    val scaledTop = top * imageHeight - sourceRect.top
+    val scaledRight = right * imageWidth - sourceRect.left
+    val scaledBottom = bottom * imageHeight - sourceRect.top
+    if (scaledRight <= scaledLeft || scaledBottom <= scaledTop) {
+        return null
+    }
+
+    val sourceWidth = sourceRect.width.toFloat()
+    val sourceHeight = sourceRect.height.toFloat()
+    if (sourceWidth <= 0f || sourceHeight <= 0f) {
+        return null
+    }
+
+    return Rect(
+        left = drawAreaRect.left + drawAreaRect.width * (scaledLeft / sourceWidth),
+        top = drawAreaRect.top + drawAreaRect.height * (scaledTop / sourceHeight),
+        right = drawAreaRect.left + drawAreaRect.width * (scaledRight / sourceWidth),
+        bottom = drawAreaRect.top + drawAreaRect.height * (scaledBottom / sourceHeight),
+    ).intersect(drawAreaRect)
 }
 
 @Composable

@@ -16,10 +16,13 @@ android {
 
     buildTypes {
         create("staging") {
+            matchingFallbacks += "release"
         }
         create("benchmarkStaging") {
+            matchingFallbacks += "release"
         }
         create("nonMinifiedStaging") {
+            matchingFallbacks += "release"
         }
     }
     namespace = "com.dot.baselineprofile"
@@ -61,7 +64,7 @@ kotlin {
 baselineProfile {
     //managedDevices += "pixel6Api31"
     useConnectedDevices = true
-    
+
 }
 
 dependencies {

@@ -1,4 +1,4 @@
-package com.dot.gallery.injection
+package com.dot.gallery.injection.module.core
 
 import android.content.Context
 import android.graphics.Bitmap
