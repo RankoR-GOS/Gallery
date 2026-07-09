@@ -675,6 +675,7 @@ fun <T : Media> MediaViewScreen(
                     val sharedElementMedia = pagerMedia ?: displayMedia
                     with(sharedTransitionScope) {
                             MediaPreviewComponent(
+                                backgroundColor = backgroundColor,
                                 modifier = Modifier
                                     .mediaSharedElement(
                                         allowAnimation = canAnimateContent && index == currentPage,

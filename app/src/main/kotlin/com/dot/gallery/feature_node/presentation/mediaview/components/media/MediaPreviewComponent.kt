@@ -18,6 +18,7 @@ import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import androidx.media3.exoplayer.ExoPlayer
 import com.dot.gallery.feature_node.data.model.Media
@@ -31,6 +32,7 @@ import dev.chrisbanes.haze.hazeSource
 @Composable
 fun <T : Media> MediaPreviewComponent(
     media: T?,
+    backgroundColor: Color,
     modifier: Modifier = Modifier,
     containerModifier: Modifier = Modifier,
     uiEnabled: Boolean,
@@ -78,6 +80,7 @@ fun <T : Media> MediaPreviewComponent(
                     VideoPlayer(
                         modifier = Modifier,
                         media = media,
+                        backgroundColor = backgroundColor,
                         playWhenReady = playWhenReady,
                         videoController = videoController,
                         onItemClick = onItemClick,

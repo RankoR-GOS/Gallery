@@ -32,6 +32,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onVisibilityChanged
@@ -66,6 +67,7 @@ import dev.chrisbanes.haze.hazeSource
 @Composable
 fun <T : Media> VideoPlayer(
     media: T,
+    backgroundColor: Color,
     modifier: Modifier = Modifier,
     playWhenReady: State<Boolean>,
     videoController: @Composable (ExoPlayer, MutableState<Boolean>, MutableLongState, Long, Int, Float) -> Unit,
@@ -238,7 +240,7 @@ fun <T : Media> VideoPlayer(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(backgroundColor)
             )
         }
     }

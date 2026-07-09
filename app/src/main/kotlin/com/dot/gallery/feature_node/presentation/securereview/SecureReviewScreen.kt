@@ -135,6 +135,7 @@ private fun SecureReviewMediaPager(
         }
 
         MediaPreviewComponent(
+            backgroundColor = MaterialTheme.colorScheme.background,
             media = media[page],
             modifier = Modifier,
             containerModifier = Modifier,
