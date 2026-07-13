@@ -35,6 +35,10 @@ android {
         base.archivesName.set("Gallery")
     }
 
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     lint.baseline = file("lint-baseline.xml")
 
     signingConfigs {

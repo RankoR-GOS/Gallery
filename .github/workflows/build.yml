@@ -20,5 +20,8 @@ jobs:
       - name: Check GOS locale overrides
         run: ./gradlew :app:checkGosStringOverrides --no-daemon
 
+      - name: Run unit tests
+        run: ./gradlew :app:testDebugUnitTest --no-daemon
+
       - name: Build with Gradle
         run: ./gradlew :app:assembleDebug --no-daemon

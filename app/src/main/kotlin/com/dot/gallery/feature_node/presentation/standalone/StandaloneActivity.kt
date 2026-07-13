@@ -5,7 +5,6 @@
 
 package com.dot.gallery.feature_node.presentation.standalone
 
-import android.app.KeyguardManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -53,7 +52,6 @@ private const val CAMERA_ACTION_REVIEW = "com.android.camera.action.REVIEW"
 class StandaloneActivity : AppCompatActivity() {
 
     private val eventHandler: EventHandler = DefaultEventHandler()
-    private var showWhenLockedForCurrentIntent = false
 
     @Inject
     lateinit var mediaDistributor: MediaDistributor
@@ -67,12 +65,14 @@ class StandaloneActivity : AppCompatActivity() {
     @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalHazeMaterialsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (intent.action == MediaStore.ACTION_REVIEW_SECURE) {
+            finish()
+            return
+        }
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
-        val isReviewSecure = isReviewSecureAction(reviewIntent = intent)
         val isReview = isReviewAction(reviewIntent = intent)
         val uriList = getReviewUris(reviewIntent = intent)
-        applyShowWhenLockedForIntent(reviewIntent = intent)
         setContent {
             GalleryTheme {
                 val allowBlur by rememberAllowBlur()
@@ -83,7 +83,7 @@ class StandaloneActivity : AppCompatActivity() {
                     hiltViewModel<StandaloneViewModel, StandaloneViewModel.Factory> { factory ->
                         factory.create(
                             reviewMode = isReview,
-                            secureReviewMode = isReviewSecure,
+                            secureReviewMode = false,
                             dataList = uriList,
                         )
                     }
@@ -126,7 +126,7 @@ class StandaloneActivity : AppCompatActivity() {
                                             toggleRotate = ::toggleOrientation,
                                             paddingValues = paddingValues,
                                             isStandalone = true,
-                                            isSecureReview = isReviewSecure,
+                                            isSecureReview = false,
                                             mediaId = mediaId,
                                             mediaState = mediaState,
                                             albumsState = albumsState,
@@ -149,39 +149,18 @@ class StandaloneActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        if (intent.action == MediaStore.ACTION_REVIEW_SECURE) {
+            finish()
+            return
+        }
         setIntent(intent)
-        applyShowWhenLockedForIntent(reviewIntent = intent)
         viewModelStore.clear()
         recreate()
     }
 
-    override fun onResume() {
-        super.onResume()
-        if (!isDeviceLocked()) {
-            showWhenLockedForCurrentIntent = false
-        }
-        setShowWhenLocked(showWhenLockedForCurrentIntent)
-    }
-
-    private fun isDeviceLocked(): Boolean {
-        val keyguardManager = getSystemService(KeyguardManager::class.java)
-        return keyguardManager?.isDeviceLocked == true
-    }
-
-    private fun applyShowWhenLockedForIntent(reviewIntent: Intent) {
-        showWhenLockedForCurrentIntent = isReviewSecureAction(reviewIntent = reviewIntent) &&
-                isDeviceLocked()
-        setShowWhenLocked(showWhenLockedForCurrentIntent)
-    }
-
     private fun isReviewAction(reviewIntent: Intent): Boolean {
         return reviewIntent.action == MediaStore.ACTION_REVIEW ||
-                reviewIntent.action == MediaStore.ACTION_REVIEW_SECURE ||
                 reviewIntent.action == CAMERA_ACTION_REVIEW
-    }
-
-    private fun isReviewSecureAction(reviewIntent: Intent): Boolean {
-        return reviewIntent.action == MediaStore.ACTION_REVIEW_SECURE
     }
 
     private fun getReviewUris(reviewIntent: Intent): List<Uri> {

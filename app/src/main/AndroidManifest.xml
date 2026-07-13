@@ -105,7 +105,6 @@
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="com.android.camera.action.REVIEW" />
                 <action android:name="android.provider.action.REVIEW" />
-                <action android:name="android.provider.action.REVIEW_SECURE" />
 
                 <data android:scheme="content"/>
                 <data android:scheme="file"/>
@@ -121,7 +120,6 @@
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="com.android.camera.action.REVIEW" />
                 <action android:name="android.provider.action.REVIEW" />
-                <action android:name="android.provider.action.REVIEW_SECURE" />
 
                 <data android:scheme="content"/>
                 <data android:scheme="http"/>
@@ -172,6 +170,31 @@
                 <action android:name="android.intent.action.ATTACH_DATA"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="image/*"/>
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".feature_node.presentation.securereview.SecureReviewActivity"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Gallery">
+            <intent-filter android:label="@string/app_name">
+                <action android:name="android.provider.action.REVIEW_SECURE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="content" />
+            </intent-filter>
+            <intent-filter android:label="@string/app_name">
+                <action android:name="android.provider.action.REVIEW_SECURE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="content" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
             </intent-filter>
         </activity>
 
