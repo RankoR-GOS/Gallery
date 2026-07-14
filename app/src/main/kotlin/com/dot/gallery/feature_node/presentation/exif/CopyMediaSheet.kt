@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,7 +37,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,11 +47,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -67,18 +70,17 @@ import com.dot.gallery.feature_node.domain.util.volume
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumGroupComponent
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
+import com.dot.gallery.feature_node.presentation.security.rememberBiometricState
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
-import com.dot.gallery.feature_node.presentation.security.rememberBiometricState
+import com.dot.gallery.ui.theme.GalleryTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun <T: Media> CopyMediaSheet(
+fun <T : Media> CopyMediaSheet(
     sheetState: AppBottomSheetState,
     albumsState: State<AlbumState>,
     mediaList: List<T>,
@@ -92,25 +94,17 @@ fun <T: Media> CopyMediaSheet(
         Environment.isExternalStorageManager()
     } else true
     val viewModel: CopyMediaViewModel = hiltViewModel()
-    val progress by viewModel.progress.collectAsState()
-    val isActive by viewModel.isActive.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val progress = (uiState as? CopyMediaUiState.Copying)?.progress ?: 0f
+    val isSelecting = uiState is CopyMediaUiState.Selecting
 
     val newAlbumSheetState = rememberAppBottomSheetState()
     val securitySheetState = rememberAppBottomSheetState()
     var pendingLockedAlbumPath by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
-    val mutex = Mutex()
 
     fun copyMedia(path: String) {
-        scope.launch(Dispatchers.IO) {
-            mutex.withLock {
-                viewModel.enqueueCopy(*mediaList.map { it to path }.toTypedArray()) {
-                    scope.launch {
-                        sheetState.show()
-                    }
-                }
-            }
-        }
+        viewModel.enqueueCopy(*mediaList.map { media -> media to path }.toTypedArray())
     }
 
     val biometricState = rememberBiometricState(
@@ -127,11 +121,22 @@ fun <T: Media> CopyMediaSheet(
         }
     )
 
-    LaunchedEffect(isActive) {
-        if (isActive) {
-            sheetState.show()
-        } else {
-            sheetState.hide()
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is CopyMediaUiState.Copying,
+            is CopyMediaUiState.Failed,
+            CopyMediaUiState.StatusUnavailable,
+            -> {
+                sheetState.show()
+            }
+
+            CopyMediaUiState.Succeeded -> {
+                sheetState.hide()
+                viewModel.onResultHandled()
+                onFinish()
+            }
+
+            CopyMediaUiState.Selecting -> Unit
         }
     }
 
@@ -140,8 +145,8 @@ fun <T: Media> CopyMediaSheet(
         enter = enterAnimation,
         exit = exitAnimation
     ) {
-        val shouldDismiss by rememberedDerivedState(progress) {
-            progress == 0f
+        val shouldDismiss by rememberedDerivedState(uiState) {
+            uiState !is CopyMediaUiState.Copying
         }
         val prop = ModalBottomSheetProperties(
             securePolicy = SecureFlagPolicy.Inherit,
@@ -151,11 +156,11 @@ fun <T: Media> CopyMediaSheet(
             sheetState = sheetState.sheetState,
             onDismissRequest = {
                 scope.launch {
-                    if (progress == 0f) {
-                        sheetState.hide()
-                    } else {
-                        sheetState.show()
-                    }
+                    handleDismissRequest(
+                        sheetState = sheetState,
+                        uiState = uiState,
+                        onResultHandled = viewModel::onResultHandled,
+                    )
                 }
             },
             properties = prop,
@@ -183,7 +188,7 @@ fun <T: Media> CopyMediaSheet(
                 )
 
                 AnimatedVisibility(
-                    visible = progress == 0f,
+                    visible = isSelecting,
                     enter = enterAnimation,
                     exit = exitAnimation
                 ) {
@@ -216,7 +221,7 @@ fun <T: Media> CopyMediaSheet(
                 }
 
                 AnimatedVisibility(
-                    visible = progress > 0f,
+                    visible = uiState is CopyMediaUiState.Copying,
                     modifier = Modifier
                         .padding(32.dp)
                         .align(Alignment.CenterHorizontally),
@@ -242,7 +247,7 @@ fun <T: Media> CopyMediaSheet(
 
                 val albumSize by rememberAlbumGridSize()
                 AnimatedVisibility(
-                    visible = progress == 0f,
+                    visible = isSelecting,
                     enter = enterAnimation,
                     exit = exitAnimation
                 ) {
@@ -402,6 +407,41 @@ fun <T: Media> CopyMediaSheet(
                         }
                     }
                 }
+
+                val failedState = uiState as? CopyMediaUiState.Failed
+                AnimatedVisibility(
+                    visible = failedState != null,
+                    enter = enterAnimation,
+                    exit = exitAnimation,
+                ) {
+                    failedState?.let { state ->
+                        CopyMediaFailureContent(
+                            copiedCount = state.copiedCount,
+                            failedCount = state.failedCount,
+                            onClose = {
+                                scope.launch {
+                                    sheetState.hide()
+                                    viewModel.onResultHandled()
+                                }
+                            },
+                        )
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = uiState == CopyMediaUiState.StatusUnavailable,
+                    enter = enterAnimation,
+                    exit = exitAnimation,
+                ) {
+                    CopyMediaStatusUnavailableContent(
+                        onClose = {
+                            scope.launch {
+                                sheetState.hide()
+                                viewModel.onResultHandled()
+                            }
+                        },
+                    )
+                }
             }
         }
     }
@@ -425,4 +465,141 @@ fun <T: Media> CopyMediaSheet(
             }
         }
     )
+}
+
+private suspend fun handleDismissRequest(
+    sheetState: AppBottomSheetState,
+    uiState: CopyMediaUiState,
+    onResultHandled: () -> Unit,
+) {
+    when (uiState) {
+        is CopyMediaUiState.Copying -> {
+            sheetState.show()
+        }
+
+        is CopyMediaUiState.Failed,
+        CopyMediaUiState.StatusUnavailable,
+        -> {
+            sheetState.hide()
+            onResultHandled()
+        }
+
+        CopyMediaUiState.Selecting,
+        CopyMediaUiState.Succeeded,
+        -> {
+            sheetState.hide()
+        }
+    }
+}
+
+@Composable
+private fun CopyMediaStatusUnavailableContent(
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp, vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringResource(R.string.media_copy_status_unavailable_title),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Text(
+            text = stringResource(R.string.media_copy_status_unavailable_guidance),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Button(
+            onClick = onClose,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(text = stringResource(R.string.close))
+        }
+    }
+}
+
+@Composable
+private fun CopyMediaFailureContent(
+    copiedCount: Int,
+    failedCount: Int,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp, vertical = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = stringResource(R.string.media_copy_failed_title),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium,
+        )
+        if (copiedCount > 0) {
+            Text(
+                text = pluralStringResource(
+                    R.plurals.media_copy_succeeded_count,
+                    copiedCount,
+                    copiedCount,
+                ),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+        Text(
+            text = pluralStringResource(
+                R.plurals.media_copy_failed_count,
+                failedCount,
+                failedCount,
+            ),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.error,
+        )
+        Text(
+            text = stringResource(
+                when {
+                    copiedCount > 0 -> R.string.media_copy_partial_failure_guidance
+                    else -> R.string.media_copy_failure_guidance
+                },
+            ),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Button(
+            onClick = onClose,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(text = stringResource(R.string.close))
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CopyMediaPartialFailurePreview() {
+    GalleryTheme {
+        CopyMediaFailureContent(
+            copiedCount = 2,
+            failedCount = 1,
+            onClose = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CopyMediaStatusUnavailablePreview() {
+    GalleryTheme {
+        CopyMediaStatusUnavailableContent(onClose = {})
+    }
 }

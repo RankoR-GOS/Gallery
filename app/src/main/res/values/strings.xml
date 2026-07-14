@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">ReFra</string>
     <string name="favorite_icon_on_thumbnails">Favorite icon on thumbnails</string>
     <string name="favorite_icon_on_thumbnails_summary">Choose the position of the heart icon on media thumbnails</string>
@@ -191,6 +191,19 @@
     <string name="album_name">Album Name</string>
     <string name="create_new_album">Create new album</string>
     <string name="copy">Copy</string>
+    <string name="media_copy_failed_title">Some media couldn’t be copied</string>
+    <string name="media_copy_failure_guidance">Check available storage and access.</string>
+    <string name="media_copy_partial_failure_guidance">Successful copies were kept. Check available storage and access.</string>
+    <string name="media_copy_status_unavailable_guidance" tools:ignore="MissingTranslation">Some items may already have been copied. Check the destination album before copying them again.</string>
+    <string name="media_copy_status_unavailable_title" tools:ignore="MissingTranslation">Couldn’t determine copy status</string>
+    <plurals name="media_copy_failed_count">
+        <item quantity="one">%d item wasn’t copied</item>
+        <item quantity="other">%d items weren’t copied</item>
+    </plurals>
+    <plurals name="media_copy_succeeded_count">
+        <item quantity="one">%d item copied successfully</item>
+        <item quantity="other">%d items copied successfully</item>
+    </plurals>
     <string name="copy_to_clipboard">Copy to clipboard</string>
     <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="error_copying_to_clipboard">Failed to copy to clipboard</string>

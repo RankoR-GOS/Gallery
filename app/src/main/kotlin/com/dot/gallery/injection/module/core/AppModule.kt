@@ -10,12 +10,9 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
-import android.os.Build
 import androidx.room.Room
 import androidx.work.WorkManager
 import com.dot.gallery.core.DefaultEventHandler
-import com.dot.gallery.core.sandbox.IsolatedImageDecoder
-import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaDistributorImpl
 import com.dot.gallery.core.MediaHandler
@@ -24,6 +21,9 @@ import com.dot.gallery.core.MediaSelector
 import com.dot.gallery.core.MediaSelectorImpl
 import com.dot.gallery.core.memory.ByteArrayPool
 import com.dot.gallery.core.ml.ModelManager
+import com.dot.gallery.core.sandbox.IsolatedImageDecoder
+import com.dot.gallery.core.sandbox.IsolatedMetadataParser
+import com.dot.gallery.core.workers.MediaCopyScheduler
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
@@ -108,13 +108,23 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMediaRepository(
+    internal fun provideMediaRepository(
         @ApplicationContext context: Context,
         workManager: WorkManager,
+        mediaCopyScheduler: MediaCopyScheduler,
         database: InternalDatabase,
         geocoder: Geocoder?,
         isolatedParser: IsolatedMetadataParser,
-    ): MediaRepository = MediaRepositoryImpl(context, workManager, database, geocoder, isolatedParser)
+    ): MediaRepository {
+        return MediaRepositoryImpl(
+            context = context,
+            workManager = workManager,
+            mediaCopyScheduler = mediaCopyScheduler,
+            database = database,
+            geocoder = geocoder,
+            isolatedParser = isolatedParser,
+        )
+    }
 
     @Provides
     @Singleton
@@ -126,8 +136,9 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideGeocoder(@ApplicationContext context: Context): Geocoder? =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && Geocoder.isPresent()) Geocoder(context) else null
+    fun provideGeocoder(@ApplicationContext context: Context): Geocoder? {
+        return if (Geocoder.isPresent()) Geocoder(context) else null
+    }
 
     @Provides
     @Singleton

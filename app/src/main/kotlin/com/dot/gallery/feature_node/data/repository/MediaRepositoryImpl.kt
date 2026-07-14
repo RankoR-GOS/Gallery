@@ -30,13 +30,15 @@ import com.dot.gallery.core.util.ext.saveImage
 import com.dot.gallery.core.util.ext.updateImageDescription
 import com.dot.gallery.core.util.ext.updateMedia
 import com.dot.gallery.core.util.ext.updateMediaExif
-import com.dot.gallery.core.workers.copyMedia
+import com.dot.gallery.core.workers.MediaCopyRequest
+import com.dot.gallery.core.workers.MediaCopyScheduler
 import com.dot.gallery.core.workers.updateDatabase
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.AlbumsFlow
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.MediaFlow
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.MediaUriFlow
+import com.dot.gallery.feature_node.data.util.resolveMediaStoreVolume
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumGroup
 import com.dot.gallery.feature_node.domain.model.AlbumGroupMember
@@ -64,8 +66,6 @@ import com.dot.gallery.feature_node.domain.util.MediaOrder
 import com.dot.gallery.feature_node.domain.util.OrderType
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isVideo
-import com.dot.gallery.feature_node.domain.util.mediaStoreVolumeName
-import com.dot.gallery.feature_node.domain.util.resolveMediaStoreVolume
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.BOTH
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.PHOTOS
@@ -84,9 +84,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 
-class MediaRepositoryImpl(
+internal class MediaRepositoryImpl(
     private val context: Context,
     private val workManager: WorkManager,
+    private val mediaCopyScheduler: MediaCopyScheduler,
     private val database: InternalDatabase,
     private val geocoder: Geocoder?,
     private val isolatedParser: IsolatedMetadataParser
@@ -327,14 +328,39 @@ class MediaRepositoryImpl(
         from: T,
         path: String
     ) {
-        workManager.copyMedia(
-            from = from as UriMedia,
-            path = path,
+        val requests = listOf(
+            MediaCopyRequest(
+                sourceUri = from.getUri(),
+                destinationPath = path,
+            ),
+        )
+
+        val batch = mediaCopyScheduler.prepareBatch(requests = requests)
+
+        mediaCopyScheduler.enqueue(
+            batch = batch,
+            requests = requests,
         )
     }
 
     override suspend fun <T : Media> copyMedia(vararg sets: Pair<T, String>) {
-        workManager.copyMedia(*sets)
+        if (sets.isEmpty()) {
+            return
+        }
+
+        val requests = sets.map { (media, path) ->
+            MediaCopyRequest(
+                sourceUri = media.getUri(),
+                destinationPath = path,
+            )
+        }
+
+        val batch = mediaCopyScheduler.prepareBatch(requests = requests)
+
+        mediaCopyScheduler.enqueue(
+            batch = batch,
+            requests = requests,
+        )
     }
 
     override suspend fun <T : Media> renameMedia(
@@ -350,7 +376,7 @@ class MediaRepositoryImpl(
         newPath: String,
     ): Boolean {
         val (destVolume, destRelPath) = resolveMediaStoreVolume(newPath)
-        val sourceVolume = media.mediaStoreVolumeName
+        val sourceVolume = resolveMediaStoreVolume(path = media.path).first
 
         if (destVolume == sourceVolume) {
             return context.updateMedia(

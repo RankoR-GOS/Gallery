@@ -300,6 +300,7 @@ dependencies {
     implementation(libs.haze.materials)
 
     // Tests
+    testImplementation(libs.androidx.work.testing)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)

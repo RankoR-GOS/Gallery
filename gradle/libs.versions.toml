@@ -78,6 +78,7 @@ androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstall
 androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startupRuntime" }
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "workRuntimeKtx" }
 avif-coder-coil = { module = "io.github.awxkee:avif-coder-coil", version.ref = "avifCoderCoil" }
 
 # Compose
