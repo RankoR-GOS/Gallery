@@ -55,6 +55,7 @@ import com.dot.gallery.feature_node.domain.util.isFavorite
 import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoDurationHeader
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
@@ -150,7 +151,7 @@ fun <T : Media> MediaImage(
                     shape = roundedShape,
                     color = strokeColor
                 ),
-            model = media.getUri(),
+            model = media.toGlideModel(),
             contentDescription = media.label,
             contentScale = ContentScale.Crop,
             signature = media

@@ -80,6 +80,7 @@ import com.dot.gallery.feature_node.presentation.util.formatSize
 import com.dot.gallery.feature_node.presentation.util.printError
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -512,7 +513,7 @@ fun AlbumOptionSheet(
                             .size(98.dp)
                             .clip(Shapes.large),
                         contentScale = ContentScale.Crop,
-                        model = album.uri,
+                        model = album.toGlideModel(),
                         contentDescription = album.label,
                         signature = album
                     )
@@ -653,7 +654,7 @@ fun AlbumImage(
                         }
                     }
                 ),
-            model = album.uri,
+            model = album.toGlideModel(),
             contentDescription = album.label,
             contentScale = ContentScale.Crop,
             signature = album

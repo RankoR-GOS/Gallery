@@ -73,6 +73,7 @@ import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.canBeTrashed
 import com.dot.gallery.feature_node.presentation.util.mediaPair
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import com.dot.gallery.ui.theme.Shapes
 import kotlinx.coroutines.launch
 
@@ -303,7 +304,7 @@ fun <T : Media> TrashDialog(
                         ) {
                             GlideImage(
                                 modifier = Modifier.fillMaxSize(),
-                                model = it.getUri(),
+                                model = it.toGlideModel(),
                                 contentDescription = it.label,
                                 contentScale = ContentScale.Crop,
                                 requestBuilderTransform = { builder ->

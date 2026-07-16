@@ -604,6 +604,9 @@
     <string name="search_media">Search media</string>
     <string name="search_albums">Search albums</string>
     <string name="rotate">Rotate</string>
+    <string name="rotation_failed">Couldn’t rotate this image.</string>
+    <string name="rotation_failed_too_large">This image is too large to rotate safely.</string>
+    <string name="rotation_failed_unsupported_format">This image format can’t be rotated.</string>
     <string name="locked">Locked</string>
     <string name="lock_album">Lock album</string>
     <string name="unlock_album">Unlock album</string>
@@ -816,4 +819,6 @@
     <string name="help_cat_selection_actions">Selection &amp; batch actions</string>
     <string name="help_cat_accessibility">Accessibility &amp; advanced</string>
 
+    <string name="image_load_failed" tools:ignore="MissingTranslation">Couldn’t load this image</string>
+    <string name="retry" tools:ignore="MissingTranslation">Retry</string>
 </resources>

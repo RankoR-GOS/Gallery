@@ -34,6 +34,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 
 /**
  * A selectable album grid item with thumbnail, selection indicator,
@@ -77,7 +78,7 @@ fun SelectableAlbumItem(
                     )
             ) {
                 GlideImage(
-                    model = album.uri,
+                    model = album.toGlideModel(),
                     contentDescription = album.label,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

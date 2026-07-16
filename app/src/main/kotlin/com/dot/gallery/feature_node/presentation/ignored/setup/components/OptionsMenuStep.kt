@@ -48,6 +48,7 @@ import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.presentation.common.components.OptionLayout
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import com.dot.gallery.ui.core.icons.RegularExpression
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem as OptionItemData
 import com.dot.gallery.ui.core.Icons as GalleryIcons
@@ -181,7 +182,7 @@ fun IgnoredAlbumThumbnail(
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             ) {
                 GlideImage(
-                    model = secondaryAlbum.uri,
+                    model = secondaryAlbum.toGlideModel(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -200,7 +201,7 @@ fun IgnoredAlbumThumbnail(
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             ) {
                 GlideImage(
-                    model = primaryAlbum.uri,
+                    model = primaryAlbum.toGlideModel(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -235,7 +236,7 @@ fun IgnoredAlbumThumbnail(
                 when {
                     primaryAlbum != null -> {
                         GlideImage(
-                            model = primaryAlbum.uri,
+                            model = primaryAlbum.toGlideModel(),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()

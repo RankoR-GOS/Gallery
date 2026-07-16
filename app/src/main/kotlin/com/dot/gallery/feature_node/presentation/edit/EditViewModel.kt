@@ -39,6 +39,7 @@ import com.dot.gallery.feature_node.presentation.util.overlayBitmaps
 import com.dot.gallery.feature_node.presentation.util.applyColorMatrix
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printError
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -360,7 +361,7 @@ class EditViewModel @Inject constructor(
     private fun setOriginalBitmap(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             val result = Glide.with(context)
-                .load(activeMedia.value?.uri)
+                .load(activeMedia.value?.toGlideModel())
                 .skipMemoryCache(true)
                 .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .submit()

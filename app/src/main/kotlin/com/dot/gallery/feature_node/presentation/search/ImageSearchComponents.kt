@@ -87,6 +87,7 @@ import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumImage
 import com.dot.gallery.feature_node.presentation.common.components.MediaImage
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import com.dot.gallery.ui.theme.Dimens
 import kotlinx.coroutines.Dispatchers
 
@@ -113,7 +114,7 @@ fun ImageSearchChip(
             modifier = Modifier
                 .matchParentSize()
                 .clip(RoundedCornerShape(8.dp)),
-            model = media.getUri(),
+            model = media.toGlideModel(),
             contentDescription = stringResource(R.string.image_search_preview),
             contentScale = ContentScale.Crop,
             requestBuilderTransform = {
@@ -163,7 +164,7 @@ fun ImageSearchPreviewDialog(
                         .fillMaxWidth()
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(16.dp)),
-                    model = media.getUri(),
+                    model = media.toGlideModel(),
                     contentDescription = stringResource(R.string.image_search_preview),
                     contentScale = ContentScale.Crop,
                     requestBuilderTransform = {

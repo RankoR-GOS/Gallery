@@ -15,10 +15,10 @@ import android.content.Context
 object SandboxedDecoderHolder {
 
     @Volatile
-    var decoder: IsolatedImageDecoder? = null
+    internal var decoder: IsolatedImageDecoder? = null
         private set
 
-    fun init(decoder: IsolatedImageDecoder) {
+    internal fun init(decoder: IsolatedImageDecoder) {
         this.decoder = decoder
     }
 

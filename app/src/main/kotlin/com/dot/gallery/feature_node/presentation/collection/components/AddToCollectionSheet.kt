@@ -54,6 +54,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.domain.model.CollectionWithCount
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
 @Composable
@@ -195,7 +196,7 @@ fun AddToCollectionSheet(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(RoundedCornerShape(8.dp)),
-                                model = thumbnailUri,
+                                model = thumbnailUri.toGlideModel(),
                                 contentDescription = cwc.collection.label,
                                 contentScale = ContentScale.Crop,
                                 requestBuilderTransform = {

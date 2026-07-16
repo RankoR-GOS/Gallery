@@ -57,6 +57,7 @@ import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalGlideComposeApi::class, ExperimentalFoundationApi::class)
@@ -198,7 +199,7 @@ fun CollectionComponent(
                                 scope.launch { appBottomSheetState.show() }
                             }
                         ),
-                    model = thumbnailUri,
+                    model = thumbnailUri.toGlideModel(),
                     contentDescription = collection.label,
                     contentScale = ContentScale.Crop,
                     requestBuilderTransform = {
@@ -411,7 +412,7 @@ fun CollectionRowComponent(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(12.dp)),
-                    model = thumbnailUri,
+                    model = thumbnailUri.toGlideModel(),
                     contentDescription = collection.label,
                     contentScale = ContentScale.Crop,
                     requestBuilderTransform = {

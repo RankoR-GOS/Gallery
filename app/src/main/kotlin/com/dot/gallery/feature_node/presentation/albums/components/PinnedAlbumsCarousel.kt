@@ -51,6 +51,7 @@ import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import com.dot.gallery.ui.theme.Shapes
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.MaskableFrameLayout
@@ -141,7 +142,7 @@ fun CarouselPinnedAlbums(
                         .size(98.dp)
                         .clip(Shapes.large),
                     contentScale = ContentScale.Crop,
-                    model = currentAlbum!!.uri,
+                    model = currentAlbum!!.toGlideModel(),
                     contentDescription = currentAlbum!!.label,
                     requestBuilderTransform = {
                         it.signature(GlideInvalidation.signature(currentAlbum!!))
@@ -204,7 +205,7 @@ private class PinnedAlbumsAdapter(
                 intArrayOf(containerColor, Color.TRANSPARENT)
             )
             Glide.with(albumImage)
-                .load(album.uri)
+                .load(album.toGlideModel())
                 .centerCrop()
                 .into(albumImage)
             albumImage.isClickable = true

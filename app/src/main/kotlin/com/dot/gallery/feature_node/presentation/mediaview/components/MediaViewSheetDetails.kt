@@ -86,6 +86,7 @@ import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberMediaInfo
 import com.dot.gallery.feature_node.presentation.util.writeRequest
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
@@ -553,7 +554,7 @@ fun <T : Media> MediaViewSheetDetails(
                                             exit = exitAnimation
                                         ) {
                                             GlideImage(
-                                                model = mediaCategoryThumbnail!!.uri,
+                                                model = mediaCategoryThumbnail!!.toGlideModel(),
                                                 contentDescription = null,
                                                 contentScale = ContentScale.Crop,
                                                 modifier = Modifier

@@ -8,9 +8,9 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Size
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -72,7 +72,7 @@ object WidgetBitmapLoader {
         try {
             val bitmap = Glide.with(appContext)
                 .asBitmap()
-                .load(uri)
+                .load(uri.toGlideModel())
                 .centerCrop()
                 .override(maxWidth, maxHeight)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
@@ -81,14 +81,6 @@ object WidgetBitmapLoader {
             return@withContext bitmap
         } catch (_: Exception) {
         }
-
-        // Fallback: ContentResolver.loadThumbnail (API 29+)
-        try {
-            val bitmap = appContext.contentResolver.loadThumbnail(
-                uri, Size(maxWidth, maxHeight), null
-            )
-            return@withContext bitmap
-        } catch (_: Exception) { }
 
         null
     }

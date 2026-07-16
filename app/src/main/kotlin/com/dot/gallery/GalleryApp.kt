@@ -101,7 +101,7 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
     lateinit var modelManager: ModelManager
 
     @Inject
-    lateinit var isolatedImageDecoder: IsolatedImageDecoder
+    internal lateinit var isolatedImageDecoder: IsolatedImageDecoder
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 

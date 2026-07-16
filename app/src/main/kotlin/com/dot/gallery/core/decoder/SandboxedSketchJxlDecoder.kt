@@ -72,21 +72,25 @@ class SandboxedSketchJxlDecoder(
     }
 
     override suspend fun decode(): ImageData {
-        val sourceData = readSourceBytes()
         val decoder = SandboxedDecoderHolder.decoder
             ?: throw DecodeException("Sandboxed image decoder is not initialized")
-        val originalSize = decoder.getSize(encodedBytes = sourceData, mimeType = JXL_MIMETYPE)
-            ?: throw DecodeException("Failed to read JPEG XL size in sandbox")
-        val targetSize = resolveTargetSize(
-            originalSize = Size(originalSize.width, originalSize.height),
-            requestSize = requestContext.size,
+        val requestedSize = requestContext.size.takeUnless { size -> size == Size.Origin }
+        val decodedImage = dataSource.openSource().buffer().use { source ->
+            decoder.decode(
+                inputStream = source.inputStream(),
+                mimeType = JXL_MIMETYPE,
+                targetWidth = requestedSize?.width ?: 0,
+                targetHeight = requestedSize?.height ?: 0,
+            )
+        } ?: throw DecodeException("Failed to decode JPEG XL in sandbox")
+        val originalSize = Size(
+            width = decodedImage.originalSize.width,
+            height = decodedImage.originalSize.height,
         )
-        val decodedImage = decoder.decode(
-            encodedBytes = sourceData,
-            mimeType = JXL_MIMETYPE,
-            targetWidth = targetSize.width,
-            targetHeight = targetSize.height,
-        ) ?: throw DecodeException("Failed to decode JPEG XL in sandbox")
+        val targetSize = Size(
+            width = decodedImage.bitmap.width,
+            height = decodedImage.bitmap.height,
+        )
 
         val imageInfo = ImageInfo(
             width = targetSize.width,
@@ -94,12 +98,12 @@ class SandboxedSketchJxlDecoder(
             mimeType = JXL_MIMETYPE,
         )
         return ImageData(
-            image = decodedImage.asImage(),
+            image = decodedImage.bitmap.asImage(),
             imageInfo = imageInfo,
             dataFrom = dataSource.dataFrom,
             resize = requestContext.computeResize(imageInfo.size),
             transformeds = transformedFor(
-                originalSize = Size(originalSize.width, originalSize.height),
+                originalSize = originalSize,
                 targetSize = targetSize,
             ),
             extras = null,
@@ -107,25 +111,16 @@ class SandboxedSketchJxlDecoder(
     }
 
     override suspend fun getImageInfo(): ImageInfo {
-        val sourceData = readSourceBytes()
         val decoder = SandboxedDecoderHolder.decoder
             ?: throw DecodeException("Sandboxed image decoder is not initialized")
-        val originalSize = decoder.getSize(encodedBytes = sourceData, mimeType = JXL_MIMETYPE)
+        val originalSize = dataSource.openSource().buffer().use { source ->
+            decoder.getSize(inputStream = source.inputStream(), mimeType = JXL_MIMETYPE)
+        }
             ?: throw DecodeException("Failed to read JPEG XL size in sandbox")
-        val targetSize = resolveTargetSize(
-            originalSize = Size(originalSize.width, originalSize.height),
-            requestSize = requestContext.size,
-        )
         return ImageInfo(
-            width = targetSize.width,
-            height = targetSize.height,
+            width = originalSize.width,
+            height = originalSize.height,
             mimeType = JXL_MIMETYPE,
         )
-    }
-
-    private fun readSourceBytes(): ByteArray {
-        return dataSource.openSource().use { source ->
-            source.buffer().readByteArray()
-        }
     }
 }

@@ -9,6 +9,7 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Rect
+import android.widget.Toast
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -585,6 +586,13 @@ fun <T : Media> MediaViewScreen(
         uiEvents.collect { event ->
             when (event) {
                 MediaViewEvent.ScrollToFirstPage -> pagerState.animateScrollToPage(0)
+                is MediaViewEvent.ShowMessage -> {
+                    Toast.makeText(
+                        context,
+                        event.messageResource,
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
             }
         }
     }

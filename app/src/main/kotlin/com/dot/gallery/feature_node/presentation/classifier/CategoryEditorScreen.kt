@@ -123,6 +123,7 @@ import com.dot.gallery.feature_node.presentation.search.ImageSearchPickerSheet
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import dev.chrisbanes.haze.LocalHazeStyle
 import dev.chrisbanes.haze.hazeEffect
 import kotlinx.coroutines.launch
@@ -812,7 +813,7 @@ private fun InlinePreviewSection(
                     key = { it.id }
                 ) { media ->
                     GlideImage(
-                        model = media.getUri(),
+                        model = media.toGlideModel(),
                         contentDescription = null,
                         modifier = Modifier
                             .aspectRatio(1f)
@@ -925,7 +926,7 @@ private fun ReferenceImagesSection(
                                 .clip(RoundedCornerShape(12.dp))
                         ) {
                             GlideImage(
-                                model = media.getUri(),
+                                model = media.toGlideModel(),
                                 contentDescription = null,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop,
@@ -958,4 +959,3 @@ private fun ReferenceImagesSection(
         }
     }
 }
-

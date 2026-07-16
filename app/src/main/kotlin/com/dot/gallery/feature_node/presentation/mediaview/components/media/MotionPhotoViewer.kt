@@ -62,8 +62,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.modifiers.resizeWithContentScale
 import androidx.media3.ui.compose.state.rememberPresentationState
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
+import com.dot.gallery.feature_node.data.repository.MotionPhotoInfo
 import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.MotionPhotoInfo
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewViewModel
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.rememberSurfaceCapture

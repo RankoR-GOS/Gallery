@@ -93,6 +93,7 @@ import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.dot.gallery.ui.theme.BlackScrim
 import com.dot.gallery.ui.theme.WhiterBlackScrim
 import com.dot.gallery.ui.theme.isDarkTheme
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import dev.chrisbanes.haze.LocalHazeStyle
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -364,7 +365,7 @@ private fun CategoryGridItem(
             GlideImage(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                model = media.getUri(),
+                model = media.toGlideModel(),
                 contentDescription = categoryWithCount.name,
                 requestBuilderTransform = {
                     it.signature(GlideInvalidation.signature(media))

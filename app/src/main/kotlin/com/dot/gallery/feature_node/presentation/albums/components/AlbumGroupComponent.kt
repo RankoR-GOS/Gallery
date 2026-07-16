@@ -52,6 +52,7 @@ import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
 import com.dot.gallery.feature_node.presentation.util.formatSize
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
@@ -551,7 +552,7 @@ internal fun GroupThumbnailCell(
             modifier = modifier
                 .fillMaxSize()
                 .clip(cornerShape),
-            model = album.uri,
+            model = album.toGlideModel(),
             contentDescription = album.label,
             contentScale = ContentScale.Crop,
             requestBuilderTransform = {

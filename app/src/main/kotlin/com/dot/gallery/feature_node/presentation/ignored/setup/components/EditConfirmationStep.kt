@@ -47,6 +47,7 @@ import com.dot.gallery.core.presentation.components.NavigationBackButton
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 
 @OptIn(ExperimentalGlideComposeApi::class, ExperimentalMaterial3Api::class)
 @Stable
@@ -238,7 +239,7 @@ fun ConfirmationAlbumItem(
 ) {
     Column {
         GlideImage(
-            model = album.uri,
+            model = album.toGlideModel(),
             contentDescription = album.label,
             contentScale = ContentScale.Crop,
             modifier = modifier

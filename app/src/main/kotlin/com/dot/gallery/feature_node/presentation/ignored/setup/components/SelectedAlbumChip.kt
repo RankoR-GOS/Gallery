@@ -26,6 +26,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 
 /**
  * A chip showing a selected album with thumbnail and remove capability.
@@ -47,7 +48,7 @@ fun SelectedAlbumChip(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         GlideImage(
-            model = album.uri,
+            model = album.toGlideModel(),
             contentDescription = album.label,
             contentScale = ContentScale.Crop,
             modifier = Modifier

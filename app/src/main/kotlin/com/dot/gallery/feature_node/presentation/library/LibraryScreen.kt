@@ -86,6 +86,7 @@ import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.categorySharedElement
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import com.dot.gallery.ui.theme.BlackScrim
 import com.dot.gallery.ui.theme.WhiterBlackScrim
 import com.dot.gallery.ui.theme.isDarkTheme
@@ -363,7 +364,7 @@ fun LibraryScreen(
                                                 GlideImage(
                                                     modifier = Modifier.fillMaxSize(),
                                                     contentScale = ContentScale.Crop,
-                                                    model = thumbnailMedia.getUri(),
+                                                    model = thumbnailMedia.toGlideModel(),
                                                     contentDescription = category.name,
                                                     requestBuilderTransform = {
                                                         it.signature(

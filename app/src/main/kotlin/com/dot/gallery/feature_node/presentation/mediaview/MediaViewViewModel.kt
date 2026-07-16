@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -12,12 +13,14 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.dot.gallery.R
+import com.dot.gallery.core.workers.RotateMediaWorker
 import com.dot.gallery.core.workers.rotateImage
+import com.dot.gallery.feature_node.data.repository.MotionPhotoInfo
+import com.dot.gallery.feature_node.data.repository.MotionPhotoRepository
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
-import com.dot.gallery.feature_node.domain.util.MotionPhotoHelper
-import com.dot.gallery.feature_node.domain.util.MotionPhotoInfo
 import com.dot.gallery.feature_node.domain.util.getUri
 import com.dot.gallery.feature_node.domain.util.isVideo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,7 +48,8 @@ private const val FILMSTRIP_THUMB_HEIGHT = 108 // px, ~36dp @ 3x
 class MediaViewViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val workManager: WorkManager,
-    private val repository: MediaRepository
+    private val repository: MediaRepository,
+    private val motionPhotoRepository: MotionPhotoRepository,
 ) : ViewModel() {
 
     private val _uiEvents = MutableSharedFlow<MediaViewEvent>(extraBufferCapacity = 1)
@@ -105,10 +109,10 @@ class MediaViewViewModel @Inject constructor(
             oldFile?.delete()
 
             val uri: Uri = media.getUri()
-            val info = MotionPhotoHelper.parseInfo(context, uri) ?: return@launch
+            val info = motionPhotoRepository.parseInfo(uri = uri) ?: return@launch
             _motionPhotoExtraction.value = MotionPhotoExtraction(info = info)
 
-            val file = MotionPhotoHelper.extractVideo(context, uri, info) ?: return@launch
+            val file = motionPhotoRepository.extractVideo(uri = uri, info = info) ?: return@launch
 
             val duration = try {
                 MediaMetadataRetriever().use { mmr ->
@@ -122,7 +126,10 @@ class MediaViewViewModel @Inject constructor(
                 info = info, videoFile = file, durationMs = duration
             )
 
-            val frames = MotionPhotoHelper.extractFrames(file, NUM_FILMSTRIP_FRAMES)
+            val frames = motionPhotoRepository.extractFrames(
+                file = file,
+                frameCount = NUM_FILMSTRIP_FRAMES,
+            )
             val composite = stitchFrames(frames, FILMSTRIP_THUMB_HEIGHT)
             _motionPhotoExtraction.value = MotionPhotoExtraction(
                 info = info, videoFile = file, durationMs = duration,
@@ -277,13 +284,40 @@ class MediaViewViewModel @Inject constructor(
         viewModelScope.launch {
             workManager.getWorkInfoByIdFlow(id).filterNotNull().collect { info ->
                 if (info.state.isFinished) {
-                    if (info.state == WorkInfo.State.SUCCEEDED) {
-                        delay(300) // wait for media store to be updated
-                        _uiEvents.emit(MediaViewEvent.ScrollToFirstPage)
+                    when (info.state) {
+                        WorkInfo.State.SUCCEEDED -> {
+                            delay(300) // wait for media store to be updated
+                            _uiEvents.emit(MediaViewEvent.ScrollToFirstPage)
+                        }
+
+                        WorkInfo.State.FAILED -> {
+                            _uiEvents.emit(
+                                MediaViewEvent.ShowMessage(
+                                    messageResource = rotationFailureMessage(workInfo = info),
+                                ),
+                            )
+                        }
+
+                        else -> Unit
                     }
                     rotateWorkId = null
                 }
             }
+        }
+    }
+
+    @StringRes
+    private fun rotationFailureMessage(workInfo: WorkInfo): Int {
+        return when (workInfo.outputData.getInt(
+            RotateMediaWorker.KEY_FAILURE_REASON,
+            RotateMediaWorker.FAILURE_REASON_GENERIC,
+        )) {
+            RotateMediaWorker.FAILURE_REASON_TOO_LARGE -> R.string.rotation_failed_too_large
+            RotateMediaWorker.FAILURE_REASON_UNSUPPORTED_FORMAT -> {
+                R.string.rotation_failed_unsupported_format
+            }
+
+            else -> R.string.rotation_failed
         }
     }
 
@@ -295,5 +329,9 @@ class MediaViewViewModel @Inject constructor(
 
     sealed interface MediaViewEvent {
         data object ScrollToFirstPage : MediaViewEvent
+
+        data class ShowMessage(
+            @param:StringRes val messageResource: Int,
+        ) : MediaViewEvent
     }
 }

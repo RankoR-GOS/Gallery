@@ -52,6 +52,7 @@ import com.dot.gallery.feature_node.presentation.settings.components.SettingsIte
 import com.dot.gallery.feature_node.presentation.settings.components.settings
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -189,8 +190,8 @@ fun IgnoredContent(
                                     R.string.matched_albums,
                                     blacklistedAlbum.matchedAlbums.joinToString()
                                 ),
-                                albumUri = primaryAlbum?.uri,
-                                secondaryAlbumUri = secondaryAlbum?.uri,
+                                albumUri = primaryAlbum?.toGlideModel(),
+                                secondaryAlbumUri = secondaryAlbum?.toGlideModel(),
                                 albumLabel = primaryAlbum?.label,
                                 albumCount = primaryAlbum?.count?.toInt() ?: 0,
                                 matchedAlbumsCount = blacklistedAlbum.matchedAlbums.size,

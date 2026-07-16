@@ -30,6 +30,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -61,7 +62,7 @@ fun EditAlbumItem(
         ) {
             GlideImage(
                 modifier = Modifier.fillMaxSize(),
-                model = album.uri,
+                model = album.toGlideModel(),
                 contentDescription = album.label,
                 contentScale = ContentScale.Crop,
             )

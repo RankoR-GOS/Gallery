@@ -98,6 +98,7 @@ import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedStat
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.selectedMedia
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import dev.chrisbanes.haze.LocalHazeStyle
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -403,7 +404,7 @@ private fun AlbumsMergedBanner(
                             modifier = Modifier
                                 .size(64.dp)
                                 .clip(RoundedCornerShape(12.dp)),
-                            model = album.uri,
+                            model = album.toGlideModel(),
                             contentDescription = album.label,
                             contentScale = ContentScale.Crop,
                             requestBuilderTransform = {

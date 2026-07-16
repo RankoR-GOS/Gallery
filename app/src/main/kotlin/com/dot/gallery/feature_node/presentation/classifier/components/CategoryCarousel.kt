@@ -51,6 +51,7 @@ import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.ui.theme.BlackScrim
 import com.dot.gallery.ui.theme.WhiterBlackScrim
 import com.dot.gallery.ui.theme.isDarkTheme
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -110,7 +111,7 @@ fun CategoryCarousel(
                         GlideImage(
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            model = categoryMedia.thumbnailMedia.getUri(),
+                            model = categoryMedia.thumbnailMedia.toGlideModel(),
                             contentDescription = categoryMedia.category.name,
                             requestBuilderTransform = {
                                 it.signature(GlideInvalidation.signature(categoryMedia.thumbnailMedia))
@@ -228,7 +229,7 @@ fun SearchCarousel(
                         GlideImage(
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
-                            model = item.media.getUri(),
+                            model = item.media.toGlideModel(),
                             contentDescription = item.label,
                             requestBuilderTransform = {
                                 it.signature(GlideInvalidation.signature(item.media))

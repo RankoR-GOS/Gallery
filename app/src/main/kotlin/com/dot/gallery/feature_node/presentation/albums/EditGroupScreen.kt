@@ -61,6 +61,7 @@ import com.dot.gallery.feature_node.domain.model.Album
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.formatSize
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -256,7 +257,7 @@ private fun EditGroupAlbumItem(
                                 onClick()
                             }
                         ),
-                    model = album.uri,
+                    model = album.toGlideModel(),
                     contentDescription = album.label,
                     contentScale = ContentScale.Crop,
                     requestBuilderTransform = {

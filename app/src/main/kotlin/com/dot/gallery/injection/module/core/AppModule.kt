@@ -21,7 +21,6 @@ import com.dot.gallery.core.MediaSelector
 import com.dot.gallery.core.MediaSelectorImpl
 import com.dot.gallery.core.memory.ByteArrayPool
 import com.dot.gallery.core.ml.ModelManager
-import com.dot.gallery.core.sandbox.IsolatedImageDecoder
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.core.workers.MediaCopyScheduler
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
@@ -99,12 +98,6 @@ object AppModule {
     @Singleton
     fun provideIsolatedMetadataParser(@ApplicationContext context: Context): IsolatedMetadataParser =
         IsolatedMetadataParser(context)
-
-    @Provides
-    @Singleton
-    fun provideIsolatedImageDecoder(@ApplicationContext context: Context): IsolatedImageDecoder {
-        return IsolatedImageDecoder(context)
-    }
 
     @Provides
     @Singleton

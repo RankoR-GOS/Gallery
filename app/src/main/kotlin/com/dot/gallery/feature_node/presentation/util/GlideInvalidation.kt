@@ -8,4 +8,8 @@ object GlideInvalidation {
     fun <T> signature(obj: T): Key {
         return ObjectKey(obj.toString())
     }
+
+    fun <T> signature(obj: T, variant: Any): Key {
+        return ObjectKey("${obj}:${variant}")
+    }
 }
