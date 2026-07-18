@@ -1,4 +1,4 @@
-package com.dot.gallery.core.decoder.glide
+package com.dot.gallery.core.decoder
 
 internal enum class ImageFileFormat(
     val sandboxMimeType: String? = null,
@@ -11,6 +11,7 @@ internal enum class ImageFileFormat(
     JPEG,
     JXL(sandboxMimeType = "image/jxl"),
     PNG,
+    SVG,
     TIFF,
     WEBP;
 }

@@ -40,7 +40,7 @@ import com.dot.gallery.core.presentation.components.NavigationComp
 import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.core.util.SetupMediaProviders
 import com.dot.gallery.feature_node.domain.model.UIEvent
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.use_case.UpdateMediaDatabase
 import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.toggleOrientation
@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var eventHandler: EventHandler
     @Inject
-    lateinit var repository: MediaRepository
+    internal lateinit var updateMediaDatabase: UpdateMediaDatabase
     @Inject
     lateinit var mediaDistributor: MediaDistributor
     @Inject
@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
                             when (event) {
                                 UIEvent.UpdateDatabase -> {
                                     delay(1000L)
-                                    repository.updateInternalDatabase()
+                                    updateMediaDatabase()
                                 }
 
                                 UIEvent.NavigationUpEvent -> eventHandler.navigateUpAction()

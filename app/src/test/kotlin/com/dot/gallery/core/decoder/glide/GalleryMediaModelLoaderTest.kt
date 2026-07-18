@@ -6,6 +6,7 @@ import android.os.ParcelFileDescriptor
 import com.bumptech.glide.Priority
 import com.bumptech.glide.load.Options
 import com.bumptech.glide.load.data.DataFetcher
+import com.dot.gallery.core.decoder.ImageFileFormat
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

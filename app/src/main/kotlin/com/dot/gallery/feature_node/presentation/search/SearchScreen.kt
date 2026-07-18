@@ -124,6 +124,8 @@ fun SearchScreen(
     val searchResults by viewModel.searchResultsState.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val selectedImageMedia by viewModel.selectedImageMedia.collectAsStateWithLifecycle()
+    val analysisSettings by viewModel.analysisSettings.collectAsStateWithLifecycle()
+    val isAiAnalysisEnabled = analysisSettings.analysisEnabled
     val isModelAvailable by viewModel.isModelAvailable.collectAsStateWithLifecycle()
     var searchHistory by rememberSearchHistory()
 
@@ -144,7 +146,9 @@ fun SearchScreen(
             emptyList()
         } else {
             listOf(SettingsEntity.Header("History")) +
-                    searchHistory.map { entry ->
+                    searchHistory.filter { entry ->
+                        entry.mediaId == null || isAiAnalysisEnabled
+                    }.map { entry ->
                         if (entry.mediaId != null) {
                             SettingsEntity.Preference(
                                 icon = if (entry.mediaUri == null) Icons.Outlined.ImageSearch else null,
@@ -299,7 +303,10 @@ fun SearchScreen(
                                         }
                                     }
                                     AnimatedVisibility(
-                                        visible = isModelAvailable && selectedImageMedia == null && !searchResults.isSearching,
+                                        visible = isModelAvailable &&
+                                            isAiAnalysisEnabled &&
+                                            selectedImageMedia == null &&
+                                            !searchResults.isSearching,
                                         enter = fadeIn() + slideInHorizontally { it },
                                         exit = fadeOut() + slideOutHorizontally { it }
                                     ) {
@@ -425,7 +432,11 @@ fun SearchScreen(
                         )
 
                         // Category Carousel
-                        if (topCategories.isNotEmpty()) {
+                        if (
+                            analysisSettings.analysisEnabled &&
+                            analysisSettings.categoryClassificationEnabled &&
+                            topCategories.isNotEmpty()
+                        ) {
                             SettingsOptionLayout(
                                 modifier = Modifier.padding(top = 12.dp),
                                 optionList = listOf(SettingsEntity.Header(resources.getString(R.string.browse_categories))),
@@ -748,7 +759,7 @@ fun SearchScreen(
         }
 
         // Image search picker bottom sheet
-        if (showPickerSheet) {
+        if (showPickerSheet && isAiAnalysisEnabled) {
             ImageSearchPickerSheet(
                 onMediaSelected = { media ->
                     showPickerSheet = false
@@ -759,7 +770,7 @@ fun SearchScreen(
         }
 
         // Image search preview dialog
-        if (showPreviewDialog && selectedImageMedia != null) {
+        if (showPreviewDialog && isAiAnalysisEnabled && selectedImageMedia != null) {
             ImageSearchPreviewDialog(
                 media = selectedImageMedia!!,
                 onDismiss = { showPreviewDialog = false },

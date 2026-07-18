@@ -2,17 +2,17 @@ package com.dot.gallery.feature_node.presentation.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkManager
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.util.SdkCompat
-import com.dot.gallery.core.workers.startCategoryClassification
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.domain.model.LibraryIndicatorState
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
+import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysisSettings
 import com.dot.gallery.feature_node.domain.util.MediaOrder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -32,14 +32,23 @@ data class CategoryMedia(
 )
 
 @HiltViewModel
-class LibraryViewModel @Inject constructor(
+class LibraryViewModel @Inject internal constructor(
     private val repository: MediaRepository,
     private val mediaDistributor: MediaDistributor,
-    private val workManager: WorkManager,
+    private val aiMediaAnalysis: AiMediaAnalysis,
     private val modelManager: ModelManager
 ) : ViewModel() {
 
     val modelStatus: StateFlow<ModelStatus> = modelManager.status
+
+    internal val analysisSettings: StateFlow<AiMediaAnalysisSettings> = aiMediaAnalysis.settings.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AiMediaAnalysisSettings(
+            analysisEnabled = false,
+            categoryClassificationEnabled = true,
+        ),
+    )
 
     val indicatorState = combine(
         if (SdkCompat.supportsTrash) repository.getTrashed() else flowOf(Resource.Success(emptyList())),
@@ -79,12 +88,5 @@ class LibraryViewModel @Inject constructor(
     val mostPopularCategory = repository.getClassifiedMediaByMostPopularCategory()
         .map { it.groupBy { it.category!! }.toSortedMap() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyMap())
-
-    /**
-     * Start the category classification using the new CLIP-based system
-     */
-    fun startClassification() {
-        workManager.startCategoryClassification()
-    }
 
 }

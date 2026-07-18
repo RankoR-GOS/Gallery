@@ -8,17 +8,16 @@ package com.dot.gallery.feature_node.presentation.classifier
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkManager
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.ml.ManagedOrtSession
 import com.dot.gallery.core.ml.ModelInferenceException
-import com.dot.gallery.core.workers.startCategoryClassification
 import com.dot.gallery.feature_node.domain.model.Category
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
 import com.dot.gallery.feature_node.presentation.search.SearchHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
@@ -40,10 +39,10 @@ import javax.inject.Inject
  * When [categoryId] is null, operates in create mode; otherwise in edit mode.
  */
 @HiltViewModel
-class CategoryEditorViewModel @Inject constructor(
+class CategoryEditorViewModel @Inject internal constructor(
     private val repository: MediaRepository,
     private val searchHelper: SearchHelper,
-    private val workManager: WorkManager
+    private val aiMediaAnalysis: AiMediaAnalysis,
 ) : ViewModel() {
 
     // Date format settings
@@ -341,7 +340,7 @@ class CategoryEditorViewModel @Inject constructor(
                     )
                     repository.updateCategory(updatedCategory)
                     if (searchTermsChanged || thresholdChanged || refImagesChanged) {
-                        workManager.startCategoryClassification()
+                        aiMediaAnalysis.requestCategoryClassification()
                     }
                 } else {
                     val category = Category(
@@ -352,7 +351,7 @@ class CategoryEditorViewModel @Inject constructor(
                         isUserCreated = true
                     )
                     repository.createCategory(category)
-                    workManager.startCategoryClassification()
+                    aiMediaAnalysis.requestCategoryClassification()
                 }
                 _saveSuccess.value = true
                 withContext(Dispatchers.Main) {

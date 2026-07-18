@@ -11,7 +11,6 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.dot.gallery.BuildConfig
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.core.util.ProgressThrottler
@@ -50,7 +49,6 @@ class MetadataCollectionWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result = runCatching {
-        if (!BuildConfig.ENABLE_INDEXING) return Result.success()
         val forceReload = inputData.getBoolean("forceReload", false)
         if (database.isMetadataUpToDate(appContext) && !forceReload) {
             printDebug("Metadata is up to date")

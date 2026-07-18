@@ -361,6 +361,7 @@
     <!-- AI Model Availability -->
     <string name="ai_models_checking">Preparing AI features…</string>
     <string name="ai_model_inference_failed">AI model inference failed.</string>
+    <string name="could_not_load_image" tools:ignore="MissingTranslation">Could not load image.</string>
     <string name="ai_models_unavailable">Bundled AI models are unavailable in this build.</string>
 
     <!-- New Category System -->
@@ -821,4 +822,10 @@
 
     <string name="image_load_failed" tools:ignore="MissingTranslation">Couldn’t load this image</string>
     <string name="retry" tools:ignore="MissingTranslation">Retry</string>
+    <string name="ai_media_analysis" tools:ignore="MissingTranslation">AI media analysis</string>
+    <string name="ai_media_analysis_disabled_summary" tools:ignore="MissingTranslation">Off by default. Enable local semantic search and media categories. Your library will be analysed only on this device.</string>
+    <string name="ai_media_analysis_enabled_summary" tools:ignore="MissingTranslation">Enabled. New and changed media will be analysed locally on this device.</string>
+    <string name="ai_media_analysis_running" tools:ignore="MissingTranslation">Analysing your media…</string>
+    <string name="ai_media_analysis_progress" tools:ignore="MissingTranslation">Analysing your media… %d%%</string>
+    <string name="ai_media_analysis_updating" tools:ignore="MissingTranslation">Applying changes…</string>
 </resources>

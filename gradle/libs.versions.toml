@@ -2,6 +2,7 @@
 adaptive = "1.2.0"
 agp = "9.1.1"
 aire = "0.18.1"
+androidSvg = "1.4"
 avifCoderCoil = "2.2.0"
 benchmarkMacroJunit4 = "1.5.0-alpha05"
 biometric = "1.2.0-alpha05"
@@ -54,6 +55,7 @@ glide-ksp = "5.0.5"
 # AndroidX
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 aire = { module = "com.github.awxkee:aire", version.ref = "aire" }
+androidsvg = { module = "com.caverock:androidsvg-aar", version.ref = "androidSvg" }
 androidx-adaptive = { module = "androidx.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
 androidx-adaptive-layout = { module = "androidx.compose.material3.adaptive:adaptive-layout", version.ref = "adaptive" }
 androidx-adaptive-navigation = { module = "androidx.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }

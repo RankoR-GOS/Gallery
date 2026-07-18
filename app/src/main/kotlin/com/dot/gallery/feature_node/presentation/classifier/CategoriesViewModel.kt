@@ -10,9 +10,7 @@ import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.workers.CategoryWorker
-import com.dot.gallery.core.workers.startCategoryClassification
 import com.dot.gallery.core.workers.startClassification
-import com.dot.gallery.core.workers.stopCategoryClassification
 import com.dot.gallery.core.workers.stopClassification
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.domain.model.Category
@@ -20,6 +18,8 @@ import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
+import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysisSettings
 import com.dot.gallery.feature_node.presentation.util.update
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -37,14 +37,24 @@ import javax.inject.Inject
  * Manages both the legacy classification system and the new embedding-based category system.
  */
 @HiltViewModel
-class CategoriesViewModel @Inject constructor(
+class CategoriesViewModel @Inject internal constructor(
     private val repository: MediaRepository,
     private val distributor: MediaDistributor,
     private val workManager: WorkManager,
+    private val aiMediaAnalysis: AiMediaAnalysis,
     private val modelManager: ModelManager
 ) : ViewModel() {
 
     val modelStatus: StateFlow<ModelStatus> = modelManager.status
+
+    internal val analysisSettings: StateFlow<AiMediaAnalysisSettings> = aiMediaAnalysis.settings.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AiMediaAnalysisSettings(
+            analysisEnabled = false,
+            categoryClassificationEnabled = true,
+        ),
+    )
 
     // ============ New Category System ============
     
@@ -69,21 +79,21 @@ class CategoriesViewModel @Inject constructor(
     /**
      * Worker state for the new category classification
      */
-    val isCategoryWorkerRunning: StateFlow<Boolean> = workManager.getWorkInfosByTagFlow(CategoryWorker.TAG)
-        .map { workInfos -> workInfos.any { it.state == State.RUNNING || it.state == State.ENQUEUED } }
+    val isCategoryWorkerRunning: StateFlow<Boolean> = aiMediaAnalysis.workState
+        .map { workState ->
+            workState.isCategoryActive
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    val categoryWorkerProgress: StateFlow<Float> = workManager.getWorkInfosByTagFlow(CategoryWorker.TAG)
-        .map { workInfos ->
-            workInfos.firstOrNull { it.state == State.RUNNING }
-                ?.progress?.getFloat(CategoryWorker.KEY_PROGRESS, 0f) ?: 0f
+    val categoryWorkerProgress: StateFlow<Float> = aiMediaAnalysis.workState
+        .map { workState ->
+            workState.categoryProgress
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0f)
 
-    val categoryWorkerStatus: StateFlow<String> = workManager.getWorkInfosByTagFlow(CategoryWorker.TAG)
-        .map { workInfos ->
-            workInfos.firstOrNull { it.state == State.RUNNING }
-                ?.progress?.getString(CategoryWorker.KEY_STATUS) ?: ""
+    val categoryWorkerStatus: StateFlow<String> = aiMediaAnalysis.workState
+        .map { workState ->
+            workState.categoryStatus
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
 
@@ -134,11 +144,17 @@ class CategoriesViewModel @Inject constructor(
      * Start the new embedding-based category classification
      */
     fun startCategoryClassification() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Initialize default categories if needed
             repository.initializeDefaultCategories()
             // Start the worker
-            workManager.startCategoryClassification()
+            aiMediaAnalysis.requestCategoryClassification()
+        }
+    }
+
+    fun setCategoryClassificationEnabled(enabled: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            aiMediaAnalysis.setCategoryClassificationEnabled(enabled = enabled)
         }
     }
 
@@ -146,7 +162,9 @@ class CategoriesViewModel @Inject constructor(
      * Stop the category classification worker
      */
     fun stopCategoryClassification() {
-        workManager.stopCategoryClassification()
+        viewModelScope.launch(Dispatchers.IO) {
+            aiMediaAnalysis.cancelCategoryClassification()
+        }
     }
 
     /**
@@ -161,7 +179,7 @@ class CategoriesViewModel @Inject constructor(
             )
             repository.createCategory(category)
             // Trigger reclassification to include the new category
-            workManager.startCategoryClassification()
+            aiMediaAnalysis.requestCategoryClassification()
         }
     }
 
@@ -175,7 +193,7 @@ class CategoriesViewModel @Inject constructor(
                 embedding = null // Clear embedding so it gets regenerated
             ))
             // Trigger reclassification
-            workManager.startCategoryClassification()
+            aiMediaAnalysis.requestCategoryClassification()
         }
     }
 
@@ -186,7 +204,7 @@ class CategoriesViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateCategoryThreshold(categoryId, threshold.coerceIn(Category.MIN_THRESHOLD, Category.MAX_THRESHOLD))
             // Trigger reclassification
-            workManager.startCategoryClassification()
+            aiMediaAnalysis.requestCategoryClassification()
         }
     }
 
@@ -242,7 +260,7 @@ class CategoriesViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             repository.resetCategoryData()
             repository.initializeDefaultCategories()
-            workManager.startCategoryClassification()
+            aiMediaAnalysis.requestCategoryClassification()
         }
     }
 
@@ -277,7 +295,9 @@ class CategoriesViewModel @Inject constructor(
      */
     fun startClassification() {
         // Use the new CLIP-based category classification
-        workManager.startCategoryClassification()
+        viewModelScope.launch(Dispatchers.IO) {
+            aiMediaAnalysis.requestCategoryClassification()
+        }
     }
 
     fun deleteClassifications() {
@@ -291,7 +311,9 @@ class CategoriesViewModel @Inject constructor(
      */
     fun stopClassification() {
         // Stop both the old and new systems for safety
-        workManager.stopCategoryClassification()
+        viewModelScope.launch(Dispatchers.IO) {
+            aiMediaAnalysis.cancelCategoryClassification()
+        }
         workManager.stopClassification()
     }
 

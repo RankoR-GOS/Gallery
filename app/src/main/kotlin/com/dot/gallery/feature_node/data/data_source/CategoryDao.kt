@@ -78,20 +78,17 @@ interface CategoryDao {
     @Upsert
     suspend fun insertMediaCategory(mediaCategory: MediaCategory)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMediaCategories(mediaCategories: List<MediaCategory>)
-
     @Query("DELETE FROM media_category WHERE mediaId = :mediaId AND categoryId = :categoryId")
     suspend fun removeMediaFromCategory(mediaId: Long, categoryId: Long)
-
-    @Query("DELETE FROM media_category WHERE categoryId = :categoryId")
-    suspend fun removeAllMediaFromCategory(categoryId: Long)
 
     @Query("DELETE FROM media_category WHERE mediaId = :mediaId")
     suspend fun removeMediaFromAllCategories(mediaId: Long)
 
-    @Query("DELETE FROM media_category WHERE mediaId NOT IN (:validMediaIds)")
-    suspend fun cleanupOrphanedMediaCategories(validMediaIds: List<Long>)
+    @Query("DELETE FROM media_category WHERE mediaId IN (:mediaIds)")
+    suspend fun removeMediaFromAllCategories(mediaIds: Set<Long>)
+
+    @Query("DELETE FROM media_category WHERE mediaId IN (:mediaIds) AND isManuallyAdded = 0")
+    suspend fun removeGeneratedMediaFromAllCategories(mediaIds: Set<Long>)
 
     // Get all media IDs in a category, ordered by similarity score
     @Query("""
@@ -176,15 +173,30 @@ interface CategoryDao {
     fun getCategoriesWithMediaCount(): Flow<List<CategoryWithMediaCount>>
 
     // Batch update for reclassification
+    @Query("DELETE FROM media_category WHERE categoryId = :categoryId AND isManuallyAdded = 0")
+    suspend fun removeGeneratedMediaFromCategory(categoryId: Long)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertGeneratedMediaCategories(mediaCategories: List<MediaCategory>)
+
     @Transaction
-    suspend fun reclassifyMediaForCategory(categoryId: Long, mediaCategories: List<MediaCategory>) {
-        removeAllMediaFromCategory(categoryId)
-        insertMediaCategories(mediaCategories)
+    suspend fun reclassifyMediaForCategory(
+        categoryId: Long,
+        mediaCategories: List<MediaCategory>,
+    ) {
+        removeGeneratedMediaFromCategory(categoryId = categoryId)
+        insertGeneratedMediaCategories(mediaCategories = mediaCategories)
     }
 
     // Delete all data (for reset)
     @Query("DELETE FROM media_category")
     suspend fun deleteAllMediaCategories()
+
+    @Query("DELETE FROM media_category WHERE isManuallyAdded = 0")
+    suspend fun deleteAllGeneratedMediaCategories()
+
+    @Query("UPDATE categories SET embedding = NULL")
+    suspend fun clearCategoryEmbeddings()
 
     @Query("DELETE FROM categories")
     suspend fun deleteAllCategories()

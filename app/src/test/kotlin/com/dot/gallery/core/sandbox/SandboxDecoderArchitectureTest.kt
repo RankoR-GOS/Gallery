@@ -10,6 +10,7 @@ internal class SandboxDecoderArchitectureTest {
         val sourceRoot = findAppDirectory().resolve("src/main/kotlin/com/dot/gallery")
         val sourceFiles = listOf(
             sourceRoot.resolve("core/sandbox/IsolatedImageDecoder.kt"),
+            sourceRoot.resolve("core/sandbox/MediaPreviewDecoder.kt"),
             sourceRoot.resolve("core/sandbox/EncodedMediaTransfer.kt"),
             sourceRoot.resolve("core/decoder/SandboxedSketchHeifDecoder.kt"),
             sourceRoot.resolve("core/decoder/SandboxedSketchJxlDecoder.kt"),
@@ -21,6 +22,32 @@ internal class SandboxDecoderArchitectureTest {
             val source = sourceFile.readText()
             assertFalse("${sourceFile.name} must not call readBytes()", ".readBytes(" in source)
             assertFalse("${sourceFile.name} must not call readAllBytes()", ".readAllBytes(" in source)
+        }
+    }
+
+    @Test
+    fun aiAnalysisEntryPoints_doNotDecodeMediaInTheApplicationProcess() {
+        val sourceRoot = findAppDirectory().resolve("src/main/kotlin/com/dot/gallery")
+        val sourceFiles = listOf(
+            sourceRoot.resolve("core/workers/SearchIndexerUpdaterWorker.kt"),
+            sourceRoot.resolve("feature_node/presentation/search/SearchViewModel.kt"),
+        )
+        val forbiddenCalls = listOf(
+            "BitmapFactory",
+            "ImageRequest(",
+            ".readBytes(",
+            ".readAllBytes(",
+            ".sketch",
+        )
+
+        sourceFiles.forEach { sourceFile ->
+            val source = sourceFile.readText()
+            forbiddenCalls.forEach { forbiddenCall ->
+                assertFalse(
+                    "${sourceFile.name} must not use $forbiddenCall",
+                    forbiddenCall in source,
+                )
+            }
         }
     }
 

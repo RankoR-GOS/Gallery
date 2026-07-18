@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
@@ -29,7 +28,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
-import com.dot.gallery.core.Settings.Misc.rememberNoClassification
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 import com.dot.gallery.feature_node.presentation.settings.components.SwitchPreferenceDetailScreen
@@ -43,23 +41,27 @@ fun CategoriesSettingsScreen() {
     val categoryWorkerStatus by viewModel.categoryWorkerStatus.collectAsStateWithLifecycle()
     val categoriesWithCount by viewModel.categoriesWithCount.collectAsStateWithLifecycle()
     val modelStatus by viewModel.modelStatus.collectAsStateWithLifecycle()
+    val analysisSettings by viewModel.analysisSettings.collectAsStateWithLifecycle()
     val isModelReady = modelStatus == ModelStatus.READY
+    val categoryControlsEnabled = isModelReady &&
+        analysisSettings.analysisEnabled &&
+        analysisSettings.categoryClassificationEnabled
     val modelSummary = when (modelStatus) {
         ModelStatus.CHECKING -> stringResource(R.string.ai_models_checking)
         ModelStatus.READY -> null
         ModelStatus.ERROR -> stringResource(R.string.ai_models_unavailable)
     }
 
-    var noClassification by rememberNoClassification()
-
     val description = stringResource(R.string.disclaimer_classification)
 
     SwitchPreferenceDetailScreen(
         title = stringResource(R.string.categories_settings),
-        isChecked = !noClassification,
-        onCheckedChange = { noClassification = !it },
+        isChecked = analysisSettings.categoryClassificationEnabled,
+        onCheckedChange = viewModel::setCategoryClassificationEnabled,
         switchLabel = stringResource(R.string.categorise_your_media),
         description = description,
+        enabled = analysisSettings.analysisEnabled &&
+            (analysisSettings.categoryClassificationEnabled || isModelReady),
         customContent = {
             Column {
                 // Scanner button
@@ -75,9 +77,9 @@ fun CategoriesSettingsScreen() {
                             Position.Top else Position.Alone
                     ),
                     modifier = Modifier
-                        .alpha(if (isModelReady) 1f else 0.5f)
+                        .alpha(if (categoryControlsEnabled) 1f else 0.5f)
                         .combinedClickable(
-                            enabled = isModelReady,
+                            enabled = categoryControlsEnabled,
                             onLongClick = {
                                 if (isCategoryWorkerRunning) viewModel.stopCategoryClassification()
                             },

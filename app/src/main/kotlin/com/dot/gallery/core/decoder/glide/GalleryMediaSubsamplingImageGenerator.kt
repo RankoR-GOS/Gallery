@@ -3,6 +3,10 @@ package com.dot.gallery.core.decoder.glide
 import android.content.Context
 import android.graphics.drawable.Drawable
 import com.bumptech.glide.Glide
+import com.dot.gallery.core.decoder.IMAGE_HEADER_BYTES
+import com.dot.gallery.core.decoder.ImageFileFormat
+import com.dot.gallery.core.decoder.classifyImageHeader
+import com.dot.gallery.core.decoder.readImageHeader
 import com.github.panpf.zoomimage.glide.GlideSubsamplingImageGenerator
 import com.github.panpf.zoomimage.subsampling.ImageSource
 import com.github.panpf.zoomimage.subsampling.SubsamplingImage

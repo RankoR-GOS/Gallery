@@ -17,9 +17,11 @@ import com.dot.gallery.core.decoder.supportSandboxedHeifDecoder
 import com.dot.gallery.core.decoder.supportSandboxedJxlDecoder
 import com.dot.gallery.core.decoder.supportVideoFrame2
 import com.dot.gallery.core.sandbox.IsolatedImageDecoder
+import com.dot.gallery.core.sandbox.MediaPreviewDecoder
 import com.dot.gallery.core.sandbox.SandboxedDecoderHolder
 import com.dot.gallery.core.workers.MetadataCollectionWorker
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
 import com.github.panpf.sketch.PlatformContext
 import com.github.panpf.sketch.SingletonSketch
 import com.github.panpf.sketch.Sketch
@@ -103,6 +105,12 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
     @Inject
     internal lateinit var isolatedImageDecoder: IsolatedImageDecoder
 
+    @Inject
+    internal lateinit var mediaPreviewDecoder: MediaPreviewDecoder
+
+    @Inject
+    internal lateinit var aiMediaAnalysis: AiMediaAnalysis
+
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
@@ -123,6 +131,7 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
 
         // Initial bundled-model availability probe; UI and workers observe this result.
         appScope.launch {
+            aiMediaAnalysis.initialize()
             modelManager.refreshStatus()
         }
     }

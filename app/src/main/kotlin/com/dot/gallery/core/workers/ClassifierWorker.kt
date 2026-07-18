@@ -11,6 +11,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.dot.gallery.feature_node.presentation.util.printWarning
+import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -22,16 +23,17 @@ import dagger.assisted.AssistedInject
  * @deprecated Use CategoryWorker directly via startCategoryClassification()
  */
 @HiltWorker
-class ClassifierWorker @AssistedInject constructor(
-    @Assisted private val appContext: Context,
-    @Assisted workerParams: WorkerParameters
+class ClassifierWorker @AssistedInject internal constructor(
+    private val aiMediaAnalysis: AiMediaAnalysis,
+    @Assisted appContext: Context,
+    @Assisted workerParams: WorkerParameters,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         printWarning("ClassifierWorker: Delegating to new CategoryWorker system")
         
         // Start the new category classification worker
-        WorkManager.getInstance(appContext).startCategoryClassification()
+        aiMediaAnalysis.requestCategoryClassification()
         
         setProgress(workDataOf("progress" to 100))
         return Result.success()

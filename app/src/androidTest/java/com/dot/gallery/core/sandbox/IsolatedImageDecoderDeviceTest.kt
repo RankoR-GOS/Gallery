@@ -248,23 +248,26 @@ internal class IsolatedImageDecoderDeviceTest {
                     fixtureFile.outputStream().use { outputStream ->
                         outputStream.write(readFixture(name = fixture.name))
                     }
-                    val bitmap = withContext(Dispatchers.IO) {
-                        Glide.with(application)
-                            .asBitmap()
-                            .load(
-                                galleryMediaModel(
-                                    uri = Uri.fromFile(fixtureFile),
-                                    mimeType = fixture.mimeType,
-                                ),
-                            )
-                            .override(64, 64)
-                            .submit()
-                            .get()
+                    val requestManager = Glide.with(application)
+                    val target = requestManager
+                        .asBitmap()
+                        .load(
+                            galleryMediaModel(
+                                uri = Uri.fromFile(fixtureFile),
+                                mimeType = fixture.mimeType,
+                            ),
+                        )
+                        .override(64, 64)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
+                        .submit()
+                    try {
+                        val bitmap = withContext(Dispatchers.IO) { target.get() }
+                        assertEquals(fixture.decodedWidth, bitmap.width)
+                        assertEquals(fixture.decodedHeight, bitmap.height)
+                    } finally {
+                        requestManager.clear(target)
                     }
-
-                    assertEquals(fixture.decodedWidth, bitmap.width)
-                    assertEquals(fixture.decodedHeight, bitmap.height)
-                    bitmap.recycle()
                 } finally {
                     fixtureFile.delete()
                 }
@@ -299,23 +302,26 @@ internal class IsolatedImageDecoderDeviceTest {
                     fixtureFile.outputStream().use { outputStream ->
                         outputStream.write(readFixture(name = fixture.name))
                     }
-                    val bitmap = withContext(Dispatchers.IO) {
-                        Glide.with(application)
-                            .asBitmap()
-                            .load(
-                                galleryMediaModel(
-                                    uri = Uri.fromFile(fixtureFile),
-                                    mimeType = "video/mp4",
-                                ),
-                            )
-                            .override(64, 64)
-                            .submit()
-                            .get()
+                    val requestManager = Glide.with(application)
+                    val target = requestManager
+                        .asBitmap()
+                        .load(
+                            galleryMediaModel(
+                                uri = Uri.fromFile(fixtureFile),
+                                mimeType = "video/mp4",
+                            ),
+                        )
+                        .override(64, 64)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
+                        .submit()
+                    try {
+                        val bitmap = withContext(Dispatchers.IO) { target.get() }
+                        assertEquals(fixture.decodedWidth, bitmap.width)
+                        assertEquals(fixture.decodedHeight, bitmap.height)
+                    } finally {
+                        requestManager.clear(target)
                     }
-
-                    assertEquals(fixture.decodedWidth, bitmap.width)
-                    assertEquals(fixture.decodedHeight, bitmap.height)
-                    bitmap.recycle()
                 } finally {
                     fixtureFile.delete()
                 }
@@ -333,7 +339,8 @@ internal class IsolatedImageDecoderDeviceTest {
             val videoFile = writeFixtureFile(application = application, name = "GalleryDecoderTest.mp4")
             try {
                 withContext(Dispatchers.IO) {
-                    val pngBitmap = Glide.with(application)
+                    val requestManager = Glide.with(application)
+                    val pngTarget = requestManager
                         .asBitmap()
                         .load(
                             galleryMediaModel(
@@ -344,12 +351,15 @@ internal class IsolatedImageDecoderDeviceTest {
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .skipMemoryCache(true)
                         .submit()
-                        .get()
-                    assertEquals(16, pngBitmap.width)
-                    assertEquals(16, pngBitmap.height)
-                    pngBitmap.recycle()
+                    try {
+                        val pngBitmap = pngTarget.get()
+                        assertEquals(16, pngBitmap.width)
+                        assertEquals(16, pngBitmap.height)
+                    } finally {
+                        requestManager.clear(pngTarget)
+                    }
 
-                    val gifDrawable = Glide.with(application)
+                    val gifTarget = requestManager
                         .asGif()
                         .load(
                             galleryMediaModel(
@@ -360,11 +370,15 @@ internal class IsolatedImageDecoderDeviceTest {
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .skipMemoryCache(true)
                         .submit()
-                        .get()
-                    assertTrue(gifDrawable.frameCount > 1)
-                    gifDrawable.stop()
+                    try {
+                        val gifDrawable = gifTarget.get()
+                        assertTrue(gifDrawable.frameCount > 1)
+                        gifDrawable.stop()
+                    } finally {
+                        requestManager.clear(gifTarget)
+                    }
 
-                    val animatedWebp = Glide.with(application)
+                    val webpTarget = requestManager
                         .asDrawable()
                         .load(
                             galleryMediaModel(
@@ -375,14 +389,18 @@ internal class IsolatedImageDecoderDeviceTest {
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .skipMemoryCache(true)
                         .submit()
-                        .get()
-                    assertTrue(
-                        "Expected AnimatedImageDrawable, got ${animatedWebp::class.java.name}",
-                        animatedWebp is AnimatedImageDrawable,
-                    )
-                    (animatedWebp as AnimatedImageDrawable).stop()
+                    try {
+                        val animatedWebp = webpTarget.get()
+                        assertTrue(
+                            "Expected AnimatedImageDrawable, got ${animatedWebp::class.java.name}",
+                            animatedWebp is AnimatedImageDrawable,
+                        )
+                        (animatedWebp as AnimatedImageDrawable).stop()
+                    } finally {
+                        requestManager.clear(webpTarget)
+                    }
 
-                    val videoBitmap = Glide.with(application)
+                    val videoTarget = requestManager
                         .asBitmap()
                         .load(
                             galleryMediaModel(
@@ -393,10 +411,13 @@ internal class IsolatedImageDecoderDeviceTest {
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .skipMemoryCache(true)
                         .submit()
-                        .get()
-                    assertEquals(16, videoBitmap.width)
-                    assertEquals(16, videoBitmap.height)
-                    videoBitmap.recycle()
+                    try {
+                        val videoBitmap = videoTarget.get()
+                        assertEquals(16, videoBitmap.width)
+                        assertEquals(16, videoBitmap.height)
+                    } finally {
+                        requestManager.clear(videoTarget)
+                    }
                 }
             } finally {
                 pngFile.delete()

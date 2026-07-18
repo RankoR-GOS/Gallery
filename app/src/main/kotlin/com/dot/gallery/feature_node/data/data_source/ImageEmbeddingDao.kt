@@ -16,4 +16,10 @@ interface ImageEmbeddingDao {
 
     @Query("SELECT * FROM image_embeddings")
     fun getRecords(): Flow<List<ImageEmbedding>>
+
+    @Query("DELETE FROM image_embeddings")
+    suspend fun deleteAll()
+
+    @Query("DELETE FROM image_embeddings WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: Set<Long>)
 }

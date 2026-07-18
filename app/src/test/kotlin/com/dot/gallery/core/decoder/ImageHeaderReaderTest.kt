@@ -1,5 +1,4 @@
-package com.dot.gallery.core.decoder.glide
-
+package com.dot.gallery.core.decoder
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Test

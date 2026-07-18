@@ -233,7 +233,7 @@ internal class IsolatedImageDecoder @Inject constructor(
         }
     }
 
-    private fun readDecodeResult(bundle: Bundle): IsolatedImageDecodeResult? {
+    internal fun readDecodeResult(bundle: Bundle): IsolatedImageDecodeResult? {
         bundle.classLoader = SharedMemory::class.java.classLoader
         val outputSharedMemory = bundle
             .getParcelable(KEY_OUTPUT_SHM, SharedMemory::class.java)
@@ -278,7 +278,7 @@ internal class IsolatedImageDecoder @Inject constructor(
                 bitmap = bitmap,
                 originalSize = AndroidSize(originalWidth, originalHeight),
             )
-        } catch (failure: OutOfMemoryError) {
+        } catch (_: OutOfMemoryError) {
             Log.w(TAG, "Decoded bitmap exceeds available heap")
             null
         } catch (failure: Exception) {

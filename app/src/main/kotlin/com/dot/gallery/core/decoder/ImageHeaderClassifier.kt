@@ -1,4 +1,4 @@
-package com.dot.gallery.core.decoder.glide
+package com.dot.gallery.core.decoder
 
 internal const val IMAGE_HEADER_BYTES = 4 * 1024
 
@@ -14,6 +14,7 @@ internal fun classifyImageHeader(header: ByteArray, length: Int): ImageFileForma
         isWebp(header = header, length = availableBytes) -> ImageFileFormat.WEBP
         isBmp(header = header, length = availableBytes) -> ImageFileFormat.BMP
         isTiff(header = header, length = availableBytes) -> ImageFileFormat.TIFF
+        isSvg(header = header, length = availableBytes) -> ImageFileFormat.SVG
         else -> classifyIsoBaseMediaFormat(header = header, length = availableBytes)
     }
 }
@@ -106,6 +107,20 @@ private fun isTiff(header: ByteArray, length: Int): Boolean {
         offset = 0,
         expected = bigEndian,
     )
+}
+
+private fun isSvg(header: ByteArray, length: Int): Boolean {
+    val searchLimit = minOf(length, SVG_SEARCH_BYTES)
+    if (searchLimit == 0) {
+        return false
+    }
+
+    val headerText = header.decodeToString(
+        startIndex = 0,
+        endIndex = searchLimit,
+        throwOnInvalidSequence = false,
+    )
+    return SVG_TAG_REGEX.containsMatchIn(input = headerText)
 }
 
 private fun classifyIsoBaseMediaFormat(header: ByteArray, length: Int): ImageFileFormat? {
@@ -210,6 +225,9 @@ private const val MAJOR_BRAND_AND_MINOR_VERSION_BYTES = 8
 private const val MINIMUM_FTYP_BOX_BYTES = 16L
 private const val WEBP_ANIMATION_FLAG = 1 shl 1
 private const val WEBP_EXTENDED_FLAGS_OFFSET = 20
+private const val SVG_SEARCH_BYTES = 1024
+
+private val SVG_TAG_REGEX = Regex(pattern = "<svg(?:\\s|>)")
 
 private val HEIF_BRANDS = setOf(
     "heic",

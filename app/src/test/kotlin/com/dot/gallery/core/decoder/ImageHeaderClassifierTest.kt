@@ -1,10 +1,32 @@
-package com.dot.gallery.core.decoder.glide
+package com.dot.gallery.core.decoder
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 internal class ImageHeaderClassifierTest {
+
+    @Test
+    fun classifyImageHeader_svgWithXmlDeclaration_returnsSvg() {
+        val header = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <!-- generated fixture -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 16">
+        """.trimIndent().encodeToByteArray()
+
+        assertEquals(
+            ImageFileFormat.SVG,
+            classifyImageHeader(header = header, length = header.size),
+        )
+    }
+
+    @Test
+    fun classifyImageHeader_textMentioningSvgWithoutTag_returnsNull() {
+        val header = "This is not an SVG image".encodeToByteArray()
+
+        assertNull(classifyImageHeader(header = header, length = header.size))
+    }
+
     @Test
     fun classifyImageHeader_recognizesStandardImageFormats() {
         assertEquals(

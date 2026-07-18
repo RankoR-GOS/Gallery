@@ -10,6 +10,11 @@ import com.bumptech.glide.load.model.ModelLoader
 import com.bumptech.glide.load.model.ModelLoaderFactory
 import com.bumptech.glide.load.model.MultiModelLoaderFactory
 import com.bumptech.glide.signature.ObjectKey
+import com.dot.gallery.core.decoder.IMAGE_HEADER_BYTES
+import com.dot.gallery.core.decoder.ImageFileFormat
+import com.dot.gallery.core.decoder.classifyImageHeader
+import com.dot.gallery.core.decoder.preadImageHeader
+import com.dot.gallery.core.decoder.readImageHeader
 import java.io.BufferedInputStream
 import java.io.IOException
 import java.io.InputStream

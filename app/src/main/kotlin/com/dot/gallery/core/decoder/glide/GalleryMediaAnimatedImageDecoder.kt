@@ -4,6 +4,7 @@ import android.graphics.drawable.Drawable
 import com.bumptech.glide.load.Options
 import com.bumptech.glide.load.ResourceDecoder
 import com.bumptech.glide.load.engine.Resource
+import com.dot.gallery.core.decoder.ImageFileFormat
 import java.io.InputStream
 
 internal class GalleryMediaAnimatedImageDecoder(

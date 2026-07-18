@@ -8,17 +8,16 @@ package com.dot.gallery.feature_node.presentation.classifier
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkManager
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.ml.ManagedOrtSession
 import com.dot.gallery.core.ml.ModelInferenceException
-import com.dot.gallery.core.workers.startCategoryClassification
 import com.dot.gallery.feature_node.domain.model.Category
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
 import com.dot.gallery.feature_node.domain.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
 import com.dot.gallery.feature_node.presentation.search.SearchHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
@@ -36,10 +35,10 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-class EditCategoryViewModel @Inject constructor(
+class EditCategoryViewModel @Inject internal constructor(
     private val repository: MediaRepository,
     private val searchHelper: SearchHelper,
-    private val workManager: WorkManager
+    private val aiMediaAnalysis: AiMediaAnalysis,
 ) : ViewModel() {
 
     // Date format settings
@@ -233,7 +232,7 @@ class EditCategoryViewModel @Inject constructor(
                 )
                 repository.updateCategory(updatedCategory)
                 if (searchTermsChanged || thresholdChanged) {
-                    workManager.startCategoryClassification()
+                    aiMediaAnalysis.requestCategoryClassification()
                 }
                 withContext(Dispatchers.Main) {
                     onComplete()

@@ -1,104 +1,129 @@
 package com.dot.gallery.core.workers
 
 import android.content.Context
-import android.graphics.ColorSpace
-import androidx.compose.ui.util.fastForEachIndexed
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.dot.gallery.BuildConfig
-import com.dot.gallery.core.ml.ModelManager
+import com.dot.gallery.core.ml.ImageEmbeddingGenerator
 import com.dot.gallery.core.ml.ModelStatus
+import com.dot.gallery.core.sandbox.MediaPreviewDecoder
 import com.dot.gallery.feature_node.domain.model.ImageEmbedding
+import com.dot.gallery.feature_node.domain.repository.AiMediaAnalysisRepository
 import com.dot.gallery.feature_node.domain.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.presentation.search.helpers.SearchVisionHelper
+import com.dot.gallery.feature_node.domain.util.isVideo
 import com.dot.gallery.feature_node.presentation.util.printInfo
 import com.dot.gallery.feature_node.presentation.util.printWarning
-import com.github.panpf.sketch.asBitmapOrNull
-import com.github.panpf.sketch.decode.BitmapColorSpace
-import com.github.panpf.sketch.request.ImageRequest
-import com.github.panpf.sketch.sketch
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.yield
 
 @HiltWorker
-class SearchIndexerUpdaterWorker @AssistedInject constructor(
+class SearchIndexerUpdaterWorker @AssistedInject internal constructor(
     private val repository: MediaRepository,
-    private val modelManager: ModelManager,
-    @Assisted private val appContext: Context,
-    @Assisted workerParams: WorkerParameters
+    private val analysisRepository: AiMediaAnalysisRepository,
+    private val embeddingGenerator: ImageEmbeddingGenerator,
+    private val previewDecoder: MediaPreviewDecoder,
+    @Assisted appContext: Context,
+    @Assisted workerParams: WorkerParameters,
 ) : CoroutineWorker(appContext, workerParams) {
 
-    private val visionHelper by lazy { SearchVisionHelper(modelManager) }
+    override suspend fun doWork(): Result {
+        return try {
+            indexMedia()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            printWarning("SearchIndexerUpdaterWorker failed with exception: ${exception.message}")
+            Result.failure()
+        }
+    }
 
-    override suspend fun doWork(): Result = runCatching {
-        setProgress(workDataOf("progress" to -1f))
-        if (!BuildConfig.ENABLE_INDEXING) return Result.success()
-        val modelStatus = modelManager.status.first { status -> status != ModelStatus.CHECKING }
+    private suspend fun indexMedia(): Result {
+        setProgress(workDataOf(KEY_PROGRESS to -1f, KEY_STAGE to STAGE_INDEXING))
+        if (!analysisRepository.getPreferences().analysisEnabled) {
+            return Result.success(workDataOf(KEY_CHANGED_COUNT to 0))
+        }
+        val modelStatus = embeddingGenerator.status.first { status -> status != ModelStatus.CHECKING }
         if (modelStatus != ModelStatus.READY) {
             printInfo("ML models unavailable, skipping indexing")
-            return Result.success()
+            return Result.success(workDataOf(KEY_CHANGED_COUNT to 0))
         }
-        if (!currentCoroutineContext().isActive) return Result.success()
-        printInfo("Starting indexing media items")
-        val media = repository.getCompleteMedia().map { it.data ?: emptyList() }.firstOrNull()
-        val records = repository.getImageEmbeddings().firstOrNull()
-        val toBeIndexed = media?.filter { mediaItem ->
-            records?.none { it.id == mediaItem.id } ?: true
-        } ?: emptyList()
-        if (toBeIndexed.isEmpty()) {
-            printInfo("No media items to index")
-            return Result.success()
+
+        val media = repository.getCompleteMedia().map { resource ->
+            resource.data.orEmpty()
+        }.firstOrNull().orEmpty()
+        val records = repository.getImageEmbeddings().firstOrNull().orEmpty()
+        val mediaById = media.associateBy { mediaItem -> mediaItem.id }
+        val recordsById = records.associateBy { record -> record.id }
+        val removedIds = recordsById.keys - mediaById.keys
+        analysisRepository.removeMissingCategoryMappings(validMediaIds = mediaById.keys)
+        val mediaToIndex = media.filter { mediaItem ->
+            recordsById[mediaItem.id]?.date != mediaItem.timestamp
         }
-        printInfo("Found ${toBeIndexed.size} media items to index")
-        setProgress(workDataOf("progress" to 0f))
-        visionHelper.setupVisionSession().use { session ->
-            val total = toBeIndexed.size
-            toBeIndexed.fastForEachIndexed { index, mediaItem ->
-                if (!currentCoroutineContext().isActive || isStopped) return@use
-                val startMillis = System.currentTimeMillis()
-                val pct = if (total <= 1) 100f else ((index.toFloat() / (total - 1).toFloat()) * 100f)
-                setProgress(workDataOf("progress" to pct))
-                val request = ImageRequest(appContext, mediaItem.getUri().toString()) {
-                    colorSpace(BitmapColorSpace(ColorSpace.Named.SRGB))
-                    size(224, 224)
+        val changedIds = mediaToIndex.map { mediaItem -> mediaItem.id }.toSet()
+        if (removedIds.isNotEmpty()) {
+            analysisRepository.removeMediaData(mediaIds = removedIds)
+        }
+        if (changedIds.isNotEmpty()) {
+            analysisRepository.invalidateGeneratedData(mediaIds = changedIds)
+        }
+        if (mediaToIndex.isEmpty()) {
+            return Result.success(workDataOf(KEY_CHANGED_COUNT to removedIds.size))
+        }
+
+        embeddingGenerator.openSession().use { session ->
+            mediaToIndex.forEachIndexed { index, mediaItem ->
+                currentCoroutineContext().ensureActive()
+                if (!analysisRepository.getPreferences().analysisEnabled) {
+                    return@use
                 }
-                val result = appContext.sketch.execute(request)
-                val bitmap = result.image?.asBitmapOrNull()
-                if (bitmap != null) {
-                    val embedding = visionHelper.getImageEmbedding(session, bitmap)
-                    printInfo("Indexed media item $index/${total - 1} in ${System.currentTimeMillis() - startMillis} ms")
-                    repository.addImageEmbedding(
-                        ImageEmbedding(
-                            id = mediaItem.id,
-                            date = mediaItem.timestamp,
-                            embedding = embedding
-                        )
-                    )
-                } else {
-                    printInfo("Failed to decode bitmap for media: ${mediaItem.id} at ${mediaItem.getUri()}")
+                val progress = ((index.toFloat() / mediaToIndex.size.toFloat()) * 100f)
+                    .coerceIn(0f, 99f)
+                setProgress(workDataOf(KEY_PROGRESS to progress, KEY_STAGE to STAGE_INDEXING))
+                val bitmap = previewDecoder.decode(
+                    uri = mediaItem.getUri(),
+                    mimeType = mediaItem.mimeType,
+                    isVideo = mediaItem.isVideo,
+                )
+                bitmap?.let { previewBitmap ->
+                    try {
+                        val embedding = session.generate(bitmap = previewBitmap)
+                        currentCoroutineContext().ensureActive()
+                        if (analysisRepository.getPreferences().analysisEnabled) {
+                            repository.addImageEmbedding(
+                                ImageEmbedding(
+                                    id = mediaItem.id,
+                                    date = mediaItem.timestamp,
+                                    embedding = embedding,
+                                ),
+                            )
+                        }
+                    } finally {
+                        previewBitmap.recycle()
+                    }
                 }
                 yield()
             }
         }
-        if (currentCoroutineContext().isActive) {
-            printInfo("Indexing completed for ${toBeIndexed.size} media items")
-            setProgress(workDataOf("progress" to 100f))
-        } else {
-            printWarning("Indexing cancelled before completion")
-        }
-        return Result.success()
-    }.getOrElse { exception ->
-        printWarning("SearchIndexerUpdaterWorker failed with exception: ${exception.message}")
-        return Result.failure()
+        setProgress(workDataOf(KEY_PROGRESS to 100f, KEY_STAGE to STAGE_INDEXING))
+        return Result.success(
+            workDataOf(KEY_CHANGED_COUNT to removedIds.size + changedIds.size),
+        )
     }
 
+    companion object {
+        internal const val KEY_CHANGED_COUNT = "changed_count"
+        internal const val KEY_PROGRESS = "progress"
+        internal const val KEY_STAGE = "stage"
+        internal const val STAGE_INDEXING = "indexing"
+        internal const val TAG = "SearchIndexerUpdater"
+    }
 }

@@ -61,7 +61,6 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             configureProvider()
-            buildConfigField("Boolean", "ENABLE_INDEXING", "false")
         }
         getByName("release") {
             configureProvider()
@@ -74,7 +73,6 @@ android {
                 )
             )
             signingConfig = signingConfigs.getByName("release")
-            buildConfigField("Boolean", "ENABLE_INDEXING", "true")
         }
         create("staging") {
             initWith(getByName("release"))
@@ -84,7 +82,6 @@ android {
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
             configureProvider()
-            buildConfigField("Boolean", "ENABLE_INDEXING", "true")
         }
 
         // Use to manually check performance with release config, but debug signing
@@ -95,7 +92,6 @@ android {
             versionNameSuffix = "-perf"
             signingConfig = signingConfigs.getByName("debug")
             configureProvider()
-            buildConfigField("Boolean", "ENABLE_INDEXING", "true")
         }
     }
 
@@ -235,8 +231,9 @@ dependencies {
     implementation(libs.room.ktx)
 
     // Coders
-    implementation(libs.jxl.coder.coil)
+    implementation(libs.androidsvg)
     implementation(libs.avif.coder.coil)
+    implementation(libs.jxl.coder.coil)
 
     // Sketch
     implementation(libs.sketch.compose)

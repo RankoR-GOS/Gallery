@@ -529,12 +529,6 @@ object Settings {
         fun rememberAutoHideOnVideoPlay() =
             rememberPreference(key = AUTO_HIDE_ON_VIDEO_PLAY, defaultValue = true)
 
-        val NO_CLASSIFICATION = booleanPreferencesKey("no_classification")
-
-        @Composable
-        fun rememberNoClassification() =
-            rememberPreference(key = NO_CLASSIFICATION, defaultValue = false)
-
         val DATE_HEADER_FORMAT = stringPreferencesKey("date_header_format")
 
         @Composable

@@ -38,6 +38,10 @@ fun SettingsSmartFeaturesScreen(
     val modelStatus by viewModel.modelStatus.collectAsStateWithLifecycle()
     val isMetadataWorkerRunning by viewModel.isMetadataWorkerRunning.collectAsStateWithLifecycle()
     val metadataProgress by viewModel.metadataProgress.collectAsStateWithLifecycle()
+    val analysisSettings by viewModel.analysisSettings.collectAsStateWithLifecycle()
+    val analysisProgress by viewModel.analysisProgress.collectAsStateWithLifecycle()
+    val isAnalysisRunning by viewModel.isAnalysisRunning.collectAsStateWithLifecycle()
+    val isUpdatingAnalysis by viewModel.isUpdatingAnalysis.collectAsStateWithLifecycle()
 
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -57,6 +61,17 @@ fun SettingsSmartFeaturesScreen(
     ) { padding ->
         // Resolve strings outside the non-composable settings{} DSL
         val smartFeaturesHeader = stringResource(R.string.ai_category)
+        val analysisTitle = stringResource(R.string.ai_media_analysis)
+        val analysisSummary = when {
+            isUpdatingAnalysis -> stringResource(R.string.ai_media_analysis_updating)
+            isAnalysisRunning && analysisProgress != null -> stringResource(
+                R.string.ai_media_analysis_progress,
+                requireNotNull(analysisProgress).toInt(),
+            )
+            isAnalysisRunning -> stringResource(R.string.ai_media_analysis_running)
+            analysisSettings.analysisEnabled -> stringResource(R.string.ai_media_analysis_enabled_summary)
+            else -> stringResource(R.string.ai_media_analysis_disabled_summary)
+        }
         val categoriesTitle = stringResource(R.string.categories)
         val categoriesSummary = when (modelStatus) {
             ModelStatus.CHECKING -> stringResource(R.string.ai_models_checking)
@@ -85,10 +100,22 @@ fun SettingsSmartFeaturesScreen(
             settings {
                 Header(smartFeaturesHeader)
 
+                SwitchPreference(
+                    title = analysisTitle,
+                    summary = analysisSummary,
+                    enabled = !isUpdatingAnalysis && (
+                        analysisSettings.analysisEnabled || modelStatus == ModelStatus.READY
+                    ),
+                    isChecked = analysisSettings.analysisEnabled,
+                    onCheck = viewModel::setAnalysisEnabled,
+                )
+
                 Preference(
                     title = categoriesTitle,
                     summary = categoriesSummary,
-                    enabled = modelStatus == ModelStatus.READY,
+                    enabled = modelStatus == ModelStatus.READY &&
+                        analysisSettings.analysisEnabled &&
+                        !isUpdatingAnalysis,
                     onClick = { handler.navigate(Screen.CategoriesScreen()) },
                 )
 

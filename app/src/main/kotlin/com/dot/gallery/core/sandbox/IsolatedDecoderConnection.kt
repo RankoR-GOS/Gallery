@@ -21,7 +21,22 @@ import javax.inject.Singleton
 
 @Singleton
 internal class IsolatedDecoderConnection @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+    @ApplicationContext context: Context,
+) : IsolatedServiceConnection(context = context, instanceName = null)
+
+@Singleton
+internal class MediaAnalysisDecoderConnection @Inject constructor(
+    @ApplicationContext context: Context,
+) : IsolatedServiceConnection(context = context, instanceName = MEDIA_ANALYSIS_INSTANCE_NAME) {
+
+    companion object {
+        private const val MEDIA_ANALYSIS_INSTANCE_NAME = "media_analysis"
+    }
+}
+
+internal open class IsolatedServiceConnection(
+    private val context: Context,
+    private val instanceName: String?,
 ) {
     @Volatile
     private var bindingRegistered = false
@@ -92,11 +107,22 @@ internal class IsolatedDecoderConnection @Inject constructor(
             return true
         }
 
-        val bindingStarted = context.bindService(
-            Intent(context, IsolatedDecoderService::class.java),
-            serviceConnection,
-            Context.BIND_AUTO_CREATE,
-        )
+        val intent = Intent(context, IsolatedDecoderService::class.java)
+        val bindingStarted = when (instanceName) {
+            null -> context.bindService(
+                intent,
+                serviceConnection,
+                Context.BIND_AUTO_CREATE,
+            )
+
+            else -> context.bindIsolatedService(
+                intent,
+                Context.BIND_AUTO_CREATE,
+                instanceName,
+                context.mainExecutor,
+                serviceConnection,
+            )
+        }
         bindingRegistered = bindingStarted
         if (!bindingStarted) {
             Log.w(TAG, "bindService returned false")

@@ -71,7 +71,6 @@ import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
-import com.dot.gallery.core.Settings.Misc.rememberNoClassification
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.util.SdkCompat
@@ -131,7 +130,7 @@ fun LibraryScreen(
     val noCategoriesFound by rememberedDerivedState { topCategories.isEmpty() }
 
     val modelStatus by viewModel.modelStatus.collectAsStateWithLifecycle()
-    var noClassification by rememberNoClassification()
+    val analysisSettings by viewModel.analysisSettings.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier.padding(
@@ -279,7 +278,10 @@ fun LibraryScreen(
                     }
                 }
 
-                if (!noClassification) {
+                if (
+                    analysisSettings.analysisEnabled &&
+                    analysisSettings.categoryClassificationEnabled
+                ) {
                     if (!noCategoriesFound) {
                         // "See all categories" header below carousel
                         item(

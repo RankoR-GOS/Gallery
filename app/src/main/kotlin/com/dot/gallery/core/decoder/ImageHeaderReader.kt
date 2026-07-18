@@ -1,4 +1,4 @@
-package com.dot.gallery.core.decoder.glide
+package com.dot.gallery.core.decoder
 
 import android.system.Os
 import java.io.FileDescriptor
