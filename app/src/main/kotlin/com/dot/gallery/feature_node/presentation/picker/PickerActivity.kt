@@ -19,6 +19,7 @@ import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
+import com.dot.gallery.core.DefaultEventHandler
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
@@ -71,8 +72,8 @@ class PickerActivityContract(
 @AndroidEntryPoint
 class PickerActivity : FragmentActivity() {
 
-    @Inject
-    lateinit var eventHandler: EventHandler
+    // Navigation callbacks belong to this activity, not the process-wide gallery handler.
+    private val eventHandler: EventHandler = DefaultEventHandler()
 
     @Inject
     lateinit var mediaDistributor: MediaDistributor

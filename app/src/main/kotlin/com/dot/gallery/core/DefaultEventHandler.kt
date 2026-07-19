@@ -12,7 +12,8 @@ val LocalEventHandler = compositionLocalOf<EventHandler> {
 
 class DefaultEventHandler : EventHandler {
 
-    private val updater = Channel<UIEvent>()
+    // Preserve events while the activity collector is handling the previous event.
+    private val updater = Channel<UIEvent>(capacity = Channel.UNLIMITED)
     override val updaterFlow = updater.receiveAsFlow()
     override var navigateAction: (String) -> Unit = {}
     override var toggleNavigationBarAction: (Boolean) -> Unit = {}
