@@ -5,6 +5,7 @@
 
 package com.dot.gallery.feature_node.presentation.albums.components
 
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
@@ -12,10 +13,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +34,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -56,8 +60,8 @@ import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import com.dot.gallery.ui.theme.Shapes
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.MaskableFrameLayout
-import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -70,9 +74,14 @@ fun CarouselPinnedAlbums(
     val scope = rememberCoroutineScope()
     val appBottomSheetState = rememberAppBottomSheetState()
     var currentAlbum: Album? by remember { mutableStateOf(null) }
+    val selectedAlbum = currentAlbum?.let { selected ->
+        albumList.firstOrNull { it.id == selected.id }
+    }
     val primaryTextColor = MaterialTheme.colorScheme.onSurface.toArgb()
     val secondaryTextColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     val containerColor = MaterialTheme.colorScheme.surface.toArgb()
+    val lockedBackgroundColor = MaterialTheme.colorScheme.surfaceVariant.toArgb()
+    val lockedContentColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     val density = LocalDensity.current
     val windowInfo = LocalWindowInfo.current
     val maxCarouselWidth = remember(density, windowInfo) {
@@ -101,13 +110,25 @@ fun CarouselPinnedAlbums(
                     maxWidth = maxCarouselWidth,
                     primaryTextColor = primaryTextColor,
                     secondaryTextColor = secondaryTextColor,
-                    containerColor = containerColor
+                    containerColor = containerColor,
+                    lockedBackgroundColor = lockedBackgroundColor,
+                    lockedContentColor = lockedContentColor
                 )
                 layoutManager = CarouselLayoutManager()
             }
         },
         update = {
-            (it.adapter as PinnedAlbumsAdapter).submitList(albumList)
+            (it.adapter as PinnedAlbumsAdapter).apply {
+                updatePresentation(
+                    maxWidth = maxCarouselWidth,
+                    primaryTextColor = primaryTextColor,
+                    secondaryTextColor = secondaryTextColor,
+                    containerColor = containerColor,
+                    lockedBackgroundColor = lockedBackgroundColor,
+                    lockedContentColor = lockedContentColor
+                )
+                submitList(albumList)
+            }
         }
     )
 
@@ -137,18 +158,29 @@ fun CarouselPinnedAlbums(
         state = appBottomSheetState,
         optionList = arrayOf(optionList),
         headerContent = {
-            if (currentAlbum != null) {
-                GlideImage(
-                    modifier = Modifier
-                        .size(98.dp)
-                        .clip(Shapes.large),
-                    contentScale = ContentScale.Crop,
-                    model = currentAlbum!!.toGlideModel(),
-                    contentDescription = currentAlbum!!.label,
-                    requestBuilderTransform = {
-                        it.signature(GlideInvalidation.signature(currentAlbum!!))
-                    }
-                )
+            selectedAlbum?.let { album ->
+                if (album.isLocked) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_album_locked),
+                        contentDescription = stringResource(R.string.locked),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(98.dp)
+                            .background(color = MaterialTheme.colorScheme.surfaceVariant, shape = Shapes.large)
+                            .padding(31.dp),
+                    )
+                } else {
+                    GlideImage(
+                        modifier = Modifier
+                            .size(98.dp)
+                            .clip(Shapes.large),
+                        contentScale = ContentScale.Crop,
+                        model = album.toGlideModel(),
+                        contentDescription = album.label,
+                        requestBuilderTransform = {
+                            it.signature(GlideInvalidation.signature(album))
+                        }
+                    )
+                }
                 Text(
                     text = buildAnnotatedString {
                         withStyle(
@@ -159,7 +191,7 @@ fun CarouselPinnedAlbums(
                                 letterSpacing = MaterialTheme.typography.titleLarge.letterSpacing
                             )
                         ) {
-                            append(currentAlbum!!.label)
+                            append(album.label)
                         }
                         append("\n")
                         withStyle(
@@ -173,9 +205,9 @@ fun CarouselPinnedAlbums(
                             append(
                                 pluralStringResource(
                                     id = R.plurals.item_count,
-                                    count = currentAlbum!!.count.toInt(),
-                                    currentAlbum!!.count
-                                )
+                                    count = album.count.toInt(),
+                                    album.count,
+                                ),
                             )
                         }
                     },
@@ -189,13 +221,15 @@ fun CarouselPinnedAlbums(
     )
 }
 
-private class PinnedAlbumsAdapter(
+internal class PinnedAlbumsAdapter(
     private val onAlbumClick: (Album) -> Unit,
     private val onAlbumLongClick: (Album) -> Unit,
-    private val maxWidth: Float,
-    private val primaryTextColor: Int,
-    private val secondaryTextColor: Int,
-    private val containerColor: Int
+    private var maxWidth: Float,
+    private var primaryTextColor: Int,
+    private var secondaryTextColor: Int,
+    private var containerColor: Int,
+    private var lockedBackgroundColor: Int,
+    private var lockedContentColor: Int
 ) :
     ListAdapter<Album, PinnedAlbumsAdapter.ViewHolder>(PinnedAlbumsDiffCallback) {
     inner class ViewHolder(
@@ -211,10 +245,10 @@ private class PinnedAlbumsAdapter(
                 GradientDrawable.Orientation.BOTTOM_TOP,
                 intArrayOf(containerColor, Color.TRANSPARENT)
             )
-            Glide.with(albumImage)
-                .load(album.toGlideModel())
-                .centerCrop()
-                .into(albumImage)
+            when {
+                album.isLocked -> bindLockedThumbnail()
+                else -> bindMediaThumbnail(album = album)
+            }
             albumImage.isClickable = true
             albumImage.setOnClickListener {
                 onAlbumClick.invoke(album)
@@ -244,6 +278,35 @@ private class PinnedAlbumsAdapter(
             }
         }
 
+        fun clearThumbnail() {
+            Glide.with(albumImage).clear(albumImage)
+            albumImage.setImageDrawable(null)
+            albumImage.imageTintList = null
+            albumImage.background = null
+            albumImage.setPadding(0, 0, 0, 0)
+            albumImage.contentDescription = null
+        }
+
+        private fun bindLockedThumbnail() {
+            clearThumbnail()
+            albumImage.scaleType = ImageView.ScaleType.CENTER
+            albumImage.setBackgroundColor(lockedBackgroundColor)
+            albumImage.setImageResource(R.drawable.ic_album_locked)
+            albumImage.imageTintList = ColorStateList.valueOf(lockedContentColor)
+            albumImage.contentDescription = albumImage.resources.getString(R.string.locked)
+        }
+
+        private fun bindMediaThumbnail(album: Album) {
+            clearThumbnail()
+            albumImage.scaleType = ImageView.ScaleType.CENTER_CROP
+            albumImage.contentDescription = album.label
+            Glide.with(albumImage)
+                .load(album.toGlideModel())
+                .signature(GlideInvalidation.signature(album))
+                .centerCrop()
+                .into(albumImage)
+        }
+
         private fun lerp(
             outputMin: Float, outputMax: Float, inputMin: Float, inputMax: Float, value: Float
         ): Float {
@@ -270,14 +333,42 @@ private class PinnedAlbumsAdapter(
         viewHolder.bind(getItem(position))
     }
 
+    override fun onViewRecycled(holder: ViewHolder) {
+        holder.clearThumbnail()
+        super.onViewRecycled(holder)
+    }
+
+    fun updatePresentation(
+        maxWidth: Float,
+        primaryTextColor: Int,
+        secondaryTextColor: Int,
+        containerColor: Int,
+        lockedBackgroundColor: Int,
+        lockedContentColor: Int
+    ) {
+        val changed = this.maxWidth != maxWidth ||
+            this.primaryTextColor != primaryTextColor ||
+            this.secondaryTextColor != secondaryTextColor ||
+            this.containerColor != containerColor ||
+            this.lockedBackgroundColor != lockedBackgroundColor ||
+            this.lockedContentColor != lockedContentColor
+        this.maxWidth = maxWidth
+        this.primaryTextColor = primaryTextColor
+        this.secondaryTextColor = secondaryTextColor
+        this.containerColor = containerColor
+        this.lockedBackgroundColor = lockedBackgroundColor
+        this.lockedContentColor = lockedContentColor
+        if (changed && itemCount > 0) notifyItemRangeChanged(0, itemCount)
+    }
+
 }
 
-private object PinnedAlbumsDiffCallback : DiffUtil.ItemCallback<Album>() {
+internal object PinnedAlbumsDiffCallback : DiffUtil.ItemCallback<Album>() {
     override fun areItemsTheSame(oldItem: Album, newItem: Album): Boolean {
-        return oldItem == newItem
+        return oldItem.id == newItem.id
     }
 
     override fun areContentsTheSame(oldItem: Album, newItem: Album): Boolean {
-        return oldItem.id == newItem.id
+        return oldItem == newItem
     }
 }
