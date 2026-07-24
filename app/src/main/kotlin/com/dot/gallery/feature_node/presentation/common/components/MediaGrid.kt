@@ -23,6 +23,7 @@ import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -86,6 +87,7 @@ fun <T : Media> GridPinchZoomScope.MediaGrid(
     emptyContent: @Composable () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
+    allowSharedElements: Boolean = true,
     onMediaClick: @DisallowComposableCalls (media: T) -> Unit
 ) {
     LaunchedEffect(gridState.isScrollInProgress) {
@@ -162,6 +164,7 @@ fun <T : Media> GridPinchZoomScope.MediaGrid(
                 topContent = topContent,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope,
+                allowSharedElements = allowSharedElements,
                 metadataState = metadataState
             )
         } else {
@@ -175,6 +178,7 @@ fun <T : Media> GridPinchZoomScope.MediaGrid(
                 topContent = topContent,
                 sharedTransitionScope = sharedTransitionScope,
                 animatedContentScope = animatedContentScope,
+                allowSharedElements = allowSharedElements,
                 metadataState = metadataState
             )
         }
@@ -196,6 +200,7 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
     topContent: LazyGridScope.() -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
+    allowSharedElements: Boolean = true,
 ) {
     val scope = rememberCoroutineScope()
     val stringToday = stringResource(id = R.string.header_today)
@@ -282,119 +287,143 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
             }
         }
 
-        LazyVerticalGrid(
-            state = gridState,
-            modifier = modifier
-                .fillMaxSize()
-                .testTag("media_grid")
-                .photoGridDragHandler(
-                    lazyGridState = gridState,
-                    haptics = LocalHapticFeedback.current,
-                    selectedIds = selectedMedia,
-                    updateSelectedIds = groupAwareUpdateSelection,
-                    autoScrollSpeed = autoScrollSpeed,
-                    autoScrollThreshold = with(LocalDensity.current) { 40.dp.toPx() },
-                    scrollGestureActive = scrollGestureActive,
-                    layoutDirection = LocalLayoutDirection.current,
-                    contentPadding = paddingValues,
-                    allKeys = allKeys
-                ),
-            columns = gridCells,
-            contentPadding = paddingValues,
-            userScrollEnabled = canScroll,
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
-        ) {
-            topContent()
+        key(gridCells) {
+            LazyVerticalGrid(
+                state = gridState,
+                modifier = modifier
+                    .fillMaxSize()
+                    .testTag("media_grid")
+                    .photoGridDragHandler(
+                        lazyGridState = gridState,
+                        haptics = LocalHapticFeedback.current,
+                        selectedIds = selectedMedia,
+                        updateSelectedIds = groupAwareUpdateSelection,
+                        autoScrollSpeed = autoScrollSpeed,
+                        autoScrollThreshold = with(LocalDensity.current) { 40.dp.toPx() },
+                        scrollGestureActive = scrollGestureActive,
+                        layoutDirection = LocalLayoutDirection.current,
+                        contentPadding = paddingValues,
+                        allKeys = allKeys
+                    ),
+                columns = gridCells,
+                contentPadding = paddingValues,
+                userScrollEnabled = canScroll,
+                horizontalArrangement = Arrangement.spacedBy(1.dp),
+                verticalArrangement = Arrangement.spacedBy(1.dp)
+            ) {
+                topContent()
 
-            //bottomContent()
-            items(
-                items = mappedData,
-                key = { item -> item.key },
-                contentType = { item -> item.key.startsWith("media_") },
-                span = { item ->
-                    GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
-                }
-            ) { it ->
-                if (it is MediaItem.Header) {
-                    val isChecked = rememberSaveable { mutableStateOf(false) }
-                    if (allowSelection) {
-                        LaunchedEffect(isSelectionActive) {
-                            // Uncheck if selectionState is set to false
-                            isChecked.value = isChecked.value && isSelectionActive
-                        }
-                        LaunchedEffect(selectedMedia.value.size) {
-                            withContext(Dispatchers.IO) {
-                                // Partial check of media items should not check the header
-                                isChecked.value = selectedMedia.value.containsAll(it.data)
-                            }
-                        }
+                //bottomContent()
+                items(
+                    items = mappedData,
+                    key = { item -> item.key },
+                    contentType = { item -> item.key.startsWith("media_") },
+                    span = { item ->
+                        GridItemSpan(if (item.key.isHeaderKey) maxLineSpan else 1)
                     }
-                    MediaItemHeader(
-                        modifier = Modifier
-                            .animateItem(
-                                fadeInSpec = null
-                            )
-                            .pinchItem(key = it.key),
-                        date = remember(it) {
-                            it.text
-                                .replace("Today", stringToday)
-                                .replace("Yesterday", stringYesterday)
-                        },
-                        showAsBig = remember(it) { it.key.isBigHeaderKey },
-                        isChecked = isChecked
-                    ) {
+                ) { it ->
+                    if (it is MediaItem.Header) {
+                        val isChecked = rememberSaveable { mutableStateOf(false) }
                         if (allowSelection) {
-                            feedbackManager.vibrate()
-                            scope.launch {
-                                isChecked.value = !isChecked.value
-                                val list = mediaState.value.media.map { it.id }
-                                    .filter { id -> id in it.data }
-                                if (isChecked.value) {
-                                    selector.addToSelection(list)
-                                } else selector.removeFromSelection(list)
+                            LaunchedEffect(isSelectionActive) {
+                                // Uncheck if selectionState is set to false
+                                isChecked.value = isChecked.value && isSelectionActive
                             }
-                        }
-                    }
-                } else if (it is MediaItem.MediaViewItem) {
-                    with(sharedTransitionScope) {
-                        MediaImage(
-                            modifier = Modifier
-                                .mediaSharedElement(
-                                    allowAnimation = canAnimate,
-                                    media = it.media,
-                                    animatedVisibilityScope = animatedContentScope
-                                )
-                                .animateItem(
-                                    fadeInSpec = null,
-                                    fadeOutSpec = spring()
-                                )
-                                .pinchItem(key = it.key),
-                            media = it.media,
-                            metadata = metadataById[it.media.id],
-                            selectionActive = isSelectionActive,
-                            isSelected = it.media.id in selectedIds,
-                            selectionNumber = selectionOrderById[it.media.id],
-                            stackCount = it.stackCount,
-                            canClick = { canScroll },
-                            onMediaClick = { onMediaClick(it) },
-                            onItemSelect = {
-                                if (allowSelection) {
-                                    feedbackManager.vibrate()
-                                    mediaIndexById[it.id]?.let { index ->
-                                        selector.toggleSelection(
-                                            mediaState = mediaState.value,
-                                            index = index,
-                                        )
-                                    }
+                            LaunchedEffect(selectedMedia.value.size) {
+                                withContext(Dispatchers.IO) {
+                                    // Partial check of media items should not check the header
+                                    isChecked.value = selectedMedia.value.containsAll(it.data)
                                 }
                             }
-                        )
+                        }
+                        MediaItemHeader(
+                            modifier = Modifier
+                                .then(
+                                    when {
+                                        canScroll -> Modifier.animateItem(
+                                                fadeInSpec = null,
+                                                fadeOutSpec = when {
+                                                    isScrolling -> null
+                                                    else -> spring()
+                                                },
+                                            )
+                                        else -> Modifier
+                                    },
+                                )
+                                .pinchItem(key = it.key),
+                            date = remember(it) {
+                                it.text
+                                    .replace("Today", stringToday)
+                                    .replace("Yesterday", stringYesterday)
+                            },
+                            showAsBig = remember(it) { it.key.isBigHeaderKey },
+                            isChecked = isChecked
+                        ) {
+                            if (allowSelection) {
+                                feedbackManager.vibrate()
+                                scope.launch {
+                                    isChecked.value = !isChecked.value
+                                    val list = mediaState.value.media.map { it.id }
+                                        .filter { id -> id in it.data }
+                                    if (isChecked.value) {
+                                        selector.addToSelection(list)
+                                    } else selector.removeFromSelection(list)
+                                }
+                            }
+                        }
+                    } else if (it is MediaItem.MediaViewItem) {
+                        with(sharedTransitionScope) {
+                            MediaImage(
+                                modifier = Modifier
+                                    .then(
+                                        when {
+                                            allowSharedElements -> Modifier.mediaSharedElement(
+                                                allowAnimation = canAnimate,
+                                                media = it.media,
+                                                animatedVisibilityScope = animatedContentScope,
+                                            )
+                                            else -> Modifier
+                                        },
+                                    )
+                                    .then(
+                                        when {
+                                            canScroll -> Modifier.animateItem(
+                                                fadeInSpec = null,
+                                                fadeOutSpec = when {
+                                                    isScrolling -> null
+                                                    else -> spring()
+                                                },
+                                            )
+                                            else -> Modifier
+                                        },
+                                    )
+                                    .pinchItem(key = it.key),
+                                media = it.media,
+                                metadata = metadataById[it.media.id],
+                                selectionActive = isSelectionActive,
+                                isSelected = it.media.id in selectedIds,
+                                selectionNumber = selectionOrderById[it.media.id],
+                                stackCount = it.stackCount,
+                                canClick = { canScroll },
+                                onMediaClick = { onMediaClick(it) },
+                                onItemSelect = {
+                                    if (allowSelection) {
+                                        feedbackManager.vibrate()
+                                        mediaIndexById[it.id]?.let { index ->
+                                            selector.toggleSelection(
+                                                mediaState = mediaState.value,
+                                                index = index,
+                                            )
+                                        }
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
+
+
             }
-
-
         }
     }
 }
@@ -412,6 +441,7 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContent(
     topContent: LazyGridScope.() -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
+    allowSharedElements: Boolean = true,
 ) {
     val feedbackManager = rememberFeedbackManager()
     val items by rememberedDerivedState(mediaState.value) {
@@ -452,67 +482,82 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContent(
     }
     val metadataById = metadataState.value.metadataById
 
-    LazyVerticalGrid(
-        state = gridState,
-        modifier = modifier
-            .fillMaxSize()
-            .photoGridDragHandler(
-                lazyGridState = gridState,
-                haptics = LocalHapticFeedback.current,
-                selectedIds = selectedMedia,
-                updateSelectedIds = selector::rawUpdateSelection,
-                autoScrollSpeed = autoScrollSpeed,
-                autoScrollThreshold = with(LocalDensity.current) { 40.dp.toPx() },
-                scrollGestureActive = scrollGestureActive,
-                layoutDirection = LocalLayoutDirection.current,
-                contentPadding = paddingValues,
-                allKeys = allKeys
-            ),
-        columns = gridCells,
-        contentPadding = paddingValues,
-        userScrollEnabled = canScroll,
-        horizontalArrangement = Arrangement.spacedBy(1.dp),
-        verticalArrangement = Arrangement.spacedBy(1.dp)
-    ) {
-        topContent()
+    key(gridCells) {
+        LazyVerticalGrid(
+            state = gridState,
+            modifier = modifier
+                .fillMaxSize()
+                .photoGridDragHandler(
+                    lazyGridState = gridState,
+                    haptics = LocalHapticFeedback.current,
+                    selectedIds = selectedMedia,
+                    updateSelectedIds = selector::rawUpdateSelection,
+                    autoScrollSpeed = autoScrollSpeed,
+                    autoScrollThreshold = with(LocalDensity.current) { 40.dp.toPx() },
+                    scrollGestureActive = scrollGestureActive,
+                    layoutDirection = LocalLayoutDirection.current,
+                    contentPadding = paddingValues,
+                    allKeys = allKeys
+                ),
+            columns = gridCells,
+            contentPadding = paddingValues,
+            userScrollEnabled = canScroll,
+            horizontalArrangement = Arrangement.spacedBy(1.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp)
+        ) {
+            topContent()
 
-        items(
-            items = items,
-            key = { item -> item.key },
-            contentType = { item -> item.mimeType }
-        ) { media ->
-            with(sharedTransitionScope) {
-                MediaImage(
-                    modifier = Modifier
-                        .mediaSharedElement(
-                            allowAnimation = canAnimate,
-                            media = media,
-                            animatedVisibilityScope = animatedContentScope
-                        )
-                        .animateItem(
-                            fadeInSpec = null,
-                            fadeOutSpec = spring()
-                        )
-                        .pinchItem(key = media.key),
-                    media = media,
-                    metadata = metadataById[media.id],
-                    selectionActive = isSelectionActive,
-                    isSelected = media.id in selectedIds,
-                    selectionNumber = selectionOrderById[media.id],
-                    canClick = { canScroll },
-                    onMediaClick = { onMediaClick(it) },
-                    onItemSelect = {
-                        if (allowSelection) {
-                            feedbackManager.vibrate()
-                            mediaIndexById[it.id]?.let { index ->
-                                selector.toggleSelection(
-                                    mediaState = mediaState.value,
-                                    index = index,
-                                )
+            items(
+                items = items,
+                key = { item -> item.key },
+                contentType = { item -> item.mimeType }
+            ) { media ->
+                with(sharedTransitionScope) {
+                    MediaImage(
+                        modifier = Modifier
+                            .then(
+                                when {
+                                    allowSharedElements -> Modifier.mediaSharedElement(
+                                        allowAnimation = canAnimate,
+                                        media = media,
+                                        animatedVisibilityScope = animatedContentScope,
+                                    )
+                                    else -> Modifier
+                                },
+                            )
+                            .then(
+                                when {
+                                    canScroll -> Modifier.animateItem(
+                                                fadeInSpec = null,
+                                                fadeOutSpec = when {
+                                                    isScrolling -> null
+                                                    else -> spring()
+                                                },
+                                            )
+                                    else -> Modifier
+                                },
+                            )
+                            .pinchItem(key = media.key),
+                        media = media,
+                        metadata = metadataById[media.id],
+                        selectionActive = isSelectionActive,
+                        isSelected = media.id in selectedIds,
+                        selectionNumber = selectionOrderById[media.id],
+                        canClick = { canScroll },
+                        onMediaClick = { onMediaClick(it) },
+                        onItemSelect = {
+                            if (allowSelection) {
+                                feedbackManager.vibrate()
+                                mediaIndexById[it.id]?.let { index ->
+                                    selector.toggleSelection(
+                                        mediaState = mediaState.value,
+                                        index = index,
+                                    )
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }

@@ -286,7 +286,9 @@ fun CategoryEditorScreen(
                             EmptyMedia(title = stringResource(R.string.no_matching_photos))
                         },
                         sharedTransitionScope = sharedTransitionScope,
-                        animatedContentScope = animatedContentScope
+                        animatedContentScope = animatedContentScope,
+                        // Shared elements cannot cross the sheet window.
+                        allowSharedElements = false,
                     )
                 }
             }

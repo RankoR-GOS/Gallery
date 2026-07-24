@@ -35,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
+import com.dot.gallery.core.Constants.mosaicColumnsList
 import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.presentation.components.Error
 import com.dot.gallery.core.presentation.components.LoadingMedia
@@ -82,11 +84,20 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+internal fun safeMosaicColumns(columns: Int): Int {
+    return columns.coerceIn(mosaicColumnsList.min(), mosaicColumnsList.max())
+}
+
+internal fun safeMosaicSpan(span: Int, columns: Int): Int {
+    return span.coerceIn(1, safeMosaicColumns(columns))
+}
+
 fun <T : Media> buildMosaicDisplayItems(
     mappedData: List<MediaItem<T>>,
     columns: Int = 4,
 ): List<MosaicDisplayItem<T>> {
-    val patterns = mosaicPatternsForColumns(columns)
+    val safeColumns = safeMosaicColumns(columns)
+    val patterns = mosaicPatternsForColumns(safeColumns)
     val result = ArrayList<MosaicDisplayItem<T>>(mappedData.size + mappedData.size / 4)
     val buffer = ArrayList<MediaItem.MediaViewItem<T>>(16)
     var blockIndex = 0
@@ -170,7 +181,7 @@ fun <T : Media> buildMosaicDisplayItems(
         buffer.subList(0, consumedCount).clear()
 
         // Emit complete rows of singles (multiples of columns)
-        val completeRowItems = (buffer.size / columns) * columns
+        val completeRowItems = (buffer.size / safeColumns) * safeColumns
         for (i in 0 until completeRowItems) {
             result.add(MosaicDisplayItem.SingleItem(buffer[i]))
         }
@@ -198,7 +209,7 @@ fun <T : Media> buildMosaicDisplayItems(
             }
             is MediaItem.MediaViewItem -> {
                 buffer.add(item)
-                if (buffer.size >= columns * 2 + 1) emitBlock()
+                if (buffer.size >= safeColumns * 2 + 1) emitBlock()
             }
         }
     }
@@ -232,17 +243,18 @@ fun <T : Media> MosaicMediaGrid(
         }
     }
 
+    val safeColumns = safeMosaicColumns(columns)
     val mappedDataSnapshot by remember(mappedData) {
         derivedStateOf { mappedData.toList() }
     }
     var displayItems by remember { mutableStateOf<List<MosaicDisplayItem<T>>>(emptyList()) }
-    LaunchedEffect(mappedDataSnapshot, allowHeaders, columns) {
+    LaunchedEffect(mappedDataSnapshot, allowHeaders, safeColumns) {
         displayItems = withContext(Dispatchers.Default) {
             val source = when {
                 allowHeaders -> mappedDataSnapshot
                 else -> mappedDataSnapshot.filterIsInstance<MediaItem.MediaViewItem<T>>()
             }
-            buildMosaicDisplayItems(mappedData = source, columns = columns)
+            buildMosaicDisplayItems(mappedData = source, columns = safeColumns)
         }
     }
 
@@ -387,239 +399,254 @@ fun <T : Media> MosaicMediaGrid(
 
     Box {
         bottomContent()
-        LazyVerticalGrid(
-            state = gridState,
-            modifier = modifier
-                .fillMaxSize()
-                .testTag("media_grid_mosaic")
-                .mosaicGridDragHandler(
-                    lazyGridState = gridState,
-                    haptics = LocalHapticFeedback.current,
-                    selectedIds = selectedMedia,
-                    updateSelectedIds = groupAwareUpdateSelection,
-                    autoScrollSpeed = autoScrollSpeed,
-                    autoScrollThreshold = with(LocalDensity.current) { 40.dp.toPx() },
-                    scrollGestureActive = scrollGestureActive,
-                    layoutDirection = LocalLayoutDirection.current,
-                    contentPadding = paddingValues,
-                    orderedGridKeys = orderedGridKeys,
-                    gridKeyToMediaIds = gridKeyToMediaIds
-                ),
-            columns = GridCells.Fixed(columns),
-            contentPadding = paddingValues,
-            userScrollEnabled = canScroll,
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
-        ) {
-            if (aboveGridContent != null) {
-                item(span = { GridItemSpan(maxLineSpan) }, key = "aboveGrid") {
-                    aboveGridContent()
+        key(safeColumns) {
+            LazyVerticalGrid(
+                state = gridState,
+                modifier = modifier
+                    .fillMaxSize()
+                    .testTag("media_grid_mosaic")
+                    .mosaicGridDragHandler(
+                        lazyGridState = gridState,
+                        haptics = LocalHapticFeedback.current,
+                        selectedIds = selectedMedia,
+                        updateSelectedIds = groupAwareUpdateSelection,
+                        autoScrollSpeed = autoScrollSpeed,
+                        autoScrollThreshold = with(LocalDensity.current) { 40.dp.toPx() },
+                        scrollGestureActive = scrollGestureActive,
+                        layoutDirection = LocalLayoutDirection.current,
+                        contentPadding = paddingValues,
+                        orderedGridKeys = orderedGridKeys,
+                        gridKeyToMediaIds = gridKeyToMediaIds
+                    ),
+                columns = GridCells.Fixed(safeColumns),
+                contentPadding = paddingValues,
+                userScrollEnabled = canScroll,
+                horizontalArrangement = Arrangement.spacedBy(1.dp),
+                verticalArrangement = Arrangement.spacedBy(1.dp)
+            ) {
+                if (aboveGridContent != null) {
+                    item(span = { GridItemSpan(maxLineSpan) }, key = "aboveGrid") {
+                        aboveGridContent()
+                    }
                 }
-            }
 
-            items(
-                count = displayItems.size,
-                key = { displayItems[it].key },
-                contentType = { idx ->
-                    when (displayItems[idx]) {
-                        is MosaicDisplayItem.HeaderItem -> "header"
-                        is MosaicDisplayItem.BigTileItem -> "big"
-                        is MosaicDisplayItem.QuadTileItem -> "quad"
-                        is MosaicDisplayItem.PairTileItem -> "pair"
-                        is MosaicDisplayItem.SingleItem -> "single"
+                items(
+                    count = displayItems.size,
+                    key = { displayItems[it].key },
+                    contentType = { idx ->
+                        when (displayItems[idx]) {
+                            is MosaicDisplayItem.HeaderItem -> "header"
+                            is MosaicDisplayItem.BigTileItem -> "big"
+                            is MosaicDisplayItem.QuadTileItem -> "quad"
+                            is MosaicDisplayItem.PairTileItem -> "pair"
+                            is MosaicDisplayItem.SingleItem -> "single"
+                        }
+                    },
+                    span = { idx ->
+                        when (val item = displayItems[idx]) {
+                            is MosaicDisplayItem.HeaderItem -> GridItemSpan(maxLineSpan)
+                            is MosaicDisplayItem.BigTileItem -> GridItemSpan(safeMosaicSpan(span = item.dynamicSpan, columns = safeColumns))
+                            is MosaicDisplayItem.QuadTileItem -> GridItemSpan(safeMosaicSpan(span = 2, columns = safeColumns))
+                            is MosaicDisplayItem.PairTileItem -> GridItemSpan(1)
+                            is MosaicDisplayItem.SingleItem -> GridItemSpan(1)
+                        }
                     }
-                },
-                span = { idx ->
+                ) { idx ->
                     when (val item = displayItems[idx]) {
-                        is MosaicDisplayItem.HeaderItem -> GridItemSpan(maxLineSpan)
-                        is MosaicDisplayItem.BigTileItem -> GridItemSpan(item.dynamicSpan)
-                        is MosaicDisplayItem.QuadTileItem -> GridItemSpan(2)
-                        is MosaicDisplayItem.PairTileItem -> GridItemSpan(1)
-                        is MosaicDisplayItem.SingleItem -> GridItemSpan(1)
-                    }
-                }
-            ) { idx ->
-                when (val item = displayItems[idx]) {
-                    is MosaicDisplayItem.HeaderItem -> {
-                        val header = item.header
-                        val isChecked = rememberSaveable { mutableStateOf(false) }
-                        if (allowSelection) {
-                            LaunchedEffect(isSelectionActive) {
-                                isChecked.value = isChecked.value && isSelectionActive
-                            }
-                            LaunchedEffect(selectedMedia.value.size) {
-                                withContext(Dispatchers.IO) {
-                                    isChecked.value = selectedMedia.value.containsAll(header.data)
-                                }
-                            }
-                        }
-                        MediaItemHeader(
-                            modifier = Modifier.animateItem(fadeInSpec = null),
-                            date = remember(header) {
-                                header.text
-                                    .replace("Today", stringToday)
-                                    .replace("Yesterday", stringYesterday)
-                            },
-                            showAsBig = remember(header) { header.key.isBigHeaderKey },
-                            isChecked = isChecked
-                        ) {
+                        is MosaicDisplayItem.HeaderItem -> {
+                            val header = item.header
+                            val isChecked = rememberSaveable { mutableStateOf(false) }
                             if (allowSelection) {
-                                feedbackManager.vibrate()
-                                scope.launch {
-                                    isChecked.value = !isChecked.value
-                                    val list = mediaState.value.media.map { it.id }
-                                        .filter { id -> id in header.data }
-                                    if (isChecked.value) selector.addToSelection(list)
-                                    else selector.removeFromSelection(list)
+                                LaunchedEffect(isSelectionActive) {
+                                    isChecked.value = isChecked.value && isSelectionActive
                                 }
-                            }
-                        }
-                    }
-                    is MosaicDisplayItem.BigTileItem -> {
-                        val mi = item.mediaItem
-                        with(sharedTransitionScope) {
-                            MediaImage(
-                                modifier = Modifier
-                                    .mediaSharedElement(
-                                        allowAnimation = canAnimate,
-                                        media = mi.media,
-                                        animatedVisibilityScope = animatedContentScope
-                                    )
-                                    .animateItem(fadeInSpec = null, fadeOutSpec = spring()),
-                                media = mi.media,
-                                metadata = metadataById[mi.media.id],
-                                selectionActive = isSelectionActive,
-                                isSelected = mi.media.id in selectedIds,
-                                selectionNumber = selectionOrderById[mi.media.id],
-                                stackCount = mi.stackCount,
-                                aspectRatio = item.dynamicAspectRatio,
-                                canClick = { canScroll },
-                                onMediaClick = { onMediaClick(it) },
-                                onItemSelect = selectMedia,
-                            )
-                        }
-                    }
-                    is MosaicDisplayItem.QuadTileItem -> {
-                        val items = item.mediaItems
-                        Box(modifier = Modifier.aspectRatio(1f)) {
-                            Column(modifier = Modifier.fillMaxSize()) {
-                                Row(modifier = Modifier.weight(1f)) {
-                                    for (i in 0..1) {
-                                        if (i > 0) Spacer(Modifier.width(1.dp))
-                                        val mi = items.getOrNull(i)
-                                        if (mi != null) {
-                                            with(sharedTransitionScope) {
-                                                MediaImage(
-                                                    modifier = Modifier
-                                                        .weight(1f)
-                                                        .aspectRatio(1f)
-                                                        .mediaSharedElement(
-                                                            allowAnimation = canAnimate,
-                                                            media = mi.media,
-                                                            animatedVisibilityScope = animatedContentScope
-                                                        ),
-                                                    media = mi.media,
-                                                    metadata = metadataById[mi.media.id],
-                                                    selectionActive = isSelectionActive,
-                                                    isSelected = mi.media.id in selectedIds,
-                                                    selectionNumber = selectionOrderById[mi.media.id],
-                                                    stackCount = mi.stackCount,
-                                                    canClick = { canScroll },
-                                                    onMediaClick = { onMediaClick(it) },
-                                                    onItemSelect = selectMedia,
-                                                )
-                                            }
-                                        } else Spacer(Modifier.weight(1f))
+                                LaunchedEffect(selectedMedia.value.size) {
+                                    withContext(Dispatchers.IO) {
+                                        isChecked.value = selectedMedia.value.containsAll(header.data)
                                     }
                                 }
-                                Spacer(Modifier.height(1.dp))
-                                Row(modifier = Modifier.weight(1f)) {
-                                    for (i in 2..3) {
-                                        if (i > 2) Spacer(Modifier.width(1.dp))
-                                        val mi = items.getOrNull(i)
-                                        if (mi != null) {
-                                            with(sharedTransitionScope) {
-                                                MediaImage(
-                                                    modifier = Modifier
-                                                        .weight(1f)
-                                                        .aspectRatio(1f)
-                                                        .mediaSharedElement(
-                                                            allowAnimation = canAnimate,
-                                                            media = mi.media,
-                                                            animatedVisibilityScope = animatedContentScope
-                                                        ),
-                                                    media = mi.media,
-                                                    metadata = metadataById[mi.media.id],
-                                                    selectionActive = isSelectionActive,
-                                                    isSelected = mi.media.id in selectedIds,
-                                                    selectionNumber = selectionOrderById[mi.media.id],
-                                                    stackCount = mi.stackCount,
-                                                    canClick = { canScroll },
-                                                    onMediaClick = { onMediaClick(it) },
-                                                    onItemSelect = selectMedia,
-                                                )
-                                            }
-                                        } else Spacer(Modifier.weight(1f))
+                            }
+                            MediaItemHeader(
+                                modifier = when {
+                                    canScroll -> Modifier.animateItem(fadeInSpec = null)
+                                    else -> Modifier
+                                },
+                                date = remember(header) {
+                                    header.text
+                                        .replace("Today", stringToday)
+                                        .replace("Yesterday", stringYesterday)
+                                },
+                                showAsBig = remember(header) { header.key.isBigHeaderKey },
+                                isChecked = isChecked
+                            ) {
+                                if (allowSelection) {
+                                    feedbackManager.vibrate()
+                                    scope.launch {
+                                        isChecked.value = !isChecked.value
+                                        val list = mediaState.value.media.map { it.id }
+                                            .filter { id -> id in header.data }
+                                        if (isChecked.value) selector.addToSelection(list)
+                                        else selector.removeFromSelection(list)
                                     }
                                 }
                             }
                         }
-                    }
-                    is MosaicDisplayItem.PairTileItem -> {
-                        val pairItems = item.mediaItems
-                        Box(modifier = Modifier.aspectRatio(0.5f)) {
-                            Column(modifier = Modifier.fillMaxSize()) {
-                                for (i in 0..1) {
-                                    if (i > 0) Spacer(Modifier.height(1.dp))
-                                    val mi = pairItems.getOrNull(i)
-                                    if (mi != null) {
-                                        with(sharedTransitionScope) {
-                                            MediaImage(
-                                                modifier = Modifier
-                                                    .weight(1f)
-                                                    .aspectRatio(1f)
-                                                    .mediaSharedElement(
-                                                        allowAnimation = canAnimate,
+                        is MosaicDisplayItem.BigTileItem -> {
+                            val mi = item.mediaItem
+                            with(sharedTransitionScope) {
+                                MediaImage(
+                                    modifier = Modifier
+                                        .mediaSharedElement(
+                                            allowAnimation = canAnimate,
+                                            media = mi.media,
+                                            animatedVisibilityScope = animatedContentScope
+                                        )
+                                        .then(
+                                            when {
+                                                canScroll -> Modifier.animateItem(fadeInSpec = null, fadeOutSpec = spring())
+                                                else -> Modifier
+                                            },
+                                        ),
+                                    media = mi.media,
+                                    metadata = metadataById[mi.media.id],
+                                    selectionActive = isSelectionActive,
+                                    isSelected = mi.media.id in selectedIds,
+                                    selectionNumber = selectionOrderById[mi.media.id],
+                                    stackCount = mi.stackCount,
+                                    aspectRatio = item.dynamicAspectRatio,
+                                    canClick = { canScroll },
+                                    onMediaClick = { onMediaClick(it) },
+                                    onItemSelect = selectMedia,
+                                )
+                            }
+                        }
+                        is MosaicDisplayItem.QuadTileItem -> {
+                            val items = item.mediaItems
+                            Box(modifier = Modifier.aspectRatio(1f)) {
+                                Column(modifier = Modifier.fillMaxSize()) {
+                                    Row(modifier = Modifier.weight(1f)) {
+                                        for (i in 0..1) {
+                                            if (i > 0) Spacer(Modifier.width(1.dp))
+                                            val mi = items.getOrNull(i)
+                                            if (mi != null) {
+                                                with(sharedTransitionScope) {
+                                                    MediaImage(
+                                                        modifier = Modifier
+                                                            .weight(1f)
+                                                            .aspectRatio(1f)
+                                                            .mediaSharedElement(
+                                                                allowAnimation = canAnimate,
+                                                                media = mi.media,
+                                                                animatedVisibilityScope = animatedContentScope
+                                                            ),
                                                         media = mi.media,
-                                                        animatedVisibilityScope = animatedContentScope
-                                                    ),
-                                                media = mi.media,
-                                                metadata = metadataById[mi.media.id],
-                                                selectionActive = isSelectionActive,
-                                                isSelected = mi.media.id in selectedIds,
-                                                selectionNumber = selectionOrderById[mi.media.id],
-                                                stackCount = mi.stackCount,
-                                                canClick = { canScroll },
-                                                onMediaClick = { onMediaClick(it) },
-                                                onItemSelect = selectMedia,
-                                            )
+                                                        metadata = metadataById[mi.media.id],
+                                                        selectionActive = isSelectionActive,
+                                                        isSelected = mi.media.id in selectedIds,
+                                                        selectionNumber = selectionOrderById[mi.media.id],
+                                                        stackCount = mi.stackCount,
+                                                        canClick = { canScroll },
+                                                        onMediaClick = { onMediaClick(it) },
+                                                        onItemSelect = selectMedia,
+                                                    )
+                                                }
+                                            } else Spacer(Modifier.weight(1f))
                                         }
-                                    } else Spacer(Modifier.weight(1f))
+                                    }
+                                    Spacer(Modifier.height(1.dp))
+                                    Row(modifier = Modifier.weight(1f)) {
+                                        for (i in 2..3) {
+                                            if (i > 2) Spacer(Modifier.width(1.dp))
+                                            val mi = items.getOrNull(i)
+                                            if (mi != null) {
+                                                with(sharedTransitionScope) {
+                                                    MediaImage(
+                                                        modifier = Modifier
+                                                            .weight(1f)
+                                                            .aspectRatio(1f)
+                                                            .mediaSharedElement(
+                                                                allowAnimation = canAnimate,
+                                                                media = mi.media,
+                                                                animatedVisibilityScope = animatedContentScope
+                                                            ),
+                                                        media = mi.media,
+                                                        metadata = metadataById[mi.media.id],
+                                                        selectionActive = isSelectionActive,
+                                                        isSelected = mi.media.id in selectedIds,
+                                                        selectionNumber = selectionOrderById[mi.media.id],
+                                                        stackCount = mi.stackCount,
+                                                        canClick = { canScroll },
+                                                        onMediaClick = { onMediaClick(it) },
+                                                        onItemSelect = selectMedia,
+                                                    )
+                                                }
+                                            } else Spacer(Modifier.weight(1f))
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                    is MosaicDisplayItem.SingleItem -> {
-                        val mi = item.mediaItem
-                        with(sharedTransitionScope) {
-                            MediaImage(
-                                modifier = Modifier
-                                    .mediaSharedElement(
-                                        allowAnimation = canAnimate,
-                                        media = mi.media,
-                                        animatedVisibilityScope = animatedContentScope
-                                    )
-                                    .animateItem(fadeInSpec = null, fadeOutSpec = spring()),
-                                media = mi.media,
-                                metadata = metadataById[mi.media.id],
-                                selectionActive = isSelectionActive,
-                                isSelected = mi.media.id in selectedIds,
-                                selectionNumber = selectionOrderById[mi.media.id],
-                                stackCount = mi.stackCount,
-                                canClick = { canScroll },
-                                onMediaClick = { onMediaClick(it) },
-                                onItemSelect = selectMedia,
-                            )
+                        is MosaicDisplayItem.PairTileItem -> {
+                            val pairItems = item.mediaItems
+                            Box(modifier = Modifier.aspectRatio(0.5f)) {
+                                Column(modifier = Modifier.fillMaxSize()) {
+                                    for (i in 0..1) {
+                                        if (i > 0) Spacer(Modifier.height(1.dp))
+                                        val mi = pairItems.getOrNull(i)
+                                        if (mi != null) {
+                                            with(sharedTransitionScope) {
+                                                MediaImage(
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .aspectRatio(1f)
+                                                        .mediaSharedElement(
+                                                            allowAnimation = canAnimate,
+                                                            media = mi.media,
+                                                            animatedVisibilityScope = animatedContentScope
+                                                        ),
+                                                    media = mi.media,
+                                                    metadata = metadataById[mi.media.id],
+                                                    selectionActive = isSelectionActive,
+                                                    isSelected = mi.media.id in selectedIds,
+                                                    selectionNumber = selectionOrderById[mi.media.id],
+                                                    stackCount = mi.stackCount,
+                                                    canClick = { canScroll },
+                                                    onMediaClick = { onMediaClick(it) },
+                                                    onItemSelect = selectMedia,
+                                                )
+                                            }
+                                        } else Spacer(Modifier.weight(1f))
+                                    }
+                                }
+                            }
+                        }
+                        is MosaicDisplayItem.SingleItem -> {
+                            val mi = item.mediaItem
+                            with(sharedTransitionScope) {
+                                MediaImage(
+                                    modifier = Modifier
+                                        .mediaSharedElement(
+                                            allowAnimation = canAnimate,
+                                            media = mi.media,
+                                            animatedVisibilityScope = animatedContentScope
+                                        )
+                                        .then(
+                                            when {
+                                                canScroll -> Modifier.animateItem(fadeInSpec = null, fadeOutSpec = spring())
+                                                else -> Modifier
+                                            },
+                                        ),
+                                    media = mi.media,
+                                    metadata = metadataById[mi.media.id],
+                                    selectionActive = isSelectionActive,
+                                    isSelected = mi.media.id in selectedIds,
+                                    selectionNumber = selectionOrderById[mi.media.id],
+                                    stackCount = mi.stackCount,
+                                    canClick = { canScroll },
+                                    onMediaClick = { onMediaClick(it) },
+                                    onItemSelect = selectMedia,
+                                )
+                            }
                         }
                     }
                 }

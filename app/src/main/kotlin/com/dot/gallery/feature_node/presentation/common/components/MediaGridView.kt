@@ -77,6 +77,7 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
     emptyContent: @Composable () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
+    allowSharedElements: Boolean = true,
     onMediaClick: @DisallowComposableCalls (media: T) -> Unit = {},
 ) {
     val mappedData by rememberedDerivedState(mediaState, showMonthlyHeader) {
@@ -91,17 +92,22 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
         onBack = selector::clearSelection
     )
 
-    /**
-     * Workaround for a small bug
-     * That shows the grid at the bottom after content is loaded
-     */
+    // Correct only a cold load; keep a restored viewer-return position.
     var hasScrolledToTop by rememberSaveable { mutableStateOf(false) }
+    val startedAtTop = remember {
+        gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0
+    }
     LaunchedEffect(gridState, mediaState.value) {
+        if (!startedAtTop || hasScrolledToTop) return@LaunchedEffect
         snapshotFlow { mediaState.value.isLoading }
             .collectLatest { isLoading ->
-                if (!isLoading  && !hasScrolledToTop) {
+                if (!isLoading && !hasScrolledToTop) {
                     hasScrolledToTop = true
-                    gridState.scrollToItem(0)
+                    if (gridState.firstVisibleItemIndex != 0 ||
+                        gridState.firstVisibleItemScrollOffset != 0
+                    ) {
+                        gridState.scrollToItem(index = 0)
+                    }
                 }
             }
     }
@@ -189,7 +195,8 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
                 emptyContent = emptyContent,
                 onMediaClick = onMediaClick,
                 sharedTransitionScope = sharedTransitionScope,
-                animatedContentScope = animatedContentScope
+                animatedContentScope = animatedContentScope,
+                allowSharedElements = allowSharedElements,
             )
         }
     } else {
@@ -208,7 +215,8 @@ fun <T : Media> GridPinchZoomScope.MediaGridView(
             emptyContent = emptyContent,
             onMediaClick = onMediaClick,
             sharedTransitionScope = sharedTransitionScope,
-            animatedContentScope = animatedContentScope
+            animatedContentScope = animatedContentScope,
+                allowSharedElements = allowSharedElements,
         )
     }
 

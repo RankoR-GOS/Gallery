@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
@@ -127,7 +128,18 @@ fun <T : Media> MediaImage(
                 .fillMaxSize()
                 .align(Alignment.Center)
                 .aspectRatio(aspectRatio)
-                .padding(selectedSize)
+                // Keep the loader's measured size stable while selecting a thumbnail.
+                .graphicsLayer {
+                    val minimumDimension = size.minDimension
+                    val scale = when {
+                        minimumDimension > 0f ->
+                            ((minimumDimension - selectedSize.toPx() * 2f) / minimumDimension)
+                                .coerceIn(0f, 1f)
+                        else -> 1f
+                    }
+                    scaleX = scale
+                    scaleY = scale
+                }
                 .clip(roundedShape)
                 .hazeSource(badgeHazeState)
                 .background(
