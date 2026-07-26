@@ -35,14 +35,15 @@ import com.github.panpf.sketch.request.ImageOptions
 import com.github.panpf.sketch.request.saveCellularTraffic
 import com.github.panpf.sketch.request.supportPauseLoadWhenScrolling
 import com.github.panpf.sketch.resize.Precision
-import com.github.panpf.sketch.util.appCacheDirectory
 import dagger.hilt.android.HiltAndroidApp
+import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import okio.FileSystem
+import okio.Path.Companion.toPath
 
 @HiltAndroidApp
 class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provider {
@@ -59,7 +60,7 @@ class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provide
             supportSandboxedJxlDecoder()
         }
         val diskCache = DiskCache.Builder(context, FileSystem.SYSTEM)
-            .directory(context.appCacheDirectory())
+            .directory(File(context.cacheDir, "sketch").absolutePath.toPath())
             .maxSize(150 * 1024 * 1024).build()
 
         memoryCache {
