@@ -28,8 +28,11 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.ImageSearch
@@ -57,6 +60,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -105,6 +109,7 @@ import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.selectedMedia
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.withContext
 
 
@@ -123,12 +128,29 @@ fun SearchScreen(
     val distributor = LocalMediaDistributor.current
     val searchResults by viewModel.searchResultsState.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
-    // The field owns its text so a keystroke lands in the same frame it is typed. Round-tripping it
-    // through the view model instead makes fast typing drop and reorder characters.
-    var queryText by rememberSaveable { mutableStateOf(query) }
-    // Pick up programmatic changes (clearQuery, mime type queries, history and category taps).
-    LaunchedEffect(query) {
-        if (query != queryText) queryText = query
+    // The field owns its text. Mirroring viewModel.query back into it makes fast typing reorder
+    // characters and strand the ime composing span, because the collection lags the keystrokes and
+    // a stale write lands mid-composition. Programmatic rewrites arrive as one-shot events instead.
+    val queryState = rememberTextFieldState()
+    LaunchedEffect(queryState) {
+        viewModel.queryOverrides.collect { override ->
+            if (override != queryState.text.toString()) {
+                queryState.setTextAndPlaceCursorAtEnd(override)
+            }
+        }
+    }
+    LaunchedEffect(queryState) {
+        snapshotFlow { queryState.text.toString() }
+            // An override publishes the query before it reaches the field, so the resulting text
+            // already matches and must not be fed back — that would cancel the search it started.
+            .filter { it != viewModel.query.value }
+            .collect { viewModel.setQuery(it, apply = false, fromUser = true) }
+    }
+    // Rejecting a lone space through the buffer keeps the ime in sync with what we accepted.
+    val rejectLoneSpace = remember {
+        InputTransformation {
+            if (asCharSequence().toString() == " ") revertAllChanges()
+        }
     }
     val selectedImageMedia by viewModel.selectedImageMedia.collectAsStateWithLifecycle()
     val analysisSettings by viewModel.analysisSettings.collectAsStateWithLifecycle()
@@ -210,7 +232,7 @@ fun SearchScreen(
                                     shape = CircleShape
                                 ),
                             onClick = {
-                                if (queryText.isNotEmpty() || selectedImageMedia != null) {
+                                if (queryState.text.isNotEmpty() || selectedImageMedia != null) {
                                     viewModel.clearQuery()
                                 } else {
                                     eventHandler.navigateUp()
@@ -227,13 +249,8 @@ fun SearchScreen(
                         OutlinedTextField(
                             modifier = Modifier
                                 .fillMaxWidth(),
-                            value = queryText,
-                            onValueChange = { newQuery ->
-                                if (newQuery != " ") {
-                                    queryText = newQuery
-                                    viewModel.setQuery(newQuery, apply = false)
-                                }
-                            },
+                            state = queryState,
+                            inputTransformation = rejectLoneSpace,
                             shape = CircleShape,
                             colors = OutlinedTextFieldDefaults.colors(
                                 unfocusedBorderColor = outlineColor,
@@ -244,24 +261,11 @@ fun SearchScreen(
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 imeAction = ImeAction.Search
                             ),
-                            keyboardActions = KeyboardActions(
-                                onSearch = {
-                                    viewModel.setQuery(queryText, apply = true)
-                                    viewModel.addHistory(queryText)
-                                },
-                                onDone = {
-                                    viewModel.setQuery(queryText, apply = true)
-                                    viewModel.addHistory(queryText)
-                                },
-                                onGo = {
-                                    viewModel.setQuery(queryText, apply = true)
-                                    viewModel.addHistory(queryText)
-                                },
-                                onSend = {
-                                    viewModel.setQuery(queryText, apply = true)
-                                    viewModel.addHistory(queryText)
-                                }
-                            ),
+                            onKeyboardAction = {
+                                val submitted = queryState.text.toString()
+                                viewModel.setQuery(submitted, apply = true, fromUser = true)
+                                viewModel.addHistory(submitted)
+                            },
                             leadingIcon = selectedImageMedia?.let { media ->
                                 {
                                     ImageSearchChip(
@@ -281,13 +285,13 @@ fun SearchScreen(
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                 )
                             },
-                            singleLine = true,
+                            lineLimits = TextFieldLineLimits.SingleLine,
                             trailingIcon = {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     AnimatedVisibility(
-                                        visible = queryText.isNotBlank() && !searchResults.isSearching && !searchResults.hasSearched,
+                                        visible = queryState.text.isNotBlank() && !searchResults.isSearching && !searchResults.hasSearched,
                                         enter = fadeIn() + slideInHorizontally { it },
                                         exit = fadeOut() + slideOutHorizontally { it }
                                     ) {
@@ -299,8 +303,13 @@ fun SearchScreen(
                                                     shape = CircleShape
                                                 ),
                                             onClick = {
-                                                viewModel.setQuery(queryText, apply = true)
-                                                viewModel.addHistory(queryText)
+                                                val submitted = queryState.text.toString()
+                                                viewModel.setQuery(
+                                                    query = submitted,
+                                                    apply = true,
+                                                    fromUser = true
+                                                )
+                                                viewModel.addHistory(submitted)
                                             }
                                         ) {
                                             Icon(

@@ -43,9 +43,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -99,6 +103,32 @@ class SearchViewModel @Inject internal constructor(
 
     private var _query = MutableStateFlow("")
     val query = _query.asStateFlow()
+
+    private val _queryOverrides = MutableSharedFlow<String>(
+        extraBufferCapacity = 8,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+
+    /**
+     * Query text the view model wants the search field to display, delivered as one-shot events.
+     *
+     * The field owns its own text, so [query] must never be mirrored back into it: the mirror lags
+     * by however long the collection takes, and a stale write landing mid-keystroke desynchronizes
+     * the ime composing region — characters reorder and the composing span strands. Only genuine
+     * rewrites (clearing, chip taps, history taps) are published here.
+     */
+    val queryOverrides: SharedFlow<String> = _queryOverrides.asSharedFlow()
+
+    /**
+     * @param fromUser true when [query] is the text the field already displays, in which case no
+     * override is emitted.
+     */
+    private fun publishQuery(query: String, fromUser: Boolean = false) {
+        _query.value = query
+        if (!fromUser) {
+            _queryOverrides.tryEmit(query)
+        }
+    }
 
     private val _selectedImageMedia = MutableStateFlow<Media.UriMedia?>(null)
     val selectedImageMedia = _selectedImageMedia.asStateFlow()
@@ -347,7 +377,7 @@ class SearchViewModel @Inject internal constructor(
     fun clearQuery() {
         viewModelScope.launch {
             searchJob?.cancel()
-            _query.tryEmit("")
+            publishQuery("")
             _selectedImageMedia.tryEmit(null)
             _searchResultsState.tryEmit(SearchResultsState())
         }
@@ -381,7 +411,7 @@ class SearchViewModel @Inject internal constructor(
             return
         }
         searchJob?.cancel()
-        _query.value = ""
+        publishQuery("")
         searchJob = viewModelScope.launch(ioDispatcher) {
             _searchResultsState.tryEmit(
                 SearchResultsState(
@@ -525,9 +555,9 @@ class SearchViewModel @Inject internal constructor(
 
     fun setMimeTypeQuery(mimeType: String, hideExplicitQuery: Boolean = false) {
         if (hideExplicitQuery) {
-            _query.value = if (mimeType.startsWith("image")) "Images" else "Videos"
+            publishQuery(if (mimeType.startsWith("image")) "Images" else "Videos")
         } else {
-            _query.value = mimeType
+            publishQuery(mimeType)
         }
         val searchQuery = if (mimeType.contains("/*")) {
             mimeType.substringBefore("/*")
@@ -563,7 +593,7 @@ class SearchViewModel @Inject internal constructor(
      */
     fun setMediaModeQuery(modeKey: String) {
         val spec = mediaModeSpecs.find { it.key == modeKey } ?: return
-        _query.value = context.getString(spec.labelResId)
+        publishQuery(context.getString(spec.labelResId))
         searchJob?.cancel()
         searchJob = viewModelScope.launch(ioDispatcher) {
             val allMediaMap = allMedia.value.media.associateBy { it.id }
@@ -596,7 +626,7 @@ class SearchViewModel @Inject internal constructor(
      * Filters metadata by manufacturer + model match and returns associated media.
      */
     fun setLensModelQuery(lensModel: String) {
-        _query.value = lensModel
+        publishQuery(lensModel)
         searchJob?.cancel()
         searchJob = viewModelScope.launch(ioDispatcher) {
             val allMediaMap = allMedia.value.media.associateBy { it.id }
@@ -634,7 +664,7 @@ class SearchViewModel @Inject internal constructor(
      */
     fun setGroupTypeQuery(groupTypeKey: String) {
         val spec = groupTypeSpecs.find { it.key == groupTypeKey } ?: return
-        _query.value = context.getString(spec.labelResId)
+        publishQuery(context.getString(spec.labelResId))
         searchJob?.cancel()
         searchJob = viewModelScope.launch(ioDispatcher) {
             val groups = allMedia.value.media
@@ -664,11 +694,15 @@ class SearchViewModel @Inject internal constructor(
         }
     }
 
-    fun setQuery(query: String, apply: Boolean = true) {
+    /**
+     * @param fromUser true when [query] is the text the search field already displays, so it does
+     * not need to be told about it again. See [queryOverrides].
+     */
+    fun setQuery(query: String, apply: Boolean = true, fromUser: Boolean = false) {
         // Publish synchronously, before the cancel: emitting from inside the job means a keystroke
         // that cancels its predecessor also drops that predecessor's query, so the field and the
         // keyboard action handlers can end up acting on a stale value.
-        _query.value = query
+        publishQuery(query, fromUser)
         searchJob?.cancel()
         searchJob = viewModelScope.launch(ioDispatcher) {
             if (query.isEmpty() || !apply) {

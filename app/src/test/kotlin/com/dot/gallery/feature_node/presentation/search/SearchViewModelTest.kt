@@ -21,6 +21,7 @@ import com.dot.gallery.testutil.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -100,6 +102,91 @@ internal class SearchViewModelTest {
 
             assertTrue(viewModel.topCategories.first { items -> items.isEmpty() }.isEmpty())
         }
+    }
+
+    /**
+     * The search field owns its own text, so text that came from the field must never be echoed
+     * back to it. An echo lags the keystrokes by however long the collection takes, and a stale
+     * write landing mid-composition desynchronizes the ime composing region.
+     */
+    @Test
+    fun setQueryFromUser_doesNotAskTheFieldToRewriteItself() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel(analysis = analysisDisabled())
+            val overrides = viewModel.recordOverrides(backgroundScope)
+            runCurrent()
+
+            viewModel.setQuery(query = "moun", apply = false, fromUser = true)
+            viewModel.setQuery(query = "mount", apply = false, fromUser = true)
+            runCurrent()
+
+            assertEquals(emptyList<String>(), overrides)
+            assertEquals("mount", viewModel.query.value)
+        }
+    }
+
+    @Test
+    fun programmaticQueryWrites_askTheFieldToRewriteItself() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel(analysis = analysisDisabled())
+            val overrides = viewModel.recordOverrides(backgroundScope)
+            runCurrent()
+
+            viewModel.setMimeTypeQuery(mimeType = "image/*", hideExplicitQuery = true)
+            viewModel.clearQuery()
+            runCurrent()
+
+            assertEquals(listOf("Images", ""), overrides)
+            assertEquals("", viewModel.query.value)
+        }
+    }
+
+    /**
+     * A history tap is text the field does not have yet, so it has to be told — even though it goes
+     * through the same [SearchViewModel.setQuery] entry point the field itself uses.
+     */
+    @Test
+    fun setQueryFromHistory_asksTheFieldToRewriteItself() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel(analysis = analysisDisabled())
+            val overrides = viewModel.recordOverrides(backgroundScope)
+            runCurrent()
+
+            viewModel.setQuery(query = "mountain")
+            runCurrent()
+
+            assertEquals(listOf("mountain"), overrides)
+        }
+    }
+
+    /**
+     * [SearchViewModel.query] has to be visible before the search job starts, so a keystroke that
+     * cancels its predecessor cannot drop the query that predecessor published.
+     */
+    @Test
+    fun setQuery_publishesTheQueryBeforeTheSearchRuns() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val viewModel = createViewModel(analysis = analysisDisabled())
+
+            viewModel.setQuery(query = "mountain", apply = true, fromUser = true)
+
+            assertEquals("mountain", viewModel.query.value)
+        }
+    }
+
+    private fun SearchViewModel.recordOverrides(scope: CoroutineScope): List<String> {
+        val recorded = mutableListOf<String>()
+        scope.launch { queryOverrides.collect { recorded += it } }
+        return recorded
+    }
+
+    private fun analysisDisabled(): FakeAiMediaAnalysis {
+        return FakeAiMediaAnalysis(
+            initialSettings = AiMediaAnalysisSettings(
+                analysisEnabled = false,
+                categoryClassificationEnabled = false,
+            ),
+        )
     }
 
     private fun createViewModel(
