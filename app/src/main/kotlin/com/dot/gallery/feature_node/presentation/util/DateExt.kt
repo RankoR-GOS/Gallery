@@ -8,15 +8,14 @@ package com.dot.gallery.feature_node.presentation.util
 import android.content.res.Resources
 import android.os.Parcelable
 import android.text.format.DateFormat
+import androidx.compose.ui.text.intl.Locale as ComposeLocale
 import androidx.core.os.ConfigurationCompat
-import kotlinx.parcelize.Parcelize
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-
-import androidx.compose.ui.text.intl.Locale as ComposeLocale
+import kotlinx.parcelize.Parcelize
 
 private val FILENAME_DATE_REGEX = Regex("""(\d{4})(\d{2})(\d{2})[_-](\d{2})(\d{2})(\d{2})""")
 

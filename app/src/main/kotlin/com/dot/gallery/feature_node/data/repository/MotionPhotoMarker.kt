@@ -1,8 +1,8 @@
 package com.dot.gallery.feature_node.data.repository
 
+import java.io.InputStream
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
-import java.io.InputStream
 
 private const val MOTION_PHOTO_BUFFER_BYTES = 64 * 1024
 private val MOTION_PHOTO_SAMSUNG_MARKER = "MotionPhoto_Data".toByteArray(Charsets.US_ASCII)

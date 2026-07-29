@@ -12,20 +12,20 @@ import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.Settings
 import com.dot.gallery.feature_node.data.model.Album
-import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.data.model.IgnoredAlbum
 import com.dot.gallery.feature_node.data.model.LockedAlbum
 import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.util.mapMedia
 import com.dot.gallery.feature_node.presentation.util.mediaFlowWithType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import javax.inject.Inject
 
 @HiltViewModel
 open class PickerViewModel @Inject constructor(

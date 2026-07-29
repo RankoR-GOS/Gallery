@@ -18,29 +18,30 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.Media.UriMedia
+import com.dot.gallery.feature_node.data.model.editor.SaveFormat
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.model.editor.Adjustment
 import com.dot.gallery.feature_node.domain.model.editor.DrawMode
 import com.dot.gallery.feature_node.domain.model.editor.DrawType
 import com.dot.gallery.feature_node.domain.model.editor.ImageFilter
 import com.dot.gallery.feature_node.domain.model.editor.PathProperties
-import com.dot.gallery.feature_node.data.model.editor.SaveFormat
 import com.dot.gallery.feature_node.domain.model.editor.SuggestionPreset
 import com.dot.gallery.feature_node.domain.model.editor.VariableFilter
-import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.edit.adjustments.Flip
 import com.dot.gallery.feature_node.presentation.edit.adjustments.Markup
 import com.dot.gallery.feature_node.presentation.edit.adjustments.Rotate90CW
-import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Rotate
 import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Denoise
+import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Rotate
 import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Sharpness
-import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Vignette
 import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.VariableFilterTypes
-import com.dot.gallery.feature_node.presentation.util.overlayBitmaps
+import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.Vignette
 import com.dot.gallery.feature_node.presentation.util.applyColorMatrix
+import com.dot.gallery.feature_node.presentation.util.overlayBitmaps
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printError
 import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,7 +51,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 @HiltViewModel
 class EditViewModel @Inject constructor(

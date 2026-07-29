@@ -5,6 +5,9 @@
 
 package com.dot.gallery.feature_node.domain.model
 
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.model.MediaItem
+
 /**
  * Tile size variants for the mosaic layout.
  *

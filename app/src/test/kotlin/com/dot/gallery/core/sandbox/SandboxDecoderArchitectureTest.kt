@@ -1,8 +1,8 @@
 package com.dot.gallery.core.sandbox
 
+import java.io.File
 import org.junit.Assert.assertFalse
 import org.junit.Test
-import java.io.File
 
 internal class SandboxDecoderArchitectureTest {
     @Test

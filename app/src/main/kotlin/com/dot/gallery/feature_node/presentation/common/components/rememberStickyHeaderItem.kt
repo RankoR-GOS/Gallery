@@ -11,9 +11,9 @@ import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.MediaItem
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.model.isHeaderKey
 import com.dot.gallery.feature_node.data.model.isSmallHeaderKey
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 
 @Composable

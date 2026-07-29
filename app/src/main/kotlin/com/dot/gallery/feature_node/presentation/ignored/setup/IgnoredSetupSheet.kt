@@ -31,7 +31,6 @@ import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.FilterNone
 import androidx.compose.material.icons.outlined.FolderCopy
 import androidx.compose.material.icons.outlined.PhotoAlbum
-import com.dot.gallery.core.presentation.components.SetupButton
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -70,9 +69,10 @@ import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.NavigationBackButton
+import com.dot.gallery.core.presentation.components.SetupButton
 import com.dot.gallery.feature_node.data.model.Album
-import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.data.model.IgnoredAlbum
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.presentation.ignored.setup.components.ConfirmationCard
 import com.dot.gallery.feature_node.presentation.ignored.setup.components.RegexExample
 import com.dot.gallery.feature_node.presentation.ignored.setup.components.SectionHeader
@@ -80,9 +80,9 @@ import com.dot.gallery.feature_node.presentation.ignored.setup.components.Select
 import com.dot.gallery.feature_node.presentation.ignored.setup.components.TypeOptionCard
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
+import com.dot.gallery.ui.core.Icons as GalleryIcons
 import com.dot.gallery.ui.core.icons.RegularExpression
 import kotlinx.coroutines.launch
-import com.dot.gallery.ui.core.Icons as GalleryIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

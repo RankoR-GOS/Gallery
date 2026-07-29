@@ -36,8 +36,8 @@ import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionLayout
-import com.dot.gallery.feature_node.presentation.util.launchViewUri
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
+import com.dot.gallery.feature_node.presentation.util.launchViewUri
 import kotlinx.coroutines.launch
 
 @Suppress("DEPRECATION")

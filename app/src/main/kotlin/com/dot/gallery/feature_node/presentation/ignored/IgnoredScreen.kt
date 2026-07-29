@@ -43,8 +43,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.core.presentation.components.NavigationBackButton
-import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.data.model.IgnoredAlbum
+import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.presentation.ignored.setup.IgnoredOptionsSheet
 import com.dot.gallery.feature_node.presentation.ignored.setup.IgnoredSetupSheet
 import com.dot.gallery.feature_node.presentation.settings.components.AlbumPreferenceItem

@@ -12,11 +12,11 @@ import com.dot.gallery.core.workers.rotateImage
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.util.mediaPair
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 val LocalMediaHandler = compositionLocalOf<MediaHandler> {
     error("No MediaHandler provided!!! This is likely due to a missing Hilt injection in the Composable hierarchy.")

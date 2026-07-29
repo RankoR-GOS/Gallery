@@ -37,8 +37,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,8 +53,8 @@ import com.dot.gallery.core.presentation.components.CheckBox
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.util.getUri
 import com.github.panpf.sketch.AsyncImage
-import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlinx.coroutines.launch
 
 private val THUMBNAIL_SIZE = 56.dp
 private val ITEM_SPACING = 6.dp

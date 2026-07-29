@@ -1,13 +1,13 @@
 package com.dot.gallery.core.sandbox
 
 import com.dot.gallery.core.util.SizeLimitExceededException
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Assert.assertThrows
-import org.junit.Test
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
 internal class EncodedMediaTransferTest {
     @Test

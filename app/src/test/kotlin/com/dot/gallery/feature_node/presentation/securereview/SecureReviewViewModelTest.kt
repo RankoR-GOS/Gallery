@@ -1,9 +1,9 @@
 package com.dot.gallery.feature_node.presentation.securereview
 
 import android.net.Uri
-import com.dot.gallery.feature_node.data.repository.SecureReviewMediaRepository
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.securereview.AuthorizedSecureReviewRequest
+import com.dot.gallery.feature_node.data.repository.SecureReviewMediaRepository
 import com.dot.gallery.testutil.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify

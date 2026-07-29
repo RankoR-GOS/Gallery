@@ -12,16 +12,17 @@ import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.workers.CategoryWorker
 import com.dot.gallery.core.workers.startClassification
 import com.dot.gallery.core.workers.stopClassification
-import com.dot.gallery.feature_node.data.model.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.model.Category
+import com.dot.gallery.feature_node.data.model.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysisSettings
 import com.dot.gallery.feature_node.presentation.util.update
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,7 +31,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * ViewModel for the Categories feature.

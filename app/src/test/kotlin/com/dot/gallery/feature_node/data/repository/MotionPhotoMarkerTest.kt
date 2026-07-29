@@ -1,10 +1,10 @@
 package com.dot.gallery.feature_node.data.repository
 
+import java.io.ByteArrayInputStream
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
-import java.io.ByteArrayInputStream
 
 class MotionPhotoMarkerTest {
 

@@ -49,10 +49,10 @@ import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.presentation.library.CategoryMedia
 import com.dot.gallery.feature_node.presentation.search.SearchMediaItem
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
+import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import com.dot.gallery.ui.theme.BlackScrim
 import com.dot.gallery.ui.theme.WhiterBlackScrim
 import com.dot.gallery.ui.theme.isDarkTheme
-import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import kotlinx.collections.immutable.ImmutableList
 
 /**

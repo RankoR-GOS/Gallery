@@ -43,9 +43,9 @@ import com.dot.gallery.core.presentation.components.FilterKind
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.util.rememberPreference
 import com.dot.gallery.core.util.rememberPreferenceSerializable
+import com.dot.gallery.feature_node.data.util.OrderType
 import com.dot.gallery.feature_node.domain.model.SearchHistory
 import com.dot.gallery.feature_node.domain.model.SelectionSheetConfig
-import com.dot.gallery.feature_node.data.util.OrderType
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.printDebug

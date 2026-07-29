@@ -1,6 +1,7 @@
 package com.dot.gallery.feature_node.presentation.edit.components.markup
 
 import android.graphics.Bitmap
+import android.graphics.Color as AndroidColor
 import android.graphics.Paint
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas
@@ -39,7 +40,6 @@ import androidx.core.graphics.toRect
 import com.dot.gallery.feature_node.presentation.edit.components.core.SupportiveLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import android.graphics.Color as AndroidColor
 
 @Composable
 fun AlphaBar(

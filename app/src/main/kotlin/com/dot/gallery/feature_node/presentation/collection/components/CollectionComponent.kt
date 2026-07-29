@@ -6,7 +6,6 @@ package com.dot.gallery.feature_node.presentation.collection.components
 
 import android.content.ContentUris
 import android.provider.MediaStore
-import com.dot.gallery.feature_node.presentation.util.formatSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
@@ -56,6 +55,7 @@ import com.dot.gallery.R
 import com.dot.gallery.feature_node.data.model.CollectionWithCount
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
+import com.dot.gallery.feature_node.presentation.util.formatSize
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.dot.gallery.feature_node.presentation.util.toGlideModel

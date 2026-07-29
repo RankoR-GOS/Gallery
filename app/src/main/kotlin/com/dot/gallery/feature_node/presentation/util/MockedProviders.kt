@@ -11,29 +11,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import com.dot.gallery.core.MediaDistributor
-import com.dot.gallery.core.presentation.components.MediaImageRenderer
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
+import com.dot.gallery.core.presentation.components.MediaImageRenderer
 import com.dot.gallery.core.util.SetupMediaProviders
-import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.data.model.CollectionWithCount
 import com.dot.gallery.feature_node.data.model.IgnoredAlbum
-import com.dot.gallery.feature_node.data.model.ImageEmbedding
-import com.dot.gallery.feature_node.data.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaMetadataState
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.model.LockedAlbum
+import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.MergedSubfolderAlbum
 import com.dot.gallery.feature_node.data.model.PinnedAlbum
 import com.dot.gallery.feature_node.data.model.TimelineSettings
+import com.dot.gallery.feature_node.data.util.MediaGroupType
+import com.dot.gallery.feature_node.domain.model.AlbumState
+import com.dot.gallery.feature_node.domain.model.MediaMetadataState
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.UIEvent
 import com.dot.gallery.feature_node.domain.util.EventHandler
-import com.dot.gallery.feature_node.data.util.MediaGroupType
+import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
-import java.util.UUID
 
 class MockedEventHandler: EventHandler {
     override val updaterFlow: Flow<UIEvent> = emptyFlow()

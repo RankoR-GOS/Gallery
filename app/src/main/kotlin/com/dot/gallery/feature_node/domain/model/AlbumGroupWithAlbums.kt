@@ -5,6 +5,8 @@
 package com.dot.gallery.feature_node.domain.model
 
 import androidx.compose.runtime.Stable
+import com.dot.gallery.feature_node.data.model.Album
+import com.dot.gallery.feature_node.data.model.AlbumGroup
 
 @Stable
 data class AlbumGroupWithAlbums(

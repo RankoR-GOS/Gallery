@@ -1,9 +1,9 @@
 package com.dot.gallery.core.decoder
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.io.ByteArrayInputStream
-import java.io.InputStream
 
 internal class ImageHeaderReaderTest {
     @Test

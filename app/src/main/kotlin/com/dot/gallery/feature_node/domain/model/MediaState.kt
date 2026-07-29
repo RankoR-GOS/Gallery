@@ -1,6 +1,8 @@
 package com.dot.gallery.feature_node.domain.model
 
 import androidx.compose.runtime.Stable
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.model.MediaItem
 
 @Stable
 data class MediaState<Type: Media>(

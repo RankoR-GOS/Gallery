@@ -10,12 +10,12 @@ import com.dot.gallery.feature_node.data.model.Collection
 import com.dot.gallery.feature_node.data.model.CollectionWithCount
 import com.dot.gallery.feature_node.data.repository.MediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class CollectionViewModel @Inject constructor(

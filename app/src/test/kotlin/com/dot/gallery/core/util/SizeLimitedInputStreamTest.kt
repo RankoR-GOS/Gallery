@@ -1,11 +1,11 @@
 package com.dot.gallery.core.util
 
+import java.io.ByteArrayInputStream
+import java.io.IOException
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
-import java.io.ByteArrayInputStream
-import java.io.IOException
 
 class SizeLimitedInputStreamTest {
 

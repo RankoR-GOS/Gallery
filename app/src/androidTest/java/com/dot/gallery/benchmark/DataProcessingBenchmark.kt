@@ -11,12 +11,12 @@ import com.dot.gallery.benchmark.BenchmarkUtils.logSummaryHeader
 import com.dot.gallery.core.Constants
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
+import kotlin.random.Random
 import kotlinx.coroutines.runBlocking
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
-import kotlin.random.Random
 
 /**
  * Pure algorithm benchmarks using synthetic data at realistic sizes.

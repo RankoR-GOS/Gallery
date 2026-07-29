@@ -2,8 +2,8 @@ package com.dot.gallery.core.ml
 
 import android.graphics.Bitmap
 import com.dot.gallery.feature_node.presentation.search.helpers.SearchVisionHelper
-import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
+import kotlinx.coroutines.flow.StateFlow
 
 internal interface ImageEmbeddingGenerator {
 

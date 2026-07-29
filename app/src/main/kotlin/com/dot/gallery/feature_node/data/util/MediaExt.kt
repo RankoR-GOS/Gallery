@@ -145,7 +145,12 @@ val Media.groupBaseName: String
         // Fall back to generic suffix stripping for RAW pairs, edits, etc.
         return nameWithoutExt
             // Pixel-style dot-separated suffixes
-            .replace(Regex("\\.(ORIGINAL|RAW-\\d+|NIGHT|PORTRAIT|LONG_EXPOSURE|MP|MOTION-\\d+|PANO|TOP|BOTTOM|COVER|BURST\\d*)", RegexOption.IGNORE_CASE), "")
+            .replace(
+                Regex(
+                    "\\.(ORIGINAL|RAW-\\d+|NIGHT|PORTRAIT|LONG_EXPOSURE|MP|MOTION-\\d+|PANO|TOP|BOTTOM|COVER|BURST\\d*)",
+                    RegexOption.IGNORE_CASE
+                ), ""
+            )
             // Copy / duplicate suffixes
             .replace(Regex("\\(\\d+\\)$"), "")           // (1), (2), etc.
             .replace(Regex("~\\d+$"), "")                 // ~2, ~3, etc.
@@ -209,13 +214,16 @@ fun <T : Media> List<T>.classifyGroupType(): MediaGroupType {
     return MediaGroupType.EDITS
 }
 
-fun List<Album>.mapPinned(pinnedAlbums: List<PinnedAlbum>): List<Album> =
-    map { album -> album.copy(isPinned = pinnedAlbums.any { it.id == album.id }) }
+fun List<Album>.mapPinned(pinnedAlbums: List<PinnedAlbum>): List<Album> {
+    return map { album -> album.copy(isPinned = pinnedAlbums.any { it.id == album.id }) }
+}
 
-fun List<Album>.mapLocked(lockedAlbums: List<LockedAlbum>): List<Album> =
-    map { album -> album.copy(isLocked = lockedAlbums.any { it.id == album.id }) }
+fun List<Album>.mapLocked(lockedAlbums: List<LockedAlbum>): List<Album> {
+    return map { album -> album.copy(isLocked = lockedAlbums.any { it.id == album.id }) }
+}
 
-fun List<Album>.removeBlacklisted(blacklistedAlbums: List<IgnoredAlbum>): List<Album> =
-    toMutableList().apply {
+fun List<Album>.removeBlacklisted(blacklistedAlbums: List<IgnoredAlbum>): List<Album> {
+    return toMutableList().apply {
         removeAll { album -> blacklistedAlbums.any { it.matchesAlbum(album) && it.hiddenInAlbums } }
     }
+}

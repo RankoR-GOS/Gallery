@@ -13,10 +13,10 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.feature_node.domain.model.editor.Adjustment
 import com.dot.gallery.feature_node.domain.model.editor.LightingTool
+import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.VariableFilterTypes
 import com.dot.gallery.feature_node.presentation.edit.components.adjustment.SelectableItem
 import com.dot.gallery.feature_node.presentation.edit.components.core.SupportiveLazyLayout
 import com.dot.gallery.feature_node.presentation.edit.utils.isApplied
-import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.VariableFilterTypes
 
 @Composable
 fun LightingSection(

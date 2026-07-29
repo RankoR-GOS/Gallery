@@ -20,16 +20,16 @@ import com.dot.gallery.feature_node.domain.model.editor.EditorItems
 import com.dot.gallery.feature_node.domain.model.editor.ImageFilter
 import com.dot.gallery.feature_node.domain.model.editor.MarkupItems
 import com.dot.gallery.feature_node.domain.model.editor.PathProperties
+import com.dot.gallery.feature_node.domain.model.editor.TextAnnotation
 import com.dot.gallery.feature_node.presentation.edit.adjustments.varfilter.VariableFilterTypes
 import com.dot.gallery.feature_node.presentation.edit.components.adjustment.AdjustScrubber
 import com.dot.gallery.feature_node.presentation.edit.components.colour.ColourSection
-import com.dot.gallery.feature_node.presentation.edit.components.lighting.toVariableFilterType
+import com.dot.gallery.feature_node.presentation.edit.components.colour.toVariableFilterType
 import com.dot.gallery.feature_node.presentation.edit.components.filters.FiltersSelector
 import com.dot.gallery.feature_node.presentation.edit.components.lighting.LightingSection
 import com.dot.gallery.feature_node.presentation.edit.components.lighting.toVariableFilterType
 import com.dot.gallery.feature_node.presentation.edit.components.markup.MarkupSelector
 import com.dot.gallery.feature_node.presentation.edit.components.markup.MarkupToolSelector
-import com.dot.gallery.feature_node.domain.model.editor.TextAnnotation
 import kotlin.math.roundToInt
 
 @Composable

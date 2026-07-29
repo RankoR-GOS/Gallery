@@ -23,11 +23,11 @@ import com.dot.gallery.feature_node.presentation.util.mediaStoreVersion
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlin.math.roundToInt
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
-import kotlin.math.roundToInt
 
 fun WorkManager.forceMetadataCollect() {
     val metadataWork = OneTimeWorkRequestBuilder<MetadataCollectionWorker>()

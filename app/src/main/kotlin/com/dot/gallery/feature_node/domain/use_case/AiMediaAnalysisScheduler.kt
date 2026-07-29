@@ -12,9 +12,9 @@ import com.dot.gallery.core.workers.AiMediaAnalysisCleanupWorker
 import com.dot.gallery.core.workers.CategoryWorker
 import com.dot.gallery.core.workers.SearchIndexerUpdaterWorker
 import com.dot.gallery.feature_node.domain.model.AiMediaAnalysisWorkState
+import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 internal interface AiMediaAnalysisScheduler {
 

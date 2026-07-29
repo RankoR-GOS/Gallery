@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.presentation.edit
 
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
@@ -74,7 +75,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.activity.compose.BackHandler
 import androidx.navigation.compose.rememberNavController
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation

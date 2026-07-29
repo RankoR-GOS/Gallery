@@ -16,7 +16,6 @@ import com.dot.gallery.core.presentation.components.FilterOption
 import com.dot.gallery.feature_node.data.model.Album
 import com.dot.gallery.feature_node.data.model.AlbumGroup
 import com.dot.gallery.feature_node.data.model.AlbumGroupMember
-import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
 import com.dot.gallery.feature_node.data.model.IgnoredAlbum
 import com.dot.gallery.feature_node.data.model.LockedAlbum
 import com.dot.gallery.feature_node.data.model.MergedSubfolderAlbum
@@ -25,14 +24,15 @@ import com.dot.gallery.feature_node.data.model.TimelineSettings
 import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.data.util.MediaOrder
 import com.dot.gallery.feature_node.data.util.OrderType
+import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
 import com.dot.gallery.feature_node.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class AlbumsViewModel @Inject constructor(

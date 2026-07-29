@@ -1,15 +1,15 @@
 package com.dot.gallery.feature_node.domain.use_case
 
-import com.dot.gallery.feature_node.domain.model.AiMediaAnalysisWorkState
 import com.dot.gallery.feature_node.data.repository.AiMediaAnalysisRepository
+import com.dot.gallery.feature_node.domain.model.AiMediaAnalysisWorkState
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
 internal data class AiMediaAnalysisSettings(
     val analysisEnabled: Boolean,

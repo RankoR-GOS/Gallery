@@ -6,9 +6,9 @@ import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.feature_node.presentation.search.helpers.SearchVisionHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
 import com.dot.gallery.feature_node.presentation.util.printDebug
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 class SearchHelperImpl @Inject constructor(
     private val modelManager: ModelManager,

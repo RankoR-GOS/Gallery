@@ -60,14 +60,13 @@ import com.dot.gallery.feature_node.data.model.MediaMetadata
 import com.dot.gallery.feature_node.data.model.MergedSubfolderAlbum
 import com.dot.gallery.feature_node.data.model.PinnedAlbum
 import com.dot.gallery.feature_node.data.model.TimelineSettings
-import com.dot.gallery.feature_node.data.repository.MediaRepository
-import com.dot.gallery.feature_node.data.util.MediaOrder
-import com.dot.gallery.feature_node.data.util.OrderType
-import com.dot.gallery.feature_node.data.util.resolveMediaStoreVolume
 import com.dot.gallery.feature_node.data.model.retrieveExtraMediaMetadata
 import com.dot.gallery.feature_node.data.model.toMediaMetadata
+import com.dot.gallery.feature_node.data.util.MediaOrder
+import com.dot.gallery.feature_node.data.util.OrderType
 import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.data.util.isVideo
+import com.dot.gallery.feature_node.data.util.resolveMediaStoreVolume
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.BOTH
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.PHOTOS
@@ -905,7 +904,7 @@ internal class MediaRepositoryImpl(
         categoryDao.getCategoryCount()
 
     override fun getTopCategories(limit: Int): Flow<List<CategoryWithMediaCount>> =
-        categoryDao.getTopCategoriesByMediaCount(limit)
+        categoryDao.getTopCategoriesByMediaCount(limit = limit)
 
     override suspend fun updateCategoryThreshold(categoryId: Long, threshold: Float) =
         categoryDao.updateCategoryThreshold(categoryId, threshold)

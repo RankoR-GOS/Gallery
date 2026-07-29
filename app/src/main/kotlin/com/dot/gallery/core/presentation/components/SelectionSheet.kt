@@ -84,8 +84,8 @@ import com.dot.gallery.core.Settings.Misc.rememberShowFavoriteButton
 import com.dot.gallery.core.Settings.Misc.rememberShowSelectionTitles
 import com.dot.gallery.core.Settings.Misc.rememberTrashEnabled
 import com.dot.gallery.core.util.SdkCompat
-import com.dot.gallery.feature_node.domain.model.ActionCondition
 import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.domain.model.ActionCondition
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.SelectionAction

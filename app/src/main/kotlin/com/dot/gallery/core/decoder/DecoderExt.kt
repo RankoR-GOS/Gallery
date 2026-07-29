@@ -2,15 +2,15 @@ package com.dot.gallery.core.decoder
 
 import android.graphics.Bitmap
 import com.github.panpf.sketch.asImage
-import com.github.panpf.sketch.request.ImageData
 import com.github.panpf.sketch.decode.ImageInfo
 import com.github.panpf.sketch.decode.internal.createScaledTransformed
+import com.github.panpf.sketch.request.ImageData
 import com.github.panpf.sketch.request.RequestContext
 import com.github.panpf.sketch.source.DataSource
 import com.github.panpf.sketch.util.Size
 import com.github.panpf.sketch.util.calculateScaleMultiplierWithOneSide
-import okio.buffer
 import kotlin.math.roundToInt
+import okio.buffer
 
 inline fun DataSource.getImageInfo(
     requestContext: RequestContext,

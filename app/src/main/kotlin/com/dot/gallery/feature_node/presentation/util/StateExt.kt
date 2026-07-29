@@ -23,13 +23,13 @@ import com.dot.gallery.core.Resource
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.Media.UriMedia
 import com.dot.gallery.feature_node.data.model.MediaItem
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.repository.MediaRepository
-import com.dot.gallery.feature_node.data.util.MediaOrder
 import com.dot.gallery.feature_node.data.util.MediaGroupType
+import com.dot.gallery.feature_node.data.util.MediaOrder
 import com.dot.gallery.feature_node.data.util.classifyGroupType
 import com.dot.gallery.feature_node.data.util.groupKey
 import com.dot.gallery.feature_node.data.util.selectRepresentative
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import kotlinx.coroutines.Dispatchers

@@ -19,8 +19,8 @@ import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberShowFavoriteButton
-import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.setFollowTheme
+import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.util.canMakeActions
 import com.dot.gallery.feature_node.data.util.isTrashed

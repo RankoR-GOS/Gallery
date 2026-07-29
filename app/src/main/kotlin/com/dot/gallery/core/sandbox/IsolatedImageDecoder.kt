@@ -30,6 +30,11 @@ import com.dot.gallery.core.sandbox.IsolatedDecoderService.Companion.KEY_TARGET_
 import com.dot.gallery.core.sandbox.IsolatedDecoderService.Companion.MSG_DECODE
 import com.dot.gallery.core.sandbox.IsolatedDecoderService.Companion.MSG_GET_SIZE
 import com.dot.gallery.injection.qualifier.IoDispatcher
+import java.io.InputStream
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.coroutines.resume
+import kotlin.math.min
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -39,11 +44,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import java.io.InputStream
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlin.coroutines.resume
-import kotlin.math.min
 
 @Singleton
 internal class IsolatedImageDecoder @Inject constructor(

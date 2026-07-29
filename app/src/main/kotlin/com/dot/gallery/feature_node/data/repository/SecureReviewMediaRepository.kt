@@ -5,12 +5,12 @@ import android.net.Uri
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.securereview.AuthorizedSecureReviewRequest
 import com.dot.gallery.injection.qualifier.IoDispatcher
+import java.util.Locale
+import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import java.util.Locale
-import javax.inject.Inject
 
 internal interface SecureReviewMediaRepository {
 

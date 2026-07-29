@@ -1,12 +1,11 @@
 package com.dot.gallery.core.util
 
+import android.graphics.drawable.ColorDrawable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import com.dot.gallery.core.Settings
-import android.graphics.drawable.ColorDrawable
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
@@ -20,6 +19,7 @@ import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.LocalMediaImageRenderer
 import com.dot.gallery.core.presentation.components.MediaImageRenderer
 import com.dot.gallery.feature_node.domain.util.EventHandler

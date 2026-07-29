@@ -7,6 +7,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Misc.rememberExifDateFormat
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.model.MediaMetadata
 import com.dot.gallery.feature_node.presentation.util.getDate
 
 @Stable

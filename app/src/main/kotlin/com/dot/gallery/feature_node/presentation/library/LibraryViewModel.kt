@@ -8,20 +8,20 @@ import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.data.model.CategoryWithMediaCount
-import com.dot.gallery.feature_node.domain.model.LibraryIndicatorState
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.repository.MediaRepository
+import com.dot.gallery.feature_node.data.util.MediaOrder
+import com.dot.gallery.feature_node.domain.model.LibraryIndicatorState
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysisSettings
-import com.dot.gallery.feature_node.data.util.MediaOrder
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import javax.inject.Inject
 
 /**
  * Data class for category with its thumbnail media

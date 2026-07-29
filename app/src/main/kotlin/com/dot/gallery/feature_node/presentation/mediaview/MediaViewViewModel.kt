@@ -16,15 +16,18 @@ import androidx.work.WorkManager
 import com.dot.gallery.R
 import com.dot.gallery.core.workers.RotateMediaWorker
 import com.dot.gallery.core.workers.rotateImage
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.data.repository.MotionPhotoInfo
 import com.dot.gallery.feature_node.data.repository.MotionPhotoRepository
-import com.dot.gallery.feature_node.data.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaMetadataState
-import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.data.util.isVideo
+import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
+import java.util.UUID
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -37,9 +40,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.io.File
-import java.util.UUID
-import javax.inject.Inject
 
 private const val NUM_FILMSTRIP_FRAMES = 12
 private const val FILMSTRIP_THUMB_HEIGHT = 108 // px, ~36dp @ 3x

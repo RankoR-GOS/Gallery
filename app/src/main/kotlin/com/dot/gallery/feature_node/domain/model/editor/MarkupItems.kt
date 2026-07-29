@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
+import com.dot.gallery.ui.core.Icons as DotIcons
 import com.dot.gallery.ui.core.icons.InkHighlighter
 import com.dot.gallery.ui.core.icons.InkMarker
 import com.dot.gallery.ui.core.icons.Ink_Eraser
@@ -15,7 +16,6 @@ import com.dot.gallery.ui.core.icons.Stylus
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
-import com.dot.gallery.ui.core.Icons as DotIcons
 
 @Serializable
 @Parcelize

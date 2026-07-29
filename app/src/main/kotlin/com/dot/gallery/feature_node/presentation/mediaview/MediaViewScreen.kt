@@ -9,11 +9,11 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Rect
-import android.widget.Toast
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.view.PixelCopy
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -77,7 +77,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoState
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.composables.core.BottomSheet
 import com.composables.core.SheetDetent.Companion.FullyExpanded
 import com.composables.core.rememberBottomSheetState
@@ -95,16 +95,16 @@ import com.dot.gallery.core.Settings.Misc.rememberExtendedDateHeaderFormat
 import com.dot.gallery.core.Settings.Misc.rememberShowMediaViewDateHeader
 import com.dot.gallery.core.Settings.Misc.rememberVideoAutoplay
 import com.dot.gallery.core.navigateUp
-import com.dot.gallery.core.setFollowTheme
 import com.dot.gallery.core.presentation.components.util.swipe
-import com.dot.gallery.feature_node.domain.model.AlbumState
+import com.dot.gallery.core.setFollowTheme
 import com.dot.gallery.feature_node.data.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaMetadataState
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.data.util.isImage
 import com.dot.gallery.feature_node.data.util.isVideo
 import com.dot.gallery.feature_node.data.util.readUriOnly
+import com.dot.gallery.feature_node.domain.model.AlbumState
+import com.dot.gallery.feature_node.domain.model.MediaMetadataState
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewViewModel.MediaViewEvent
 import com.dot.gallery.feature_node.presentation.mediaview.components.GroupMemberSelectionBar
 import com.dot.gallery.feature_node.presentation.mediaview.components.GroupMemberStrip
@@ -113,8 +113,8 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewQ
 import com.dot.gallery.feature_node.presentation.mediaview.components.MediaViewSheetDetails
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MediaPreviewComponent
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoFilmstrip
+import com.dot.gallery.feature_node.presentation.mediaview.components.media.MotionPhotoState
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayerController
-import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.feature_node.presentation.util.FullBrightnessWindow
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.ProvideInsets
@@ -127,6 +127,7 @@ import com.dot.gallery.feature_node.presentation.util.rememberGestureNavigationE
 import com.dot.gallery.feature_node.presentation.util.rememberNavigationBarHeight
 import com.dot.gallery.feature_node.presentation.util.rememberWindowInsetsController
 import com.dot.gallery.feature_node.presentation.util.setHdrMode
+import com.dot.gallery.feature_node.presentation.util.shareMedia
 import com.dot.gallery.feature_node.presentation.util.toggleSystemBars
 import com.dot.gallery.ui.theme.isDarkTheme
 import com.github.panpf.sketch.BitmapImage
@@ -135,7 +136,8 @@ import com.github.panpf.sketch.sketch
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -143,8 +145,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun <T> rememberedDerivedState(

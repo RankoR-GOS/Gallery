@@ -8,8 +8,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.MediaStore
 import com.dot.gallery.feature_node.data.model.securereview.AuthorizedSecureReviewRequest
-import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
+import kotlinx.collections.immutable.toImmutableList
 
 internal fun interface AuthorizeSecureReviewRequest {
     operator fun invoke(

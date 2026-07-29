@@ -12,10 +12,10 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.dot.gallery.core.MediaDistributor
-import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.decoder.supportSandboxedHeifDecoder
 import com.dot.gallery.core.decoder.supportSandboxedJxlDecoder
 import com.dot.gallery.core.decoder.supportVideoFrame2
+import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.sandbox.IsolatedImageDecoder
 import com.dot.gallery.core.sandbox.MediaPreviewDecoder
 import com.dot.gallery.core.sandbox.SandboxedDecoderHolder
@@ -37,12 +37,12 @@ import com.github.panpf.sketch.request.supportPauseLoadWhenScrolling
 import com.github.panpf.sketch.resize.Precision
 import com.github.panpf.sketch.util.appCacheDirectory
 import dagger.hilt.android.HiltAndroidApp
-import okio.FileSystem
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import okio.FileSystem
 
 @HiltAndroidApp
 class GalleryApp : Application(), SingletonSketch.Factory, Configuration.Provider {

@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dot.gallery.R
+import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideNavBar
 import com.dot.gallery.core.Settings.Misc.rememberAutoHideSearchBar
@@ -57,6 +58,7 @@ import com.dot.gallery.core.Settings.Misc.rememberOldNavbar
 import com.dot.gallery.core.Settings.Misc.rememberSelectionSheetConfig
 import com.dot.gallery.core.Settings.Misc.rememberShowSelectionTitles
 import com.dot.gallery.core.SettingsEntity
+import com.dot.gallery.core.navigate
 import com.dot.gallery.feature_node.presentation.settings.components.BaseSettingsScreen
 import com.dot.gallery.feature_node.presentation.settings.components.ChooserPreferenceDetailScreen
 import com.dot.gallery.feature_node.presentation.settings.components.PreferenceOption
@@ -64,8 +66,6 @@ import com.dot.gallery.feature_node.presentation.settings.components.SwitchPrefe
 import com.dot.gallery.feature_node.presentation.settings.components.rememberPreference
 import com.dot.gallery.feature_node.presentation.settings.components.rememberSwitchPreference
 import com.dot.gallery.feature_node.presentation.util.Screen
-import com.dot.gallery.core.LocalEventHandler
-import com.dot.gallery.core.navigate
 import com.dot.gallery.ui.core.Icons as AppIcons
 
 private const val DETAIL_LAUNCH_SCREEN = "launch_screen"

@@ -7,12 +7,12 @@ import com.dot.gallery.feature_node.data.model.IgnoredAlbum
 import com.dot.gallery.feature_node.data.model.matchesAlbum
 import com.dot.gallery.feature_node.data.repository.MediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class IgnoredViewModel @Inject constructor(

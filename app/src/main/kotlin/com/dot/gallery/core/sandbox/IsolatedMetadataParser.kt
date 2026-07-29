@@ -29,15 +29,15 @@ import com.dot.gallery.feature_node.presentation.exif.MetadataDirectory
 import com.dot.gallery.feature_node.presentation.exif.MetadataTag
 import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printWarning
+import java.util.concurrent.Executors
+import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import java.util.concurrent.Executors
-import kotlin.coroutines.resume
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Client for [IsolatedMetadataService].

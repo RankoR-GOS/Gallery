@@ -10,6 +10,9 @@ import com.dot.gallery.core.decoder.ImageFileFormat
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.InputStream
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -17,9 +20,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.io.ByteArrayInputStream
-import java.io.File
-import java.io.InputStream
 
 @RunWith(RobolectricTestRunner::class)
 internal class GalleryMediaModelLoaderTest {

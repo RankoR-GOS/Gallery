@@ -56,8 +56,8 @@ import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import com.dot.gallery.ui.theme.Shapes
 import com.google.android.material.carousel.CarouselLayoutManager
 import com.google.android.material.carousel.MaskableFrameLayout
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable

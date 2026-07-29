@@ -39,8 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.dot.gallery.feature_node.presentation.common.components.GridPinchZoomLayout
-import com.dot.gallery.feature_node.presentation.common.components.rememberGridPinchZoomState
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -57,10 +55,10 @@ import com.dot.gallery.core.presentation.components.FilterKind
 import com.dot.gallery.core.presentation.components.FilterOption
 import com.dot.gallery.core.presentation.components.LoadingAlbum
 import com.dot.gallery.feature_node.data.model.Album
-import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
 import com.dot.gallery.feature_node.data.model.CollectionWithCount
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.util.MediaOrder
+import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumGroupComponent
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumGroupRowComponent
@@ -70,6 +68,8 @@ import com.dot.gallery.feature_node.presentation.collection.components.Collectio
 import com.dot.gallery.feature_node.presentation.collection.components.CollectionRowComponent
 import com.dot.gallery.feature_node.presentation.collection.components.CreateCollectionComponent
 import com.dot.gallery.feature_node.presentation.collection.components.CreateCollectionRowComponent
+import com.dot.gallery.feature_node.presentation.common.components.GridPinchZoomLayout
+import com.dot.gallery.feature_node.presentation.common.components.rememberGridPinchZoomState
 import com.dot.gallery.feature_node.presentation.search.MainSearchBar
 import com.dot.gallery.feature_node.presentation.timeline.components.TimelineNavActions
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState

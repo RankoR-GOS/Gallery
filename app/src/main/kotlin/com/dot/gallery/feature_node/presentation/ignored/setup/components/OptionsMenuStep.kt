@@ -44,14 +44,14 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.R
 import com.dot.gallery.feature_node.data.model.Album
-import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.data.model.IgnoredAlbum
+import com.dot.gallery.feature_node.domain.model.AlbumState
+import com.dot.gallery.feature_node.presentation.common.components.OptionItem as OptionItemData
 import com.dot.gallery.feature_node.presentation.common.components.OptionLayout
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
 import com.dot.gallery.feature_node.presentation.util.toGlideModel
-import com.dot.gallery.ui.core.icons.RegularExpression
-import com.dot.gallery.feature_node.presentation.common.components.OptionItem as OptionItemData
 import com.dot.gallery.ui.core.Icons as GalleryIcons
+import com.dot.gallery.ui.core.icons.RegularExpression
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
