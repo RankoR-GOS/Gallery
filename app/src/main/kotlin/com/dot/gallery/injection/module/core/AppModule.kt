@@ -51,11 +51,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(app: Application): InternalDatabase =
-        Room.databaseBuilder(app, InternalDatabase::class.java, InternalDatabase.NAME)
-            .fallbackToDestructiveMigrationOnDowngrade(true)
-            .fallbackToDestructiveMigration(false)
+    fun provideDatabase(app: Application): InternalDatabase {
+        return Room.databaseBuilder(app, InternalDatabase::class.java, InternalDatabase.NAME)
+            .fallbackToDestructiveMigration(true)
             .build()
+    }
 
     @Provides
     @Singleton
