@@ -159,6 +159,7 @@ internal class AiMediaAnalysisRepositoryImpl @Inject constructor(
             database.getImageEmbeddingDao().deleteAll()
             database.getCategoryDao().deleteAllGeneratedMediaCategories()
             database.getCategoryDao().clearCategoryEmbeddings()
+            database.getCategoryDao().clearGeneratedMediaCategoryStagingState()
         }
     }
 
@@ -166,6 +167,7 @@ internal class AiMediaAnalysisRepositoryImpl @Inject constructor(
         database.withTransaction {
             database.getCategoryDao().deleteAllGeneratedMediaCategories()
             database.getCategoryDao().clearCategoryEmbeddings()
+            database.getCategoryDao().clearGeneratedMediaCategoryStagingState()
         }
     }
 

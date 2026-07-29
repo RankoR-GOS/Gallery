@@ -54,6 +54,8 @@ import com.dot.gallery.feature_node.data.util.EmbeddingBlobConverter
         CollectionMedia::class,
         CollectionAlbum::class,
         ScannedMedia::class,
+        CategoryClassificationGeneration::class,
+        GeneratedMediaCategoryStaging::class,
     ],
     version = 1,
     exportSchema = true,

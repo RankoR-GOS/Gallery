@@ -6,7 +6,6 @@
 package com.dot.gallery.core.workers
 
 import android.content.Context
-import androidx.compose.ui.util.fastForEach
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -14,9 +13,11 @@ import androidx.work.workDataOf
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.util.ProgressThrottler
+import com.dot.gallery.feature_node.data.data_source.GeneratedMediaCategoryStaging
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
+import com.dot.gallery.feature_node.data.data_source.flatMapIdChunks
 import com.dot.gallery.feature_node.data.model.Category
-import com.dot.gallery.feature_node.data.model.MediaCategory
+import com.dot.gallery.feature_node.data.model.ImageEmbedding
 import com.dot.gallery.feature_node.data.repository.AiMediaAnalysisRepository
 import com.dot.gallery.feature_node.presentation.search.helpers.SearchVisionHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
@@ -25,10 +26,11 @@ import com.dot.gallery.feature_node.presentation.util.printWarning
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.withContext
 
 /**
  * Worker that classifies media into categories using CLIP embeddings.
@@ -103,125 +105,193 @@ class CategoryWorker @AssistedInject internal constructor(
             return Result.success()
         }
 
-        // Get all image embeddings
-        val imageEmbeddings = embeddingDao.getRecords().firstOrNull() ?: emptyList()
-        if (imageEmbeddings.isEmpty()) {
-            printInfo("CategoryWorker: No image embeddings to classify")
+        val preparedCategories = prepareCategories(categories = categories)
+        val imageCount = embeddingDao.getCount()
+        printInfo(
+            "CategoryWorker: Processing ${preparedCategories.size} categories and ${imageCount} images",
+        )
+
+        val generationId = id.toString()
+        currentCoroutineContext().ensureActive()
+        if (isStopped || !isClassificationEnabled()) {
             return Result.success()
         }
-
-        printInfo("CategoryWorker: Processing ${categories.size} categories and ${imageEmbeddings.size} images")
-
-        // Set up text session for generating category embeddings
-        val textSession = visionHelper.setupTextSession()
-
-        val throttler = ProgressThrottler()
-        val totalSteps = categories.size
-
-        textSession.use { session ->
-            for ((categoryIndex, category) in categories.withIndex()) {
+        categoryDao.beginGeneratedMediaCategoryStaging(generationId = generationId)
+        var published = false
+        try {
+            val throttler = ProgressThrottler()
+            var processedImages = 0
+            var afterId = Long.MIN_VALUE
+            while (true) {
                 currentCoroutineContext().ensureActive()
                 if (isStopped || !isClassificationEnabled()) {
                     return Result.success()
                 }
 
-                val pct = ((categoryIndex.toFloat() / totalSteps.toFloat()) * 100f).coerceIn(0f, 99f)
-                throttler.emit(pct.toInt()) {
+                val page = embeddingDao.getPage(afterId = afterId, limit = EMBEDDING_PAGE_SIZE)
+
+                if (page.isEmpty()) {
+                    break
+                }
+
+                val matches = classifyPage(
+                    imageEmbeddings = page,
+                    categories = preparedCategories,
+                    generationId = generationId,
+                )
+
+                if (matches.isNotEmpty()) {
+                    val staged = categoryDao.stageGeneratedMediaCategories(
+                        generationId = generationId,
+                        mediaCategories = matches,
+                    )
+                    if (!staged) {
+                        printInfo("CategoryWorker: Classification was superseded")
+                        return Result.success()
+                    }
+                }
+                processedImages += page.size
+
+                val progress = when {
+                    imageCount == 0 -> 99
+                    else -> {
+                        ((processedImages.toFloat() / imageCount.toFloat()) * 99f)
+                            .toInt()
+                            .coerceIn(0, 99)
+                    }
+                }
+
+                throttler.emit(progress) { percentage ->
                     setProgress(
                         workDataOf(
-                            KEY_PROGRESS to it.toFloat(),
-                            KEY_STATUS to "Processing ${category.name}...",
-                            KEY_CURRENT_CATEGORY to category.name,
+                            KEY_PROGRESS to percentage.toFloat(),
+                            KEY_STATUS to "Classifying media...",
                         ),
                     )
                 }
+                afterId = page.last().id
+            }
 
-                // Generate text embedding for the category's search terms (if any)
-                val categoryEmbedding = when {
+            currentCoroutineContext().ensureActive()
+            if (!isClassificationEnabled()) {
+                return Result.success()
+            }
+
+            published = categoryDao.replaceGeneratedMediaCategoriesFromStaging(
+                generationId = generationId,
+            )
+
+            if (!published) {
+                printInfo("CategoryWorker: Classification was superseded")
+                return Result.success()
+            }
+
+            setProgress(workDataOf(KEY_PROGRESS to 100f, KEY_STATUS to "Complete"))
+            printInfo("CategoryWorker: Classification complete")
+
+            return Result.success()
+        } finally {
+            if (!published) {
+                withContext(NonCancellable) {
+                    categoryDao.abandonGeneratedMediaCategoryStaging(generationId = generationId)
+                }
+            }
+        }
+    }
+
+    private suspend fun prepareCategories(categories: List<Category>): List<PreparedCategory> {
+        val categoryDao = database.getCategoryDao()
+        val embeddingDao = database.getImageEmbeddingDao()
+        val referenceIds = categories
+            .flatMapTo(mutableSetOf()) { category -> category.referenceImageIds }
+        val referenceEmbeddings = when {
+            referenceIds.isEmpty() -> emptyMap()
+            else -> flatMapIdChunks(ids = referenceIds) { idChunk ->
+                embeddingDao.getByIds(ids = idChunk)
+            }.associateBy { embedding -> embedding.id }
+        }
+
+        return visionHelper.setupTextSession().use { session ->
+            categories.mapNotNull { category ->
+                currentCoroutineContext().ensureActive()
+                if (!isClassificationEnabled()) {
+                    return@use emptyList()
+                }
+                val textEmbedding = when {
                     category.searchTerms.isBlank() -> null
                     category.embedding != null -> category.embedding
                     else -> {
-                        val embedding = visionHelper.getTextEmbedding(
+                        val generatedEmbedding = visionHelper.getTextEmbedding(
                             session = session,
                             text = category.searchTerms,
                         )
                         currentCoroutineContext().ensureActive()
                         if (!isClassificationEnabled()) {
-                            return Result.success()
+                            return@use emptyList()
                         }
                         categoryDao.updateCategory(
                             category.copy(
-                                embedding = embedding,
+                                embedding = generatedEmbedding,
                                 updatedAt = System.currentTimeMillis(),
                             ),
                         )
-                        embedding
+                        generatedEmbedding
                     }
                 }
 
-                // Collect reference image embeddings for image-to-image matching
-                val refIdSet = category.referenceImageIds.toSet()
-                val refEmbeddings = when {
-                    refIdSet.isNotEmpty() -> imageEmbeddings.filter { it.id in refIdSet }
-                    else -> emptyList()
+                val categoryReferenceEmbeddings = category.referenceImageIds.mapNotNull { id ->
+                    referenceEmbeddings[id]
                 }
 
-                if (categoryEmbedding == null && refEmbeddings.isEmpty()) {
-                    printInfo("CategoryWorker: Category '${category.name}' has no text or reference images, skipping")
-                    continue
-                }
-
-                // Find matching media
-                val matchingMedia = mutableListOf<MediaCategory>()
-
-                imageEmbeddings.fastForEach { imageEmbedding ->
-                    // Skip reference images themselves
-                    if (imageEmbedding.id in refIdSet) return@fastForEach
-
-                    var bestScore = 0f
-
-                    // Text-to-image similarity
-                    if (categoryEmbedding != null) {
-                        bestScore = maxOf(bestScore, categoryEmbedding.dot(imageEmbedding.embedding))
+                when {
+                    textEmbedding == null && categoryReferenceEmbeddings.isEmpty() -> null
+                    else -> {
+                        PreparedCategory(
+                            category = category,
+                            textEmbedding = textEmbedding,
+                            referenceIds = category.referenceImageIds.toSet(),
+                            referenceEmbeddings = categoryReferenceEmbeddings,
+                        )
                     }
+                }
+            }
+        }
+    }
 
-                    // Image-to-image similarity (against each reference)
-                    refEmbeddings.fastForEach { referenceEmbedding ->
+    private fun classifyPage(
+        imageEmbeddings: List<ImageEmbedding>,
+        categories: List<PreparedCategory>,
+        generationId: String,
+    ): List<GeneratedMediaCategoryStaging> {
+        val addedAt = System.currentTimeMillis()
+        return buildList {
+            imageEmbeddings.forEach { imageEmbedding ->
+                for (preparedCategory in categories) {
+                    val category = preparedCategory.category
+                    if (imageEmbedding.id in preparedCategory.referenceIds) {
+                        continue
+                    }
+                    var bestScore = preparedCategory.textEmbedding?.dot(imageEmbedding.embedding) ?: 0f
+                    preparedCategory.referenceEmbeddings.forEach { referenceEmbedding ->
                         bestScore = maxOf(
                             bestScore,
                             referenceEmbedding.embedding.dot(imageEmbedding.embedding),
                         )
                     }
-
                     if (bestScore >= category.threshold) {
-                        matchingMedia.add(
-                            MediaCategory(
+                        add(
+                            GeneratedMediaCategoryStaging(
+                                generationId = generationId,
                                 mediaId = imageEmbedding.id,
                                 categoryId = category.id,
                                 similarityScore = bestScore,
+                                addedAt = addedAt,
                             ),
                         )
                     }
                 }
-
-                printInfo("CategoryWorker: Category '${category.name}' matched ${matchingMedia.size} media items")
-
-                // Update the database with the matches
-                currentCoroutineContext().ensureActive()
-                if (!isClassificationEnabled()) {
-                    return Result.success()
-                }
-                categoryDao.reclassifyMediaForCategory(
-                    categoryId = category.id,
-                    mediaCategories = matchingMedia,
-                )
             }
         }
-
-        setProgress(workDataOf(KEY_PROGRESS to 100f, KEY_STATUS to "Complete"))
-        printInfo("CategoryWorker: Classification complete")
-
-        return Result.success()
     }
 
     private suspend fun isClassificationEnabled(): Boolean {
@@ -235,5 +305,13 @@ class CategoryWorker @AssistedInject internal constructor(
         const val KEY_STATUS = "status"
         const val KEY_CURRENT_CATEGORY = "current_category"
         const val TAG = "CategoryClassifier"
+        private const val EMBEDDING_PAGE_SIZE = 256
     }
+
+    private class PreparedCategory(
+        val category: Category,
+        val textEmbedding: FloatArray?,
+        val referenceIds: Set<Long>,
+        val referenceEmbeddings: List<ImageEmbedding>,
+    )
 }

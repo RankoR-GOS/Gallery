@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.room.Room
 import com.dot.gallery.core.dataStore
+import com.dot.gallery.feature_node.data.data_source.GeneratedMediaCategoryStaging
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.model.Category
 import com.dot.gallery.feature_node.data.model.ImageEmbedding
@@ -96,6 +97,17 @@ internal class AiMediaAnalysisRepositoryTest {
     }
 
     @Test
+    fun clearAllGeneratedData_removesInterruptedClassificationState() {
+        runTest {
+            insertInterruptedClassificationState()
+
+            repository.clearAllGeneratedData()
+
+            assertInterruptedClassificationStateCleared()
+        }
+    }
+
+    @Test
     fun invalidateGeneratedData_preservesManualMappingForChangedMedia() {
         runTest {
             database.getCategoryDao().insertCategory(
@@ -173,6 +185,28 @@ internal class AiMediaAnalysisRepositoryTest {
     }
 
     @Test
+    fun clearCategoryGeneratedData_removesInterruptedClassificationState() {
+        runTest {
+            insertInterruptedClassificationState()
+
+            repository.clearCategoryGeneratedData()
+
+            assertInterruptedClassificationStateCleared()
+        }
+    }
+
+    @Test
+    fun resetAllCategoryData_removesInterruptedClassificationState() {
+        runTest {
+            insertInterruptedClassificationState()
+
+            database.getCategoryDao().resetAllCategoryData()
+
+            assertInterruptedClassificationStateCleared()
+        }
+    }
+
+    @Test
     fun reclassifyMediaForCategory_preservesManualMembershipAndAddsGeneratedMatches() {
         runTest {
             insertCategoryAndMembership(isManuallyAdded = true)
@@ -204,6 +238,121 @@ internal class AiMediaAnalysisRepositoryTest {
                     categoryId = CATEGORY_ID,
                 ),
             )
+        }
+    }
+
+    @Test
+    fun publishingGeneratedStaging_isAtomicAndPreservesManualMembership() {
+        runTest {
+            insertCategoryAndMembership(isManuallyAdded = true)
+            database.getCategoryDao().insertMediaCategory(
+                mediaCategory = MediaCategory(
+                    mediaId = OTHER_MEDIA_ID,
+                    categoryId = CATEGORY_ID,
+                    similarityScore = 0.8f,
+                ),
+            )
+            database.getCategoryDao().beginGeneratedMediaCategoryStaging(
+                generationId = FIRST_GENERATION_ID,
+            )
+            database.getCategoryDao().insertGeneratedMediaCategoryStaging(
+                mediaCategories = listOf(
+                    GeneratedMediaCategoryStaging(
+                        generationId = FIRST_GENERATION_ID,
+                        mediaId = MEDIA_ID,
+                        categoryId = CATEGORY_ID,
+                        similarityScore = 0.1f,
+                        addedAt = 1L,
+                    ),
+                    GeneratedMediaCategoryStaging(
+                        generationId = FIRST_GENERATION_ID,
+                        mediaId = THIRD_MEDIA_ID,
+                        categoryId = CATEGORY_ID,
+                        similarityScore = 0.7f,
+                        addedAt = 2L,
+                    ),
+                ),
+            )
+
+            val published = database.getCategoryDao().replaceGeneratedMediaCategoriesFromStaging(
+                generationId = FIRST_GENERATION_ID,
+            )
+
+            assertTrue(published)
+            assertEquals(
+                setOf(MEDIA_ID, THIRD_MEDIA_ID),
+                database.getCategoryDao().getAllClassifiedMediaIds().toSet(),
+            )
+            val manualMapping = database.getCategoryDao().getMediaCategory(
+                mediaId = MEDIA_ID,
+                categoryId = CATEGORY_ID,
+            )
+            assertEquals(true, manualMapping?.isManuallyAdded)
+            assertEquals(0.9f, manualMapping?.similarityScore)
+        }
+    }
+
+    @Test
+    fun overlappingClassificationGenerations_publishOnlyTheAuthoritativeGeneration() {
+        runTest {
+            insertCategoryAndMembership(isManuallyAdded = true)
+            val categoryDao = database.getCategoryDao()
+            categoryDao.beginGeneratedMediaCategoryStaging(generationId = FIRST_GENERATION_ID)
+            categoryDao.insertGeneratedMediaCategoryStaging(
+                mediaCategories = listOf(
+                    stagedMapping(
+                        generationId = FIRST_GENERATION_ID,
+                        mediaId = OTHER_MEDIA_ID,
+                    ),
+                ),
+            )
+
+            categoryDao.beginGeneratedMediaCategoryStaging(generationId = SECOND_GENERATION_ID)
+            categoryDao.insertGeneratedMediaCategoryStaging(
+                mediaCategories = listOf(
+                    stagedMapping(
+                        generationId = SECOND_GENERATION_ID,
+                        mediaId = THIRD_MEDIA_ID,
+                    ),
+                ),
+            )
+            categoryDao.abandonGeneratedMediaCategoryStaging(generationId = FIRST_GENERATION_ID)
+
+            val stalePublished = categoryDao.replaceGeneratedMediaCategoriesFromStaging(
+                generationId = FIRST_GENERATION_ID,
+            )
+            val authoritativePublished = categoryDao.replaceGeneratedMediaCategoriesFromStaging(
+                generationId = SECOND_GENERATION_ID,
+            )
+
+            assertEquals(false, stalePublished)
+            assertEquals(true, authoritativePublished)
+            assertEquals(
+                setOf(MEDIA_ID, THIRD_MEDIA_ID),
+                categoryDao.getAllClassifiedMediaIds().toSet(),
+            )
+        }
+    }
+
+    @Test
+    fun clearedClassificationState_rejectsFurtherStagingFromInterruptedGeneration() {
+        runTest {
+            val categoryDao = database.getCategoryDao()
+            categoryDao.beginGeneratedMediaCategoryStaging(generationId = FIRST_GENERATION_ID)
+            categoryDao.clearGeneratedMediaCategoryStagingState()
+
+            val staged = categoryDao.stageGeneratedMediaCategories(
+                generationId = FIRST_GENERATION_ID,
+                mediaCategories = listOf(
+                    stagedMapping(
+                        generationId = FIRST_GENERATION_ID,
+                        mediaId = MEDIA_ID,
+                    ),
+                ),
+            )
+
+            assertEquals(false, staged)
+            assertInterruptedClassificationStateCleared()
         }
     }
 
@@ -344,10 +493,45 @@ internal class AiMediaAnalysisRepositoryTest {
         )
     }
 
+    private suspend fun insertInterruptedClassificationState() {
+        val categoryDao = database.getCategoryDao()
+        categoryDao.beginGeneratedMediaCategoryStaging(generationId = FIRST_GENERATION_ID)
+        categoryDao.insertGeneratedMediaCategoryStaging(
+            mediaCategories = listOf(
+                stagedMapping(
+                    generationId = FIRST_GENERATION_ID,
+                    mediaId = MEDIA_ID,
+                ),
+            ),
+        )
+    }
+
+    private suspend fun assertInterruptedClassificationStateCleared() {
+        val categoryDao = database.getCategoryDao()
+        assertEquals(0, categoryDao.getGeneratedMediaCategoryStagingCount())
+        assertNull(categoryDao.getCategoryClassificationGeneration())
+    }
+
+    private fun stagedMapping(
+        generationId: String,
+        mediaId: Long,
+    ): GeneratedMediaCategoryStaging {
+        return GeneratedMediaCategoryStaging(
+            generationId = generationId,
+            mediaId = mediaId,
+            categoryId = CATEGORY_ID,
+            similarityScore = 0.8f,
+            addedAt = 1L,
+        )
+    }
+
     companion object {
         private const val CATEGORY_ID = 42L
+        private const val FIRST_GENERATION_ID = "first"
         private const val LARGE_ID_SET_SIZE = 1_001
         private const val MEDIA_ID = 7L
         private const val OTHER_MEDIA_ID = 8L
+        private const val SECOND_GENERATION_ID = "second"
+        private const val THIRD_MEDIA_ID = 9L
     }
 }

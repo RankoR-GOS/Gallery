@@ -151,6 +151,9 @@ interface CategoryDao {
     @Query("SELECT similarityScore FROM media_category WHERE mediaId = :mediaId AND categoryId = :categoryId")
     suspend fun getSimilarityScore(mediaId: Long, categoryId: Long): Float?
 
+    @Query("SELECT * FROM media_category WHERE mediaId = :mediaId AND categoryId = :categoryId")
+    suspend fun getMediaCategory(mediaId: Long, categoryId: Long): MediaCategory?
+
     // Check if a media item is in a category
     @Query("SELECT EXISTS(SELECT 1 FROM media_category WHERE mediaId = :mediaId AND categoryId = :categoryId)")
     suspend fun isMediaInCategory(mediaId: Long, categoryId: Long): Boolean
@@ -186,6 +189,98 @@ interface CategoryDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertGeneratedMediaCategories(mediaCategories: List<MediaCategory>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertGeneratedMediaCategoryStaging(
+        mediaCategories: List<GeneratedMediaCategoryStaging>,
+    )
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun setCategoryClassificationGeneration(
+        generation: CategoryClassificationGeneration,
+    )
+
+    @Query(
+        "SELECT generationId FROM category_classification_generation " +
+            "WHERE singletonId = ${CategoryClassificationGeneration.SINGLETON_ID}",
+    )
+    suspend fun getCategoryClassificationGeneration(): String?
+
+    @Query("DELETE FROM generated_media_category_staging")
+    suspend fun clearAllGeneratedMediaCategoryStaging()
+
+    @Query("SELECT COUNT(*) FROM generated_media_category_staging")
+    suspend fun getGeneratedMediaCategoryStagingCount(): Int
+
+    @Query("DELETE FROM generated_media_category_staging WHERE generationId = :generationId")
+    suspend fun clearGeneratedMediaCategoryStaging(generationId: String)
+
+    @Query(
+        "DELETE FROM category_classification_generation " +
+            "WHERE singletonId = ${CategoryClassificationGeneration.SINGLETON_ID} " +
+            "AND generationId = :generationId",
+    )
+    suspend fun clearCategoryClassificationGeneration(generationId: String)
+
+    @Query("DELETE FROM category_classification_generation")
+    suspend fun clearAllCategoryClassificationGenerations()
+
+    @Query(
+        """
+        INSERT OR IGNORE INTO media_category (
+            mediaId, categoryId, similarityScore, addedAt, isManuallyAdded
+        )
+        SELECT mediaId, categoryId, similarityScore, addedAt, 0
+        FROM generated_media_category_staging
+        WHERE generationId = :generationId
+        """,
+    )
+    suspend fun publishGeneratedMediaCategoryStaging(generationId: String)
+
+    @Transaction
+    suspend fun beginGeneratedMediaCategoryStaging(generationId: String) {
+        setCategoryClassificationGeneration(
+            generation = CategoryClassificationGeneration(generationId = generationId),
+        )
+        clearAllGeneratedMediaCategoryStaging()
+    }
+
+    @Transaction
+    suspend fun stageGeneratedMediaCategories(
+        generationId: String,
+        mediaCategories: List<GeneratedMediaCategoryStaging>,
+    ): Boolean {
+        if (getCategoryClassificationGeneration() != generationId) {
+            return false
+        }
+        insertGeneratedMediaCategoryStaging(mediaCategories = mediaCategories)
+        return true
+    }
+
+    @Transaction
+    suspend fun abandonGeneratedMediaCategoryStaging(generationId: String) {
+        clearGeneratedMediaCategoryStaging(generationId = generationId)
+        clearCategoryClassificationGeneration(generationId = generationId)
+    }
+
+    @Transaction
+    suspend fun clearGeneratedMediaCategoryStagingState() {
+        clearAllGeneratedMediaCategoryStaging()
+        clearAllCategoryClassificationGenerations()
+    }
+
+    @Transaction
+    suspend fun replaceGeneratedMediaCategoriesFromStaging(generationId: String): Boolean {
+        if (getCategoryClassificationGeneration() != generationId) {
+            clearGeneratedMediaCategoryStaging(generationId = generationId)
+            return false
+        }
+        deleteAllGeneratedMediaCategories()
+        publishGeneratedMediaCategoryStaging(generationId = generationId)
+        clearGeneratedMediaCategoryStaging(generationId = generationId)
+        clearCategoryClassificationGeneration(generationId = generationId)
+        return true
+    }
+
     @Transaction
     suspend fun reclassifyMediaForCategory(
         categoryId: Long,
@@ -210,6 +305,7 @@ interface CategoryDao {
 
     @Transaction
     suspend fun resetAllCategoryData() {
+        clearGeneratedMediaCategoryStagingState()
         deleteAllMediaCategories()
         deleteAllCategories()
     }
