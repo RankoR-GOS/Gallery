@@ -1,17 +1,12 @@
 package com.dot.gallery.feature_node.data.util
 
-import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
 import com.dot.gallery.feature_node.data.model.Album
 import com.dot.gallery.feature_node.data.model.IgnoredAlbum
-import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.LockedAlbum
+import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.PinnedAlbum
-import com.github.panpf.zoomimage.subsampling.ContentImageSource
-import com.github.panpf.zoomimage.subsampling.SubsamplingImage
 import io.ktor.util.reflect.instanceOf
-import kotlinx.serialization.json.Json
 
 /**
  * Determine if the current media is a raw format
@@ -74,18 +69,6 @@ val Media.isVideo: Boolean get() = mimeType.startsWith("video/") && (duration !=
 
 val Media.isImage: Boolean get() = mimeType.startsWith("image/")
 
-/**
- * Returns true if this media is a raw file format that should not be converted
- * through bitmap encoding/decoding (e.g., GIF, animated WebP).
- * These formats would lose animation or quality if processed as bitmaps.
- */
-val Media.isRawFile: Boolean get() = mimeType in listOf(
-    "image/gif",
-    "image/webp",  // WebP can be animated
-    "image/svg+xml",
-    "image/bmp"
-)
-
 val Media.isTrashed: Boolean get() = trashed == 1
 
 val Media.isFavorite: Boolean get() = favorite == 1
@@ -95,68 +78,10 @@ val Media.isLocalContent: Boolean
 
 val Media.canMakeActions: Boolean get() = isLocalContent && !instanceOf(Media.ClassifiedMedia::class) && !readUriOnly
 
-val Media.isClassified: Boolean get() = instanceOf(Media.ClassifiedMedia::class)
-
 val Media.getCategory: String?
     get() = if (this is Media.ClassifiedMedia) {
         this.category
     } else null
-
-/*
-@Suppress("UNCHECKED_CAST")
-fun <T : Serializable> fromByteArray(byteArray: ByteArray): T {
-    ByteArrayInputStream(byteArray).use { byteArrayInputStream ->
-        ObjectInputStream(byteArrayInputStream).use { objectInput ->
-            return objectInput.readObject() as T
-        }
-    }
-}
-*/
-
-@Suppress("UNCHECKED_CAST")
-inline fun <reified T> fromKotlinByteArray(byteArray: ByteArray): T =
-    Json.decodeFromString(String(byteArray, Charsets.UTF_8))
-
-inline fun <reified T> T.toKotlinByteArray() = Json.encodeToString(this).toByteArray(Charsets.UTF_8)
-
-fun <T : Media> T.asSubsamplingImage(context: Context): SubsamplingImage {
-    return SubsamplingImage(imageSource = ContentImageSource(context, getUri()))
-}
-
-fun <T : Media> T.compatibleMimeType(): String {
-    return if (isImage) when (mimeType) {
-        "image/jpeg" -> "image/jpeg"
-        "image/png" -> "image/png"
-        else -> "image/png"
-    } else mimeType
-}
-
-fun <T : Media> T.compatibleBitmapFormat(): Bitmap.CompressFormat {
-    return when (mimeType) {
-        "image/jpeg" -> Bitmap.CompressFormat.JPEG
-        "image/png" -> Bitmap.CompressFormat.PNG
-        else -> Bitmap.CompressFormat.PNG
-    }
-}
-
-fun <T : Media> T.asUriMedia(uri: Uri): Media.UriMedia {
-    return Media.UriMedia(
-        id = id,
-        label = label,
-        uri = uri,
-        path = path,
-        timestamp = timestamp,
-        mimeType = mimeType,
-        duration = duration,
-        trashed = trashed,
-        favorite = favorite,
-        albumID = albumID,
-        albumLabel = albumLabel,
-        relativePath = relativePath,
-        fullDate = fullDate,
-        size = size,
-    )
-}
 
 fun <T : Media> T.getUri(): Uri {
     return when (this) {
