@@ -79,7 +79,7 @@ import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.NavigationBackButton
-import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
+import com.dot.gallery.feature_node.data.model.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.util.getUri

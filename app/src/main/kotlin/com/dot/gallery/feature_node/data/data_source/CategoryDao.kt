@@ -14,6 +14,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
 import com.dot.gallery.feature_node.data.model.Category
+import com.dot.gallery.feature_node.data.model.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.model.MediaCategory
 import kotlinx.coroutines.flow.Flow
 
@@ -226,76 +227,4 @@ interface CategoryDao {
         LIMIT :limit
     """)
     fun getTopCategoriesByMediaCount(limit: Int = 10): Flow<List<CategoryWithMediaCount>>
-}
-
-/**
- * Helper class for queries that return category with media count
- */
-data class CategoryWithMediaCount(
-    val id: Long,
-    val name: String,
-    val searchTerms: String,
-    val embedding: FloatArray?,
-    val referenceImageIds: List<Long>,
-    val threshold: Float,
-    val isUserCreated: Boolean,
-    val isPinned: Boolean,
-    val createdAt: Long,
-    val updatedAt: Long,
-    val mediaCount: Int,
-    val thumbnailMediaId: Long?
-) {
-    fun toCategory() = Category(
-        id = id,
-        name = name,
-        searchTerms = searchTerms,
-        embedding = embedding,
-        referenceImageIds = referenceImageIds,
-        threshold = threshold,
-        isUserCreated = isUserCreated,
-        isPinned = isPinned,
-        createdAt = createdAt,
-        updatedAt = updatedAt
-    )
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as CategoryWithMediaCount
-
-        if (id != other.id) return false
-        if (name != other.name) return false
-        if (searchTerms != other.searchTerms) return false
-        if (embedding != null) {
-            if (other.embedding == null) return false
-            if (!embedding.contentEquals(other.embedding)) return false
-        } else if (other.embedding != null) return false
-        if (referenceImageIds != other.referenceImageIds) return false
-        if (threshold != other.threshold) return false
-        if (isUserCreated != other.isUserCreated) return false
-        if (isPinned != other.isPinned) return false
-        if (createdAt != other.createdAt) return false
-        if (updatedAt != other.updatedAt) return false
-        if (mediaCount != other.mediaCount) return false
-        if (thumbnailMediaId != other.thumbnailMediaId) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + name.hashCode()
-        result = 31 * result + searchTerms.hashCode()
-        result = 31 * result + (embedding?.contentHashCode() ?: 0)
-        result = 31 * result + referenceImageIds.hashCode()
-        result = 31 * result + threshold.hashCode()
-        result = 31 * result + isUserCreated.hashCode()
-        result = 31 * result + isPinned.hashCode()
-        result = 31 * result + createdAt.hashCode()
-        result = 31 * result + updatedAt.hashCode()
-        result = 31 * result + mediaCount
-        result = 31 * result + (thumbnailMediaId?.hashCode() ?: 0)
-        return result
-    }
 }

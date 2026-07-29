@@ -13,7 +13,7 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Security
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
-import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
+import com.dot.gallery.feature_node.data.model.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.data.model.Media

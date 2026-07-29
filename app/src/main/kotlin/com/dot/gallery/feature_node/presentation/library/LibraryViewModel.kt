@@ -7,7 +7,7 @@ import com.dot.gallery.core.Resource
 import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.util.SdkCompat
-import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
+import com.dot.gallery.feature_node.data.model.CategoryWithMediaCount
 import com.dot.gallery.feature_node.domain.model.LibraryIndicatorState
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.repository.MediaRepository

@@ -12,7 +12,7 @@ import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.workers.CategoryWorker
 import com.dot.gallery.core.workers.startClassification
 import com.dot.gallery.core.workers.stopClassification
-import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
+import com.dot.gallery.feature_node.data.model.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.model.Category
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState

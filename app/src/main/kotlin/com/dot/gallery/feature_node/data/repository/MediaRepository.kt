@@ -34,7 +34,6 @@ import com.dot.gallery.core.util.ext.updateMediaExif
 import com.dot.gallery.core.workers.MediaCopyRequest
 import com.dot.gallery.core.workers.MediaCopyScheduler
 import com.dot.gallery.core.workers.updateDatabase
-import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.data_source.flatMapIdChunks
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.AlbumsFlow
@@ -45,6 +44,7 @@ import com.dot.gallery.feature_node.data.model.AlbumGroup
 import com.dot.gallery.feature_node.data.model.AlbumGroupMember
 import com.dot.gallery.feature_node.data.model.AlbumThumbnail
 import com.dot.gallery.feature_node.data.model.Category
+import com.dot.gallery.feature_node.data.model.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.model.Collection
 import com.dot.gallery.feature_node.data.model.CollectionMedia
 import com.dot.gallery.feature_node.data.model.CollectionWithCount
