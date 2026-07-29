@@ -3,6 +3,7 @@ package com.dot.gallery.feature_node.data.repository
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Intent
+import android.content.IntentSender
 import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
@@ -24,7 +25,6 @@ import com.dot.gallery.feature_node.data.model.editor.crop.CropImage
 import com.dot.gallery.feature_node.data.model.editor.crop.CropPixelRect
 import com.dot.gallery.feature_node.data.model.editor.crop.ExternalCropRequest
 import com.dot.gallery.feature_node.data.model.editor.crop.NormalizedCropRect
-import com.dot.gallery.feature_node.data.repository.ExternalCropRepository
 import com.dot.gallery.injection.qualifier.DefaultDispatcher
 import com.dot.gallery.injection.qualifier.IoDispatcher
 import java.io.IOException
@@ -44,7 +44,22 @@ internal interface ExternalCropRepository {
         request: ExternalCropRequest,
         image: CropImage,
         normalizedRect: NormalizedCropRect,
-    ): Intent?
+    ): ExternalCropSaveResult
+}
+
+internal sealed interface ExternalCropSaveResult {
+
+    data class Saved(val resultIntent: Intent) : ExternalCropSaveResult
+
+    /**
+     * The caller-supplied output uri is not writable by us. Scoped storage only lets an app write
+     * media it owns, and the caller cannot delegate its own access through
+     * [android.provider.MediaStore.EXTRA_OUTPUT] — a plain extra carries no uri grant. The user
+     * resolves it by approving [intentSender], which also makes the overwrite explicit to them.
+     */
+    data class OutputPermissionRequired(val intentSender: IntentSender) : ExternalCropSaveResult
+
+    data object Failed : ExternalCropSaveResult
 }
 
 internal class ExternalCropRepositoryImpl @Inject constructor(
@@ -88,7 +103,7 @@ internal class ExternalCropRepositoryImpl @Inject constructor(
         request: ExternalCropRequest,
         image: CropImage,
         normalizedRect: NormalizedCropRect,
-    ): Intent? {
+    ): ExternalCropSaveResult {
         val saveFormat = request.saveFormat
         val cropResult = withContext(defaultDispatcher) {
             createCropBitmapResult(
@@ -97,66 +112,75 @@ internal class ExternalCropRepositoryImpl @Inject constructor(
                 normalizedRect = normalizedRect,
             )
         }
-        val outputUri = writeRequestedOutput(
+        val outcome = writeRequestedOutput(
             request = request,
             bitmap = cropResult.bitmap,
             saveFormat = saveFormat,
         )
+        val outputUri = when (outcome) {
+            is OutputWriteOutcome.Written -> outcome.uri
+            is OutputWriteOutcome.PermissionDenied -> {
+                return createOutputPermissionRequest(uri = outcome.uri)
+            }
+
+            OutputWriteOutcome.Failed -> null
+        }
         val requiresOutput = request.outputUri != null || !request.returnData
         if (outputUri == null && requiresOutput) {
-            return null
+            return ExternalCropSaveResult.Failed
         }
 
-        return buildCropResultIntent(
-            croppedRect = cropResult.cropRect,
-            outputUri = outputUri,
-            returnDataBitmap = cropResult.returnDataBitmap,
+        return ExternalCropSaveResult.Saved(
+            resultIntent = buildCropResultIntent(
+                croppedRect = cropResult.cropRect,
+                outputUri = outputUri,
+                returnDataBitmap = cropResult.returnDataBitmap,
+            ),
         )
+    }
+
+    private fun createOutputPermissionRequest(uri: Uri): ExternalCropSaveResult {
+        val intentSender = try {
+            MediaStore.createWriteRequest(contentResolver, listOf(uri)).intentSender
+        } catch (exception: Exception) {
+            Log.w(TAG, "Failed to build write request for $uri", exception)
+            null
+        }
+
+        return when (intentSender) {
+            null -> ExternalCropSaveResult.Failed
+            else -> ExternalCropSaveResult.OutputPermissionRequired(intentSender = intentSender)
+        }
     }
 
     private suspend fun writeRequestedOutput(
         request: ExternalCropRequest,
         bitmap: Bitmap,
         saveFormat: SaveFormat,
-    ): Uri? {
+    ): OutputWriteOutcome {
         val outputUri = request.outputUri
         return withContext(ioDispatcher) {
             when {
                 outputUri != null -> {
-                    writeExplicitOutput(
+                    writeCropOutput(
                         uri = outputUri,
                         bitmap = bitmap,
                         saveFormat = saveFormat,
                     )
                 }
 
-                request.returnData -> null
+                request.returnData -> OutputWriteOutcome.Written(uri = null)
 
                 else -> {
-                    writeFallbackOutput(
-                        sourceUri = request.sourceUri,
-                        bitmap = bitmap,
-                        saveFormat = saveFormat,
+                    OutputWriteOutcome.Written(
+                        uri = writeFallbackOutput(
+                            sourceUri = request.sourceUri,
+                            bitmap = bitmap,
+                            saveFormat = saveFormat,
+                        ),
                     )
                 }
             }
-        }
-    }
-
-    private fun writeExplicitOutput(
-        uri: Uri,
-        bitmap: Bitmap,
-        saveFormat: SaveFormat,
-    ): Uri? {
-        val wroteOutput = writeCropOutput(
-            uri = uri,
-            bitmap = bitmap,
-            saveFormat = saveFormat,
-        )
-
-        return when {
-            wroteOutput -> uri
-            else -> null
         }
     }
 
@@ -422,7 +446,11 @@ internal class ExternalCropRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun writeCropOutput(uri: Uri, bitmap: Bitmap, saveFormat: SaveFormat): Boolean {
+    private fun writeCropOutput(
+        uri: Uri,
+        bitmap: Bitmap,
+        saveFormat: SaveFormat,
+    ): OutputWriteOutcome {
         return try {
             openWritableOutputStream(uri = uri)
                 ?.use { output ->
@@ -432,12 +460,16 @@ internal class ExternalCropRepositoryImpl @Inject constructor(
                         output = output,
                     )
                 }
-                ?: return false
+                ?: return OutputWriteOutcome.Failed
 
-            true
+            OutputWriteOutcome.Written(uri = uri)
+        } catch (exception: SecurityException) {
+            // MediaProvider rejects writes to media we do not own; the user can still grant it.
+            Log.w(TAG, "No write access to crop output $uri", exception)
+            OutputWriteOutcome.PermissionDenied(uri = uri)
         } catch (exception: Exception) {
             Log.w(TAG, "Failed to write crop output to $uri", exception)
-            false
+            OutputWriteOutcome.Failed
         }
     }
 
@@ -596,6 +628,17 @@ internal class ExternalCropRepositoryImpl @Inject constructor(
         val bitmap: Bitmap,
         val returnDataBitmap: Bitmap?,
     )
+
+    /** Outcome of writing the crop bytes, before it is turned into an [ExternalCropSaveResult]. */
+    private sealed interface OutputWriteOutcome {
+
+        /** The uri is null when the caller only asked for `return-data`. */
+        data class Written(val uri: Uri?) : OutputWriteOutcome
+
+        data class PermissionDenied(val uri: Uri) : OutputWriteOutcome
+
+        data object Failed : OutputWriteOutcome
+    }
 
     private class ImageHeaderDecodedException : RuntimeException() {
         override fun fillInStackTrace(): Throwable {

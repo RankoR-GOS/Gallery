@@ -20,11 +20,11 @@ internal data class ExternalCropRequest(
     val saveFormat: SaveFormat
         get() {
             return when (normalizedOutputFormatToken()) {
-                FORMAT_PNG, FORMAT_X_PNG, FORMAT_GIF -> SaveFormat.PNG
-                FORMAT_WEBP, FORMAT_WEBP_LOSSY -> SaveFormat.WEBP_LOSSY
-                FORMAT_WEBP_LOSSLESS -> SaveFormat.WEBP_LOSSLESS
-                FORMAT_JPEG, FORMAT_JPG -> SaveFormat.JPEG
-                else -> SaveFormat.JPEG
+                FORMAT_PNG, FORMAT_X_PNG, FORMAT_GIF -> SaveFormat.Png
+                FORMAT_WEBP, FORMAT_WEBP_LOSSY -> SaveFormat.WebpLossy
+                FORMAT_WEBP_LOSSLESS -> SaveFormat.WebpLossless
+                FORMAT_JPEG, FORMAT_JPG -> SaveFormat.Jpeg
+                else -> SaveFormat.Jpeg
             }
         }
 

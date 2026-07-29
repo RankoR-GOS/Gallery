@@ -1,7 +1,11 @@
 package com.dot.gallery.feature_node.presentation.edit.crop
 
+import android.app.Activity
 import android.content.Intent
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,6 +65,11 @@ internal fun CropScreen(
     val currentOnFinishCanceled by rememberUpdatedState(onFinishCanceled)
     val currentOnFinishWithResult by rememberUpdatedState(onFinishWithResult)
     val currentOnShowSaveErrorAndCancel by rememberUpdatedState(onShowSaveErrorAndCancel)
+    val outputWritePermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+    ) { result ->
+        screenModel.onOutputWritePermissionResult(isGranted = result.resultCode == Activity.RESULT_OK)
+    }
 
     LaunchedEffect(request, screenModel) {
         screenModel.onLaunchRequest(request = request)
@@ -73,6 +82,14 @@ internal fun CropScreen(
                 CropEffect.ShowSaveErrorAndCancel -> currentOnShowSaveErrorAndCancel()
                 is CropEffect.FinishWithResult -> {
                     currentOnFinishWithResult(effect.resultIntent)
+                }
+
+                is CropEffect.RequestOutputWritePermission -> {
+                    outputWritePermissionLauncher.launch(
+                        IntentSenderRequest.Builder(effect.intentSender)
+                            .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
+                            .build(),
+                    )
                 }
             }
         }

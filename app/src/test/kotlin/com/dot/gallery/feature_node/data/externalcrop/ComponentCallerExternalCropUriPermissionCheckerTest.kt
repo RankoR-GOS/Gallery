@@ -1,48 +1,56 @@
 package com.dot.gallery.feature_node.data.externalcrop
 
 import android.app.ComponentCaller
-import android.content.Intent
+import android.content.ContentResolver
+import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Environment
 import android.os.Process
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import java.io.File
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 class ComponentCallerExternalCropUriPermissionCheckerTest {
 
     @Test
-    fun canWriteContentUri_returnsTrueWhenCallerHasWriteGrant() {
-        val uri = Uri.parse("content://caller/output")
-        val fixture = permissionChecker(
-            permissionResult = PackageManager.PERMISSION_GRANTED,
-        )
+    fun canWriteContentUri_acceptsReachableMediaStoreUri() {
+        val fixture = permissionChecker(resolvedType = "image/jpeg")
 
         assertTrue(
             fixture.checker.canWriteContentUri(
-                uri = uri,
+                uri = OUTPUT_URI,
                 caller = fixture.caller,
             ),
         )
     }
 
     @Test
-    fun canWriteContentUri_returnsFalseWhenPlatformThrowsIllegalArgumentException() {
-        val uri = Uri.parse("content://caller/output")
-        val fixture = permissionChecker(
-            permissionException = IllegalArgumentException("not launch tracked"),
-        )
+    fun canWriteContentUri_rejectsUnreachableMediaStoreUri() {
+        val fixture = permissionChecker(resolvedType = null)
 
         assertFalse(
             fixture.checker.canWriteContentUri(
-                uri = uri,
+                uri = OUTPUT_URI,
+                caller = fixture.caller,
+            ),
+        )
+    }
+
+    @Test
+    fun canWriteContentUri_rejectsForeignAuthority() {
+        val fixture = permissionChecker(resolvedType = "image/jpeg")
+
+        assertFalse(
+            fixture.checker.canWriteContentUri(
+                uri = Uri.parse("content://com.example.provider/output"),
                 caller = fixture.caller,
             ),
         )
@@ -50,22 +58,56 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
 
     @Test
     fun canWriteContentUri_returnsFalseWhenPlatformThrowsSecurityException() {
-        val uri = Uri.parse("content://caller/output")
         val fixture = permissionChecker(
-            permissionException = SecurityException("not accessible"),
+            resolveException = SecurityException("not accessible"),
         )
 
         assertFalse(
             fixture.checker.canWriteContentUri(
-                uri = uri,
+                uri = OUTPUT_URI,
                 caller = fixture.caller,
             ),
         )
     }
 
+    /**
+     * The output uri never belongs to the launch grant set, so routing it through
+     * [ComponentCaller.checkContentUriPermission] makes the platform throw and every external crop
+     * request carrying an output uri gets rejected. Pin that it is never used here.
+     */
+    @Test
+    fun canWriteContentUri_neverUsesLaunchGrantApi() {
+        val fixture = permissionChecker(resolvedType = "image/jpeg")
+
+        fixture.checker.canWriteContentUri(
+            uri = OUTPUT_URI,
+            caller = fixture.caller,
+        )
+
+        verify(exactly = 0) { fixture.caller.checkContentUriPermission(any(), any()) }
+    }
+
+    /**
+     * `"w"` truncates the target on some providers, so probing writability by opening the output
+     * would destroy it before the user confirms the crop.
+     */
+    @Test
+    fun canWriteContentUri_neverOpensTheOutput() {
+        val fixture = permissionChecker(resolvedType = "image/jpeg")
+
+        fixture.checker.canWriteContentUri(
+            uri = OUTPUT_URI,
+            caller = fixture.caller,
+        )
+
+        verify(exactly = 0) { fixture.contentResolver.openFileDescriptor(any(), any()) }
+        verify(exactly = 0) { fixture.contentResolver.openOutputStream(any()) }
+    }
+
     @Test
     fun canReadFileUri_acceptsSharedImageDirectories() {
         val checker = ComponentCallerExternalCropUriPermissionChecker(
+            context = mockk<Context>(relaxed = true),
             packageManager = mockk<PackageManager>(relaxed = true),
         )
         val caller = currentProcessCaller()
@@ -95,6 +137,7 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
     @Test
     fun canReadFileUri_rejectsPrivateAndEscapedPaths() {
         val checker = ComponentCallerExternalCropUriPermissionChecker(
+            context = mockk<Context>(relaxed = true),
             packageManager = mockk<PackageManager>(relaxed = true),
         )
         val caller = currentProcessCaller()
@@ -118,32 +161,30 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
     }
 
     private fun permissionChecker(
-        permissionResult: Int = PackageManager.PERMISSION_DENIED,
-        permissionException: RuntimeException? = null,
+        resolvedType: String? = null,
+        resolveException: RuntimeException? = null,
     ): PermissionCheckerFixture {
         val caller = mockk<ComponentCaller>()
         every { caller.uid } returns Process.myUid() + 1
-        if (permissionException == null) {
-            every {
-                caller.checkContentUriPermission(
-                    any(),
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                )
-            } returns permissionResult
+
+        val contentResolver = mockk<ContentResolver>(relaxed = true)
+        val typeCheck = every { contentResolver.getType(any()) }
+        if (resolveException == null) {
+            typeCheck returns resolvedType
         } else {
-            every {
-                caller.checkContentUriPermission(
-                    any(),
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                )
-            } throws permissionException
+            typeCheck throws resolveException
         }
+
+        val context = mockk<Context>()
+        every { context.contentResolver } returns contentResolver
 
         return PermissionCheckerFixture(
             checker = ComponentCallerExternalCropUriPermissionChecker(
+                context = context,
                 packageManager = mockk<PackageManager>(relaxed = true),
             ),
             caller = caller,
+            contentResolver = contentResolver,
         )
     }
 
@@ -156,5 +197,10 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
     private data class PermissionCheckerFixture(
         val checker: ComponentCallerExternalCropUriPermissionChecker,
         val caller: ComponentCaller,
+        val contentResolver: ContentResolver,
     )
+
+    private companion object {
+        val OUTPUT_URI: Uri = Uri.parse("content://media/external/images/media/42")
+    }
 }

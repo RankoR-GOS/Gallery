@@ -1,6 +1,7 @@
 package com.dot.gallery.feature_node.presentation.edit.crop
 
 import android.content.Intent
+import android.content.IntentSender
 import android.graphics.Bitmap
 import android.graphics.RectF
 import android.net.Uri
@@ -8,6 +9,7 @@ import com.dot.gallery.feature_node.data.model.editor.crop.CropImage
 import com.dot.gallery.feature_node.data.model.editor.crop.ExternalCropRequest
 import com.dot.gallery.feature_node.data.model.editor.crop.NormalizedCropRect
 import com.dot.gallery.feature_node.data.repository.ExternalCropRepository
+import com.dot.gallery.feature_node.data.repository.ExternalCropSaveResult
 import com.dot.gallery.testutil.MainDispatcherRule
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
@@ -192,7 +194,7 @@ class CropViewModelTest {
             val savedRect = CapturingSlot<NormalizedCropRect>()
             val repository = mockExternalCropRepository(
                 imageToLoad = image,
-                saveResult = resultIntent,
+                saveResult = ExternalCropSaveResult.Saved(resultIntent = resultIntent),
                 savedRect = savedRect,
             )
             val request = externalCropRequest()
@@ -249,7 +251,7 @@ class CropViewModelTest {
     @Test
     fun doneClick_whileSaving_savesOnce() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            val saveResult = CompletableDeferred<Intent?>()
+            val saveResult = CompletableDeferred<ExternalCropSaveResult>()
             val repository = mockExternalCropRepository(saveResultDeferred = saveResult)
             val viewModel = createLoadedViewModel(repository = repository)
             advanceUntilIdle()
@@ -268,7 +270,7 @@ class CropViewModelTest {
                 )
             }
 
-            saveResult.complete(Intent())
+            saveResult.complete(ExternalCropSaveResult.Saved(resultIntent = Intent()))
             advanceUntilIdle()
 
             assertTrue(awaitEffect(viewModel = viewModel) is CropEffect.FinishWithResult)
@@ -305,7 +307,7 @@ class CropViewModelTest {
     @Test
     fun doneClick_whenSaveFails_emitsSaveErrorEffect() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            val repository = mockExternalCropRepository(saveResult = null)
+            val repository = mockExternalCropRepository(saveResult = ExternalCropSaveResult.Failed)
             val viewModel = createLoadedViewModel(repository = repository)
             advanceUntilIdle()
 
@@ -325,9 +327,100 @@ class CropViewModelTest {
     }
 
     @Test
+    fun doneClick_whenOutputPermissionRequired_requestsItAndSavesAfterItIsGranted() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val intentSender = mockk<IntentSender>()
+            val resultIntent = Intent()
+            val repository = mockExternalCropRepository(
+                saveResults = listOf(
+                    ExternalCropSaveResult.OutputPermissionRequired(intentSender = intentSender),
+                    ExternalCropSaveResult.Saved(resultIntent = resultIntent),
+                ),
+            )
+            val viewModel = createLoadedViewModel(repository = repository)
+            advanceUntilIdle()
+
+            viewModel.onDoneClick()
+            advanceUntilIdle()
+
+            assertEquals(
+                CropEffect.RequestOutputWritePermission(intentSender = intentSender),
+                awaitEffect(viewModel = viewModel),
+            )
+
+            viewModel.onOutputWritePermissionResult(isGranted = true)
+            advanceUntilIdle()
+
+            assertEquals(
+                CropEffect.FinishWithResult(resultIntent = resultIntent),
+                awaitEffect(viewModel = viewModel),
+            )
+            coVerify(exactly = 2) {
+                repository.saveCropResult(
+                    request = any(),
+                    image = any(),
+                    normalizedRect = any(),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun outputWritePermissionResult_whenDenied_finishesCanceledWithoutRetrying() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repository = mockExternalCropRepository(
+                saveResult = ExternalCropSaveResult.OutputPermissionRequired(
+                    intentSender = mockk<IntentSender>(),
+                ),
+            )
+            val viewModel = createLoadedViewModel(repository = repository)
+            advanceUntilIdle()
+
+            viewModel.onDoneClick()
+            advanceUntilIdle()
+            assertTrue(awaitEffect(viewModel = viewModel) is CropEffect.RequestOutputWritePermission)
+
+            viewModel.onOutputWritePermissionResult(isGranted = false)
+            advanceUntilIdle()
+
+            assertEquals(CropEffect.FinishCanceled, awaitEffect(viewModel = viewModel))
+            coVerify(exactly = 1) {
+                repository.saveCropResult(
+                    request = any(),
+                    image = any(),
+                    normalizedRect = any(),
+                )
+            }
+        }
+    }
+
+    /** Asking again after the user already answered would loop the system dialog. */
+    @Test
+    fun outputWritePermissionResult_whenStillDeniedAfterGrant_failsInsteadOfAskingAgain() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val repository = mockExternalCropRepository(
+                saveResult = ExternalCropSaveResult.OutputPermissionRequired(
+                    intentSender = mockk<IntentSender>(),
+                ),
+            )
+            val viewModel = createLoadedViewModel(repository = repository)
+            advanceUntilIdle()
+
+            viewModel.onDoneClick()
+            advanceUntilIdle()
+            assertTrue(awaitEffect(viewModel = viewModel) is CropEffect.RequestOutputWritePermission)
+
+            viewModel.onOutputWritePermissionResult(isGranted = true)
+            advanceUntilIdle()
+
+            assertEquals(CropEffect.ShowSaveErrorAndCancel, awaitEffect(viewModel = viewModel))
+        }
+    }
+
+    @Test
     fun cancelClick_whileSaving_cancelsSaveAndFinishes() {
         runTest(context = mainDispatcherRule.testDispatcher) {
-            val saveResult = CompletableDeferred<Intent?>()
+            val saveResult = CompletableDeferred<ExternalCropSaveResult>()
             var saveWasCancelled = false
             val repository = mockExternalCropRepository(
                 saveResultDeferred = saveResult,
@@ -403,8 +496,10 @@ class CropViewModelTest {
 
 private fun mockExternalCropRepository(
     imageToLoad: CropImage? = cropImage(),
-    saveResult: Intent? = Intent(),
-    saveResultDeferred: CompletableDeferred<Intent?>? = null,
+    saveResult: ExternalCropSaveResult = ExternalCropSaveResult.Saved(resultIntent = Intent()),
+    saveResultDeferred: CompletableDeferred<ExternalCropSaveResult>? = null,
+    /** One result per save attempt, for the write-permission retry. */
+    saveResults: List<ExternalCropSaveResult>? = null,
     savedRect: CapturingSlot<NormalizedCropRect>? = null,
     onSaveCancelled: () -> Unit = {},
 ): ExternalCropRepository {
@@ -412,6 +507,16 @@ private fun mockExternalCropRepository(
     coEvery {
         repository.loadImage(uri = any())
     } returns imageToLoad
+    if (saveResults != null) {
+        coEvery {
+            repository.saveCropResult(
+                request = any(),
+                image = any(),
+                normalizedRect = any(),
+            )
+        } returnsMany saveResults
+        return repository
+    }
     configureSaveResult(
         repository = repository,
         saveResult = saveResult,
@@ -424,8 +529,8 @@ private fun mockExternalCropRepository(
 
 private fun configureSaveResult(
     repository: ExternalCropRepository,
-    saveResult: Intent?,
-    saveResultDeferred: CompletableDeferred<Intent?>?,
+    saveResult: ExternalCropSaveResult,
+    saveResultDeferred: CompletableDeferred<ExternalCropSaveResult>?,
     savedRect: CapturingSlot<NormalizedCropRect>?,
     onSaveCancelled: () -> Unit,
 ) {
@@ -465,10 +570,10 @@ private fun configureSaveResult(
 }
 
 private suspend fun awaitSaveResult(
-    saveResult: Intent?,
-    saveResultDeferred: CompletableDeferred<Intent?>?,
+    saveResult: ExternalCropSaveResult,
+    saveResultDeferred: CompletableDeferred<ExternalCropSaveResult>?,
     onSaveCancelled: () -> Unit,
-): Intent? {
+): ExternalCropSaveResult {
     return try {
         when (saveResultDeferred) {
             null -> saveResult

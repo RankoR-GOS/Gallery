@@ -1,7 +1,10 @@
 package com.dot.gallery.feature_node.data.repository
 
+import android.app.PendingIntent
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.content.Intent
+import android.content.IntentSender
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.graphics.Bitmap
@@ -14,18 +17,19 @@ import com.dot.gallery.feature_node.data.model.editor.SaveFormat
 import com.dot.gallery.feature_node.data.model.editor.crop.CropImage
 import com.dot.gallery.feature_node.data.model.editor.crop.ExternalCropRequest
 import com.dot.gallery.feature_node.data.model.editor.crop.NormalizedCropRect
-import com.dot.gallery.feature_node.data.repository.ExternalCropRepository
 import com.dot.gallery.testutil.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -87,14 +91,13 @@ class ExternalCropRepositoryTest {
                 normalizedRect = fullCropRect(),
             )
 
-            assertNotNull(resultIntent)
-            assertEquals(outputUri, resultIntent?.data)
+            assertEquals(outputUri, assertSaved(resultIntent).data)
             assertEquals(
                 "avatar-cropped.jpg",
                 insertedValues.captured.getAsString(MediaStore.MediaColumns.DISPLAY_NAME),
             )
             assertEquals(
-                SaveFormat.JPEG.mimeType,
+                SaveFormat.Jpeg.mimeType,
                 insertedValues.captured.getAsString(MediaStore.MediaColumns.MIME_TYPE),
             )
             assertEquals(
@@ -120,8 +123,7 @@ class ExternalCropRepositoryTest {
                 normalizedRect = fullCropRect(),
             )
 
-            assertNotNull(resultIntent)
-            assertEquals(outputUri, resultIntent?.data)
+            assertEquals(outputUri, assertSaved(resultIntent).data)
             verify(exactly = 0) {
                 contentResolver.insert(any(), any())
             }
@@ -129,7 +131,7 @@ class ExternalCropRepositoryTest {
     }
 
     @Test
-    fun saveCropResult_whenExplicitOutputWriteFails_returnsNull() {
+    fun saveCropResult_whenExplicitOutputWriteFails_returnsFailed() {
         runTest(context = mainDispatcherRule.testDispatcher) {
             val outputUri = Uri.parse("content://test/output")
             val contentResolver = mockk<ContentResolver>()
@@ -147,9 +149,53 @@ class ExternalCropRepositoryTest {
                 normalizedRect = fullCropRect(),
             )
 
-            assertNull(resultIntent)
+            assertFailed(resultIntent)
             verify(exactly = 0) {
                 contentResolver.insert(any(), any())
+            }
+        }
+    }
+
+    /**
+     * Scoped storage denies writes to media we do not own, which is the normal case for a
+     * caller-supplied output uri. That is recoverable by asking the user, not a hard failure.
+     */
+    @Test
+    fun saveCropResult_whenExplicitOutputWriteIsDenied_requestsWritePermission() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val outputUri = Uri.parse("content://media/external/images/media/42")
+            val intentSender = mockk<IntentSender>()
+            val contentResolver = mockk<ContentResolver>()
+            every {
+                contentResolver.openOutputStream(outputUri, "wt")
+            } throws SecurityException("no access")
+            every {
+                contentResolver.openOutputStream(outputUri)
+            } throws SecurityException("no access")
+            mockkStatic(MediaStore::class)
+            every {
+                MediaStore.createWriteRequest(contentResolver, listOf(outputUri))
+            } returns mockk<PendingIntent> {
+                every { this@mockk.intentSender } returns intentSender
+            }
+            val repository = externalCropRepository(contentResolver = contentResolver)
+
+            try {
+                val resultIntent = repository.saveCropResult(
+                    request = externalCropRequest(outputUri = outputUri),
+                    image = cropImage(),
+                    normalizedRect = fullCropRect(),
+                )
+
+                assertEquals(
+                    ExternalCropSaveResult.OutputPermissionRequired(intentSender = intentSender),
+                    resultIntent,
+                )
+                verify(exactly = 0) {
+                    contentResolver.insert(any(), any())
+                }
+            } finally {
+                unmockkStatic(MediaStore::class)
             }
         }
     }
@@ -192,7 +238,7 @@ class ExternalCropRepositoryTest {
                 normalizedRect = fullCropRect(),
             )
 
-            assertNull(resultIntent)
+            assertFailed(resultIntent)
             verify(exactly = 1) {
                 contentResolver.delete(outputUri, null, null)
             }
@@ -240,7 +286,7 @@ class ExternalCropRepositoryTest {
                 normalizedRect = fullCropRect(),
             )
 
-            assertNull(resultIntent)
+            assertFailed(resultIntent)
             verify(exactly = 1) {
                 contentResolver.delete(outputUri, null, null)
             }
@@ -259,9 +305,9 @@ class ExternalCropRepositoryTest {
                 normalizedRect = fullCropRect(),
             )
 
-            assertNotNull(resultIntent)
-            assertNull(resultIntent?.data)
-            assertEquals(true, resultIntent?.hasExtra("data"))
+            val savedIntent = assertSaved(resultIntent)
+            assertNull(savedIntent.data)
+            assertEquals(true, savedIntent.hasExtra("data"))
             verify(exactly = 0) {
                 contentResolver.insert(any(), any())
             }
@@ -296,7 +342,7 @@ class ExternalCropRepositoryTest {
             )
 
             val decodedBitmap = decodeWrittenBitmap(outputStream = outputStream)
-            assertNotNull(resultIntent)
+            assertSaved(resultIntent)
             assertEquals(4, decodedBitmap.width)
             assertEquals(4, decodedBitmap.height)
             assertEquals(Color.TRANSPARENT, decodedBitmap.getPixel(0, 0))
@@ -329,7 +375,7 @@ class ExternalCropRepositoryTest {
             )
 
             val decodedBitmap = decodeWrittenBitmap(outputStream = outputStream)
-            assertNotNull(resultIntent)
+            assertSaved(resultIntent)
             assertEquals(2, decodedBitmap.width)
             assertEquals(2, decodedBitmap.height)
             assertEquals(patternColor(x = 1, y = 1), decodedBitmap.getPixel(0, 0))
@@ -368,7 +414,7 @@ class ExternalCropRepositoryTest {
             )
 
             val decodedBitmap = decodeWrittenBitmap(outputStream = outputStream)
-            assertNotNull(resultIntent)
+            assertSaved(resultIntent)
             assertEquals(4, decodedBitmap.width)
             assertEquals(4, decodedBitmap.height)
             assertEquals(Color.RED, decodedBitmap.getPixel(0, 0))
@@ -484,5 +530,14 @@ class ExternalCropRepositoryTest {
         return MatrixCursor(arrayOf(OpenableColumns.DISPLAY_NAME)).apply {
             addRow(arrayOf(displayName))
         }
+    }
+
+    private fun assertSaved(result: ExternalCropSaveResult): Intent {
+        assertTrue("Expected a saved result but was $result", result is ExternalCropSaveResult.Saved)
+        return (result as ExternalCropSaveResult.Saved).resultIntent
+    }
+
+    private fun assertFailed(result: ExternalCropSaveResult) {
+        assertEquals(ExternalCropSaveResult.Failed, result)
     }
 }

@@ -52,19 +52,19 @@ class ExternalCropRequestTest {
     @Test
     fun saveFormat_mapsPngAndGifToPng() {
         assertEquals(
-            SaveFormat.PNG,
+            SaveFormat.Png,
             externalCropRequest(outputFormat = "PNG").saveFormat,
         )
         assertEquals(
-            SaveFormat.PNG,
+            SaveFormat.Png,
             externalCropRequest(outputFormat = "image/gif").saveFormat,
         )
         assertEquals(
-            SaveFormat.PNG,
+            SaveFormat.Png,
             externalCropRequest(outputFormat = "avatar.png").saveFormat,
         )
         assertEquals(
-            SaveFormat.PNG,
+            SaveFormat.Png,
             externalCropRequest(outputFormat = "image/x-png").saveFormat,
         )
     }
@@ -72,19 +72,19 @@ class ExternalCropRequestTest {
     @Test
     fun saveFormat_mapsWebpToWebpLossy() {
         assertEquals(
-            SaveFormat.WEBP_LOSSY,
+            SaveFormat.WebpLossy,
             externalCropRequest(outputFormat = "WEBP").saveFormat,
         )
         assertEquals(
-            SaveFormat.WEBP_LOSSY,
+            SaveFormat.WebpLossy,
             externalCropRequest(outputFormat = "image/webp").saveFormat,
         )
         assertEquals(
-            SaveFormat.WEBP_LOSSY,
+            SaveFormat.WebpLossy,
             externalCropRequest(outputFormat = "avatar.webp").saveFormat,
         )
         assertEquals(
-            SaveFormat.WEBP_LOSSY,
+            SaveFormat.WebpLossy,
             externalCropRequest(outputFormat = "image/webp; charset=utf-8").saveFormat,
         )
     }
@@ -92,11 +92,11 @@ class ExternalCropRequestTest {
     @Test
     fun saveFormat_mapsWebpLosslessExplicitly() {
         assertEquals(
-            SaveFormat.WEBP_LOSSLESS,
+            SaveFormat.WebpLossless,
             externalCropRequest(outputFormat = "WEBP_LOSSLESS").saveFormat,
         )
         assertEquals(
-            SaveFormat.WEBP_LOSSLESS,
+            SaveFormat.WebpLossless,
             externalCropRequest(outputFormat = "Bitmap.CompressFormat.WEBP_LOSSLESS").saveFormat,
         )
     }
@@ -104,15 +104,15 @@ class ExternalCropRequestTest {
     @Test
     fun saveFormat_mapsJpegAndJpgToJpeg() {
         assertEquals(
-            SaveFormat.JPEG,
+            SaveFormat.Jpeg,
             externalCropRequest(outputFormat = "JPEG").saveFormat,
         )
         assertEquals(
-            SaveFormat.JPEG,
+            SaveFormat.Jpeg,
             externalCropRequest(outputFormat = "image/jpg").saveFormat,
         )
         assertEquals(
-            SaveFormat.JPEG,
+            SaveFormat.Jpeg,
             externalCropRequest(outputFormat = "avatar.jpg").saveFormat,
         )
     }
@@ -120,11 +120,11 @@ class ExternalCropRequestTest {
     @Test
     fun saveFormat_defaultsToJpeg() {
         assertEquals(
-            SaveFormat.JPEG,
+            SaveFormat.Jpeg,
             externalCropRequest(outputFormat = null).saveFormat,
         )
         assertEquals(
-            SaveFormat.JPEG,
+            SaveFormat.Jpeg,
             externalCropRequest(outputFormat = "heic").saveFormat,
         )
     }

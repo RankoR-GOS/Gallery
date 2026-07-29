@@ -1,13 +1,15 @@
 package com.dot.gallery.feature_node.presentation.edit.crop
 
-import android.content.Intent
+import android.content.IntentSender
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.feature_node.data.model.editor.crop.CropImage
 import com.dot.gallery.feature_node.data.model.editor.crop.ExternalCropRequest
 import com.dot.gallery.feature_node.data.model.editor.crop.NormalizedCropRect
 import com.dot.gallery.feature_node.data.repository.ExternalCropRepository
+import com.dot.gallery.feature_node.data.repository.ExternalCropSaveResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -18,7 +20,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 internal interface CropScreenModel {
     val effects: Flow<CropEffect>
@@ -28,6 +29,7 @@ internal interface CropScreenModel {
     fun onCancelClick()
     fun onDoneClick()
     fun onCropRectChanged(normalizedRect: NormalizedCropRect)
+    fun onOutputWritePermissionResult(isGranted: Boolean)
 }
 
 @HiltViewModel
@@ -43,6 +45,8 @@ internal class CropViewModel @Inject constructor(
     private var loadJob: Job? = null
     private var saveJob: Job? = null
     private var hasFinished = false
+    private var pendingSaveInput: CropSaveInput? = null
+    private var hasRequestedOutputWritePermission = false
 
     override val effects = effectsChannel.receiveAsFlow()
     override val uiState = _uiState.asStateFlow()
@@ -67,6 +71,8 @@ internal class CropViewModel @Inject constructor(
 
     private fun resetCropSession() {
         hasFinished = false
+        pendingSaveInput = null
+        hasRequestedOutputWritePermission = false
         loadJob?.cancel()
         saveJob?.cancel()
     }
@@ -183,7 +189,11 @@ internal class CropViewModel @Inject constructor(
             val resultEffect = saveCropAndCreateResultEffect(saveInput = saveInput)
             setSaving(isSaving = false)
 
-            sendTerminalEffect(effect = resultEffect)
+            when (resultEffect) {
+                // The save resumes in onOutputWritePermissionResult, so the session stays open.
+                is CropEffect.RequestOutputWritePermission -> sendEffect(effect = resultEffect)
+                else -> sendTerminalEffect(effect = resultEffect)
+            }
         } catch (exception: CancellationException) {
             setSaving(isSaving = false)
             throw exception
@@ -194,20 +204,64 @@ internal class CropViewModel @Inject constructor(
     }
 
     private suspend fun saveCropAndCreateResultEffect(saveInput: CropSaveInput): CropEffect {
-        return repository
-            .saveCropResult(
+        return createCropResultEffect(
+            saveInput = saveInput,
+            saveResult = repository.saveCropResult(
                 request = saveInput.request,
                 image = saveInput.image,
                 normalizedRect = saveInput.normalizedRect,
-            )
-            .let(::createCropResultEffect)
+            ),
+        )
     }
 
-    private fun createCropResultEffect(resultIntent: Intent?): CropEffect {
-        return when (resultIntent) {
-            null -> CropEffect.ShowSaveErrorAndCancel
-            else -> CropEffect.FinishWithResult(resultIntent = resultIntent)
+    private fun createCropResultEffect(
+        saveInput: CropSaveInput,
+        saveResult: ExternalCropSaveResult,
+    ): CropEffect {
+        return when (saveResult) {
+            is ExternalCropSaveResult.Saved -> {
+                CropEffect.FinishWithResult(resultIntent = saveResult.resultIntent)
+            }
+
+            is ExternalCropSaveResult.OutputPermissionRequired -> {
+                createOutputWritePermissionEffect(
+                    saveInput = saveInput,
+                    intentSender = saveResult.intentSender,
+                )
+            }
+
+            ExternalCropSaveResult.Failed -> CropEffect.ShowSaveErrorAndCancel
         }
+    }
+
+    /**
+     * Only ask once per session: if the save still cannot write after the user has answered, asking
+     * again would loop the dialog.
+     */
+    private fun createOutputWritePermissionEffect(
+        saveInput: CropSaveInput,
+        intentSender: IntentSender,
+    ): CropEffect {
+        if (hasRequestedOutputWritePermission) {
+            return CropEffect.ShowSaveErrorAndCancel
+        }
+
+        hasRequestedOutputWritePermission = true
+        pendingSaveInput = saveInput
+
+        return CropEffect.RequestOutputWritePermission(intentSender = intentSender)
+    }
+
+    override fun onOutputWritePermissionResult(isGranted: Boolean) {
+        val saveInput = pendingSaveInput ?: return
+        pendingSaveInput = null
+
+        if (!isGranted) {
+            sendTerminalEffect(effect = CropEffect.FinishCanceled)
+            return
+        }
+
+        saveJob = launchCropSave(saveInput = saveInput)
     }
 
     private fun setSaving(isSaving: Boolean) {

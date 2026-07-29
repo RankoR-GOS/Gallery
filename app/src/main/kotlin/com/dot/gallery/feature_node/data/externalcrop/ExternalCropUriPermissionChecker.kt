@@ -3,11 +3,14 @@ package com.dot.gallery.feature_node.data.externalcrop
 import android.Manifest
 import android.app.ComponentCaller
 import android.content.ContentResolver
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Environment
 import android.os.Process
+import android.provider.MediaStore
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 
@@ -27,6 +30,7 @@ internal interface ExternalCropUriPermissionChecker {
 }
 
 internal class ComponentCallerExternalCropUriPermissionChecker @Inject constructor(
+    @param:ApplicationContext private val context: Context,
     private val packageManager: PackageManager,
 ) : ExternalCropUriPermissionChecker {
 
@@ -41,15 +45,51 @@ internal class ComponentCallerExternalCropUriPermissionChecker @Inject construct
         )
     }
 
+    /**
+     * The caller's own write access to the output uri cannot be verified, so this only allowlists
+     * the authority and confirms the row is reachable from here.
+     *
+     * The output uri arrives in [android.provider.MediaStore.EXTRA_OUTPUT], a plain extra, so it is
+     * never part of the launch grant set that [ComponentCaller.checkContentUriPermission] accepts —
+     * that method throws [IllegalArgumentException] for anything not passed via `Intent#getData`,
+     * `EXTRA_STREAM` or `Intent#getClipData`. Uid-based [Context.checkUriPermission] is no
+     * substitute either: it consults explicit uri grants and the provider's manifest permission
+     * only, not MediaProvider's ownership model, so it denies media uris even for our own uid.
+     *
+     * Known risk, accepted to keep the legacy `ACTION_CROP` contract working: a hostile caller can
+     * point [android.provider.MediaStore.EXTRA_OUTPUT] at media it cannot write itself and have us
+     * overwrite it. The exposure is bounded — the authority allowlist keeps it inside shared media,
+     * and nothing is written until the user confirms the crop in our own ui.
+     */
     override fun canWriteContentUri(
         uri: Uri,
         caller: ComponentCaller,
     ): Boolean {
-        return hasContentUriPermission(
-            caller = caller,
-            uri = uri,
-            modeFlags = Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-        )
+        if (caller.uid == Process.myUid()) {
+            return true
+        }
+
+        return isMediaStoreUri(uri) && isReachable(uri)
+    }
+
+    private fun isMediaStoreUri(uri: Uri): Boolean {
+        return uri.authority == MediaStore.AUTHORITY
+    }
+
+    /**
+     * Deliberately probes with [ContentResolver.getType] rather than opening the descriptor: `"w"`
+     * truncates the target on some providers, which would destroy the output before the user has
+     * even confirmed the crop. A write that fails later is handled by the save path, which returns
+     * no result intent and cancels.
+     */
+    private fun isReachable(uri: Uri): Boolean {
+        return try {
+            context.contentResolver.getType(uri) != null
+        } catch (_: SecurityException) {
+            false
+        } catch (_: IllegalArgumentException) {
+            false
+        }
     }
 
     override fun canReadFileUri(
