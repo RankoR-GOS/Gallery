@@ -55,11 +55,11 @@ import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.SecurityInfoSheet
-import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.data.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
 import com.dot.gallery.feature_node.domain.model.AlbumState
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.volume
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.volume
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumComponent
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumGroupComponent
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState

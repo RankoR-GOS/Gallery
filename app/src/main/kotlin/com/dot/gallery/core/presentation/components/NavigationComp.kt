@@ -258,9 +258,9 @@ fun NavigationComp(
             ) {
                 val albumsViewModel = hiltViewModel<AlbumsViewModel>()
                 val scope = rememberCoroutineScope()
-                var pendingAlbum by remember { mutableStateOf<com.dot.gallery.feature_node.domain.model.Album?>(null) }
+                var pendingAlbum by remember { mutableStateOf<com.dot.gallery.feature_node.data.model.Album?>(null) }
                 var biometricAction by remember { mutableStateOf<String?>(null) }
-                var pendingLockAlbum by remember { mutableStateOf<com.dot.gallery.feature_node.domain.model.Album?>(null) }
+                var pendingLockAlbum by remember { mutableStateOf<com.dot.gallery.feature_node.data.model.Album?>(null) }
                 val securitySheetState = rememberAppBottomSheetState()
                 val lockDisclaimerSheetState = rememberAppBottomSheetState()
                 val biometricState = rememberBiometricState(
@@ -283,7 +283,7 @@ fun NavigationComp(
                         biometricAction = null
                     }
                 )
-                val onAlbumClickWithLock: (com.dot.gallery.feature_node.domain.model.Album) -> Unit = remember(biometricState) {
+                val onAlbumClickWithLock: (com.dot.gallery.feature_node.data.model.Album) -> Unit = remember(biometricState) {
                     { album ->
                         if (album.isLocked) {
                             if (!biometricState.isSupported) {
@@ -298,7 +298,7 @@ fun NavigationComp(
                         }
                     }
                 }
-                val onLockAlbumWithCheck: (com.dot.gallery.feature_node.domain.model.Album) -> Unit = remember(biometricState) {
+                val onLockAlbumWithCheck: (com.dot.gallery.feature_node.data.model.Album) -> Unit = remember(biometricState) {
                     { album ->
                         if (!biometricState.isSupported) {
                             scope.launch { securitySheetState.show() }
@@ -325,7 +325,7 @@ fun NavigationComp(
                 var groupDialogMode by remember { mutableStateOf("create") }
                 var groupDialogGroupId by remember { mutableStateOf<Long?>(null) }
                 var groupDialogInitialName by remember { mutableStateOf("") }
-                var pendingGroupAlbum by remember { mutableStateOf<com.dot.gallery.feature_node.domain.model.Album?>(null) }
+                var pendingGroupAlbum by remember { mutableStateOf<com.dot.gallery.feature_node.data.model.Album?>(null) }
                 val deleteGroupSheetState = rememberAppBottomSheetState()
                 var pendingDeleteGroupId by remember { mutableStateOf<Long?>(null) }
 

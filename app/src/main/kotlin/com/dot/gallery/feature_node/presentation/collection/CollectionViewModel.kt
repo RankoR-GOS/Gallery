@@ -6,9 +6,9 @@ package com.dot.gallery.feature_node.presentation.collection
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dot.gallery.feature_node.domain.model.Collection
-import com.dot.gallery.feature_node.domain.model.CollectionWithCount
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.model.Collection
+import com.dot.gallery.feature_node.data.model.CollectionWithCount
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted

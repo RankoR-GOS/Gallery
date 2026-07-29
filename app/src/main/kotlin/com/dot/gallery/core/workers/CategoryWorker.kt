@@ -15,9 +15,9 @@ import com.dot.gallery.core.ml.ModelManager
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.util.ProgressThrottler
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
-import com.dot.gallery.feature_node.domain.model.Category
-import com.dot.gallery.feature_node.domain.model.MediaCategory
-import com.dot.gallery.feature_node.domain.repository.AiMediaAnalysisRepository
+import com.dot.gallery.feature_node.data.model.Category
+import com.dot.gallery.feature_node.data.model.MediaCategory
+import com.dot.gallery.feature_node.data.repository.AiMediaAnalysisRepository
 import com.dot.gallery.feature_node.presentation.search.helpers.SearchVisionHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
 import com.dot.gallery.feature_node.presentation.util.printInfo

@@ -15,9 +15,9 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.core.util.ProgressThrottler
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
-import com.dot.gallery.feature_node.domain.model.MediaVersion
-import com.dot.gallery.feature_node.domain.model.retrieveExtraMediaMetadata
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.model.MediaVersion
+import com.dot.gallery.feature_node.data.model.retrieveExtraMediaMetadata
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.util.isMetadataUpToDate
 import com.dot.gallery.feature_node.presentation.util.mediaStoreVersion
 import com.dot.gallery.feature_node.presentation.util.printDebug

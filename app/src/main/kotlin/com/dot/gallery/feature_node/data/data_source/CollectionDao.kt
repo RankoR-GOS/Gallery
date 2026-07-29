@@ -12,9 +12,9 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import com.dot.gallery.feature_node.domain.model.Collection
-import com.dot.gallery.feature_node.domain.model.CollectionAlbum
-import com.dot.gallery.feature_node.domain.model.CollectionMedia
+import com.dot.gallery.feature_node.data.model.Collection
+import com.dot.gallery.feature_node.data.model.CollectionAlbum
+import com.dot.gallery.feature_node.data.model.CollectionMedia
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -161,7 +161,7 @@ data class CollectionWithMediaCount(
         updatedAt = updatedAt
     )
 
-    fun toCollectionWithCount() = com.dot.gallery.feature_node.domain.model.CollectionWithCount(
+    fun toCollectionWithCount() = com.dot.gallery.feature_node.data.model.CollectionWithCount(
         collection = toCollection(),
         mediaCount = mediaCount,
         thumbnailMediaId = thumbnailMediaId,

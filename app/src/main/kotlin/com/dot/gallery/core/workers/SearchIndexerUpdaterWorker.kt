@@ -8,11 +8,11 @@ import androidx.work.workDataOf
 import com.dot.gallery.core.ml.ImageEmbeddingGenerator
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.sandbox.MediaPreviewDecoder
-import com.dot.gallery.feature_node.domain.model.ImageEmbedding
-import com.dot.gallery.feature_node.domain.repository.AiMediaAnalysisRepository
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
-import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.domain.util.isVideo
+import com.dot.gallery.feature_node.data.model.ImageEmbedding
+import com.dot.gallery.feature_node.data.repository.AiMediaAnalysisRepository
+import com.dot.gallery.feature_node.data.repository.MediaRepository
+import com.dot.gallery.feature_node.data.util.getUri
+import com.dot.gallery.feature_node.data.util.isVideo
 import com.dot.gallery.feature_node.presentation.util.printInfo
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import dagger.assisted.Assisted

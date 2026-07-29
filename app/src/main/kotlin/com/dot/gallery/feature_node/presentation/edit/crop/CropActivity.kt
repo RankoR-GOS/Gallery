@@ -7,7 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.externalcrop.ExternalCropIntentParser
+import com.dot.gallery.feature_node.data.externalcrop.ExternalCropIntentParser
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

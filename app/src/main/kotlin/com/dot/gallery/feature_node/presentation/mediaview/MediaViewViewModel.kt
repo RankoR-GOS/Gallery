@@ -18,11 +18,11 @@ import com.dot.gallery.core.workers.RotateMediaWorker
 import com.dot.gallery.core.workers.rotateImage
 import com.dot.gallery.feature_node.data.repository.MotionPhotoInfo
 import com.dot.gallery.feature_node.data.repository.MotionPhotoRepository
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
-import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.domain.util.isVideo
+import com.dot.gallery.feature_node.data.repository.MediaRepository
+import com.dot.gallery.feature_node.data.util.getUri
+import com.dot.gallery.feature_node.data.util.isVideo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers

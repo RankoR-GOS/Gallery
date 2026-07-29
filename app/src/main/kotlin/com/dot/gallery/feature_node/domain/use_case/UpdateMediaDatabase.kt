@@ -1,6 +1,6 @@
 package com.dot.gallery.feature_node.domain.use_case
 
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import javax.inject.Inject
 
 internal class UpdateMediaDatabase @Inject constructor(

@@ -67,11 +67,11 @@ import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.SelectionSheet
 import com.dot.gallery.core.toggleNavigationBar
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.model.isHeaderKey
-import com.dot.gallery.feature_node.domain.model.isIgnoredKey
+import com.dot.gallery.feature_node.data.model.isHeaderKey
+import com.dot.gallery.feature_node.data.model.isIgnoredKey
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.common.components.MosaicMediaGrid
 import com.dot.gallery.feature_node.presentation.common.components.MosaicPinchZoomLayout

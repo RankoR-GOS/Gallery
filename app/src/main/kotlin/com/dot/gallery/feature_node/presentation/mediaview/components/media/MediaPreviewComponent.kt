@@ -20,8 +20,8 @@ import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.media3.exoplayer.ExoPlayer
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.isVideo
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.isVideo
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayer
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import dev.chrisbanes.haze.hazeSource

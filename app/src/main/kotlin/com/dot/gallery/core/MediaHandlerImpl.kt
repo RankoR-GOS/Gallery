@@ -9,8 +9,8 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.work.WorkManager
 import com.dot.gallery.core.Settings.Misc.getTrashEnabled
 import com.dot.gallery.core.workers.rotateImage
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.util.mediaPair
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

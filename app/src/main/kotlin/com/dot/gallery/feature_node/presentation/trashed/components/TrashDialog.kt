@@ -63,8 +63,8 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Settings.Misc.rememberTrashConfirmationEnabled
 import com.dot.gallery.core.presentation.components.DragHandle
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.DELETE
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.RESTORE
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.TRASH

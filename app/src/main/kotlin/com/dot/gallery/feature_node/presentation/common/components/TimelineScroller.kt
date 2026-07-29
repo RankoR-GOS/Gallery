@@ -32,8 +32,8 @@ import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Settings.Misc.rememberDefaultDateFormat
 import com.dot.gallery.core.Settings.Misc.rememberExtendedDateFormat
 import com.dot.gallery.core.Settings.Misc.rememberWeeklyDateFormat
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaItem
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.model.MediaItem
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.getDate
 import my.nanihadesuka.compose.InternalLazyVerticalGridScrollbar

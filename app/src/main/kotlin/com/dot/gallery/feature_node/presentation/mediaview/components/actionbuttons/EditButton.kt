@@ -8,9 +8,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.domain.util.isImage
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.getUri
+import com.dot.gallery.feature_node.data.util.isImage
 import com.dot.gallery.feature_node.presentation.util.launchEditImageIntent
 import com.dot.gallery.feature_node.presentation.util.launchEditIntent
 

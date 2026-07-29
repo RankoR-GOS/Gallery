@@ -2,8 +2,8 @@ package com.dot.gallery.injection.module.core
 
 import com.dot.gallery.core.ml.ImageEmbeddingGenerator
 import com.dot.gallery.core.ml.ImageEmbeddingGeneratorImpl
-import com.dot.gallery.feature_node.domain.repository.AiMediaAnalysisRepository
-import com.dot.gallery.feature_node.domain.repository.AiMediaAnalysisRepositoryImpl
+import com.dot.gallery.feature_node.data.repository.AiMediaAnalysisRepository
+import com.dot.gallery.feature_node.data.repository.AiMediaAnalysisRepositoryImpl
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysisImpl
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysisScheduler

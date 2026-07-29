@@ -9,9 +9,9 @@ import androidx.work.impl.WorkManagerImpl
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.dot.gallery.core.workers.CategoryWorker
 import com.dot.gallery.core.workers.SearchIndexerUpdaterWorker
-import com.dot.gallery.feature_node.domain.model.AiMediaAnalysisPreferences
-import com.dot.gallery.feature_node.domain.repository.AiMediaAnalysisRepository
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.model.AiMediaAnalysisPreferences
+import com.dot.gallery.feature_node.data.repository.AiMediaAnalysisRepository
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow

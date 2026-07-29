@@ -23,7 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.presentation.components.util.advancedShadow
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.formatMinSec
 

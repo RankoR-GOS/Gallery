@@ -38,9 +38,9 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Constants.albumCellsList
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.presentation.components.NavigationBackButton
-import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.data.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
-import com.dot.gallery.feature_node.domain.model.matchesAlbum
+import com.dot.gallery.feature_node.data.model.matchesAlbum
 import com.dot.gallery.feature_node.presentation.util.PreviewHost
 
 @OptIn(ExperimentalMaterial3Api::class)

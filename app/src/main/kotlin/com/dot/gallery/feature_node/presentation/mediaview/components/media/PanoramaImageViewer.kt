@@ -30,8 +30,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.rememberSurfaceCapture
 import com.dot.gallery.libs.panoramaviewer.CameraState

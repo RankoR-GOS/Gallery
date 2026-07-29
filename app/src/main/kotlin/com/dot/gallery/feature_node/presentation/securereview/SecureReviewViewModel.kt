@@ -3,7 +3,7 @@ package com.dot.gallery.feature_node.presentation.securereview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.feature_node.data.repository.SecureReviewMediaRepository
-import com.dot.gallery.feature_node.domain.model.securereview.AuthorizedSecureReviewRequest
+import com.dot.gallery.feature_node.data.model.securereview.AuthorizedSecureReviewRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException

@@ -2,10 +2,10 @@ package com.dot.gallery.feature_node.presentation.ignored.setup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
-import com.dot.gallery.feature_node.domain.model.matchesAlbum
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.model.Album
+import com.dot.gallery.feature_node.data.model.IgnoredAlbum
+import com.dot.gallery.feature_node.data.model.matchesAlbum
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.ignored.IgnoredState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

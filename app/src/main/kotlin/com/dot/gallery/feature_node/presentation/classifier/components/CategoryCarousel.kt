@@ -44,7 +44,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
-import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.presentation.library.CategoryMedia
 import com.dot.gallery.feature_node.presentation.search.SearchMediaItem
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation

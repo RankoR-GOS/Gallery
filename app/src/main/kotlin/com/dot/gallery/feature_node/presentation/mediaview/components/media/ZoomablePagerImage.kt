@@ -48,7 +48,7 @@ import com.dot.gallery.core.decoder.glide.galleryMediaSubsamplingImageGenerators
 import com.dot.gallery.core.presentation.components.util.LocalBatteryStatus
 import com.dot.gallery.core.presentation.components.util.ProvideBatteryStatus
 import com.dot.gallery.core.presentation.components.util.swipe
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.dot.gallery.feature_node.presentation.util.toGlideModel

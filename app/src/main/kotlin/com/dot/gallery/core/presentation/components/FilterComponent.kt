@@ -38,8 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Album.rememberLastSort
-import com.dot.gallery.feature_node.domain.util.MediaOrder
-import com.dot.gallery.feature_node.domain.util.OrderType
+import com.dot.gallery.feature_node.data.util.MediaOrder
+import com.dot.gallery.feature_node.data.util.OrderType
 
 @Composable
 fun FilterButton(

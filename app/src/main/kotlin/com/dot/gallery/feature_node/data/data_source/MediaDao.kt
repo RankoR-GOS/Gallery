@@ -4,9 +4,9 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
-import com.dot.gallery.feature_node.domain.model.Media.UriMedia
-import com.dot.gallery.feature_node.domain.model.MediaVersion
-import com.dot.gallery.feature_node.domain.model.TimelineSettings
+import com.dot.gallery.feature_node.data.model.Media.UriMedia
+import com.dot.gallery.feature_node.data.model.MediaVersion
+import com.dot.gallery.feature_node.data.model.TimelineSettings
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import kotlinx.coroutines.flow.Flow
 

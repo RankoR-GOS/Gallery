@@ -2,7 +2,7 @@ package com.dot.gallery.feature_node.presentation.ignored
 
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
-import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
+import com.dot.gallery.feature_node.data.model.IgnoredAlbum
 import kotlinx.parcelize.Parcelize
 
 @Immutable

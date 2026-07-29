@@ -20,8 +20,8 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
 import androidx.exifinterface.media.ExifInterface
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose

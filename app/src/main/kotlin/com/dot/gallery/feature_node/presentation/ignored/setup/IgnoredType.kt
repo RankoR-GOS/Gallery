@@ -1,6 +1,6 @@
 package com.dot.gallery.feature_node.presentation.ignored.setup
 
-import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.data.model.Album
 
 sealed class IgnoredType {
 

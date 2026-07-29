@@ -27,7 +27,7 @@ import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Album.LastSort
 import com.dot.gallery.core.presentation.components.FilterKind
-import com.dot.gallery.feature_node.domain.util.OrderType
+import com.dot.gallery.feature_node.data.util.OrderType
 
 @Composable
 fun AlbumSortDropdown(

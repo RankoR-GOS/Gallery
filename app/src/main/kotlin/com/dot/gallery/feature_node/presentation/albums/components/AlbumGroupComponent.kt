@@ -544,7 +544,7 @@ fun AlbumGroupRowComponent(
 @Composable
 internal fun GroupThumbnailCell(
     modifier: Modifier = Modifier,
-    album: com.dot.gallery.feature_node.domain.model.Album?,
+    album: com.dot.gallery.feature_node.data.model.Album?,
     cornerShape: RoundedCornerShape
 ) {
     if (album != null) {

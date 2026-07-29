@@ -11,8 +11,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.dot.gallery.feature_node.domain.model.AlbumGroup
-import com.dot.gallery.feature_node.domain.model.AlbumGroupMember
+import com.dot.gallery.feature_node.data.model.AlbumGroup
+import com.dot.gallery.feature_node.data.model.AlbumGroupMember
 import kotlinx.coroutines.flow.Flow
 
 @Dao

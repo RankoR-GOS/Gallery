@@ -13,8 +13,8 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
-import com.dot.gallery.feature_node.domain.model.Category
-import com.dot.gallery.feature_node.domain.model.MediaCategory
+import com.dot.gallery.feature_node.data.model.Category
+import com.dot.gallery.feature_node.data.model.MediaCategory
 import kotlinx.coroutines.flow.Flow
 
 @Dao

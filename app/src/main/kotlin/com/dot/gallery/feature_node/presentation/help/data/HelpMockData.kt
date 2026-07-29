@@ -14,10 +14,10 @@ import androidx.compose.material.icons.outlined.Security
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
-import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.data.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaItem
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.model.MediaItem
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.exif.MetadataDirectory

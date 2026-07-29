@@ -9,8 +9,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.dot.gallery.core.Settings
-import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.data.model.Album
+import com.dot.gallery.feature_node.data.model.Media
 
 sealed interface MediaSharedElementKey {
     data class MediaKey(val key: String) : MediaSharedElementKey

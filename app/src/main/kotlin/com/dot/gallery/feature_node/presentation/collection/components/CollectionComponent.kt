@@ -52,7 +52,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.model.CollectionWithCount
+import com.dot.gallery.feature_node.data.model.CollectionWithCount
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState

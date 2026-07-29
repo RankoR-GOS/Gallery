@@ -51,8 +51,8 @@ import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
 import com.dot.gallery.core.Constants.DEFAULT_TOP_BAR_ANIMATION_DURATION
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.isVideo
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.isVideo
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.ui.theme.BlackScrim

@@ -25,9 +25,9 @@ import com.dot.gallery.core.util.ext.tryGetLong
 import com.dot.gallery.core.util.ext.tryGetString
 import com.dot.gallery.core.util.join
 import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaType
-import com.dot.gallery.feature_node.domain.util.isTrashed
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.model.MediaType
+import com.dot.gallery.feature_node.data.util.isTrashed
 import com.dot.gallery.feature_node.presentation.util.getDate
 import com.dot.gallery.feature_node.presentation.util.parseTimestampFromFilename
 import com.dot.gallery.feature_node.presentation.util.printWarning

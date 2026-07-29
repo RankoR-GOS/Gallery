@@ -3,9 +3,9 @@ package com.dot.gallery.feature_node.presentation.ignored
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dot.gallery.core.LocalMediaDistributor
-import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
-import com.dot.gallery.feature_node.domain.model.matchesAlbum
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.model.IgnoredAlbum
+import com.dot.gallery.feature_node.data.model.matchesAlbum
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -21,7 +21,7 @@ class IgnoredViewModel @Inject constructor(
 
     val blacklistState = combine(
         repository.getBlacklistedAlbums(),
-        repository.getAlbums(com.dot.gallery.feature_node.domain.util.MediaOrder.Default)
+        repository.getAlbums(com.dot.gallery.feature_node.data.util.MediaOrder.Default)
     ) { ignoredAlbums, albumsResource ->
         val allAlbums = albumsResource.data ?: emptyList()
         val updatedIgnoredAlbums = ignoredAlbums.map { ignored ->

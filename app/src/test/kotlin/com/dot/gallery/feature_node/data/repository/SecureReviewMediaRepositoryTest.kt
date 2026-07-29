@@ -2,7 +2,7 @@ package com.dot.gallery.feature_node.data.repository
 
 import android.content.ContentResolver
 import android.net.Uri
-import com.dot.gallery.feature_node.domain.model.securereview.AuthorizedSecureReviewRequest
+import com.dot.gallery.feature_node.data.model.securereview.AuthorizedSecureReviewRequest
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.collections.immutable.persistentListOf

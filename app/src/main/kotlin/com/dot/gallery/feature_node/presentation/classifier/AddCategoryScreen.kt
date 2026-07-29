@@ -87,7 +87,7 @@ import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.NavigationBackButton
 import kotlinx.coroutines.launch
-import com.dot.gallery.feature_node.domain.model.Category
+import com.dot.gallery.feature_node.data.model.Category
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState

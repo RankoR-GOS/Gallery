@@ -50,8 +50,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.dot.gallery.R
 import com.dot.gallery.core.presentation.components.CheckBox
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.getUri
 import com.github.panpf.sketch.AsyncImage
 import kotlinx.coroutines.launch
 import kotlin.math.abs

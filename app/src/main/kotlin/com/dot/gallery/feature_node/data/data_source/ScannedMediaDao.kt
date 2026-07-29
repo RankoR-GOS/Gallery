@@ -8,7 +8,7 @@ package com.dot.gallery.feature_node.data.data_source
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
-import com.dot.gallery.feature_node.domain.model.ScannedMedia
+import com.dot.gallery.feature_node.data.model.ScannedMedia
 
 @Dao
 interface ScannedMediaDao {

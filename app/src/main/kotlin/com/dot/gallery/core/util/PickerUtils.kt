@@ -2,7 +2,7 @@ package com.dot.gallery.core.util
 
 import android.content.Intent
 import android.provider.MediaStore
-import com.dot.gallery.feature_node.domain.model.MediaType
+import com.dot.gallery.feature_node.data.model.MediaType
 
 object PickerUtils {
     private const val MIME_TYPE_IMAGE_ANY = "image/*"

@@ -4,8 +4,8 @@ import com.dot.gallery.feature_node.data.externalcrop.ComponentCallerExternalCro
 import com.dot.gallery.feature_node.data.externalcrop.ExternalCropIntentParserImpl
 import com.dot.gallery.feature_node.data.externalcrop.ExternalCropUriPermissionChecker
 import com.dot.gallery.feature_node.data.repository.ExternalCropRepositoryImpl
-import com.dot.gallery.feature_node.domain.externalcrop.ExternalCropIntentParser
-import com.dot.gallery.feature_node.domain.repository.ExternalCropRepository
+import com.dot.gallery.feature_node.data.externalcrop.ExternalCropIntentParser
+import com.dot.gallery.feature_node.data.repository.ExternalCropRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Reusable

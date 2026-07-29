@@ -13,8 +13,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toIntRect
-import com.dot.gallery.feature_node.domain.util.isHeaderKey
-import com.dot.gallery.feature_node.domain.util.isIgnoredKey
+import com.dot.gallery.feature_node.data.util.isHeaderKey
+import com.dot.gallery.feature_node.data.util.isIgnoredKey
 
 private val String?.mediaIdFromKey: Long?
     get() = this?.let {

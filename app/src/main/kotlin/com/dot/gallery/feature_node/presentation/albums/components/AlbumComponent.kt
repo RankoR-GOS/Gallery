@@ -70,7 +70,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
 import com.dot.gallery.core.LocalMediaHandler
 import com.dot.gallery.core.presentation.components.LocalMediaImageRenderer
-import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.data.model.Album
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionLayoutStyle
 import com.dot.gallery.feature_node.presentation.common.components.OptionSheet

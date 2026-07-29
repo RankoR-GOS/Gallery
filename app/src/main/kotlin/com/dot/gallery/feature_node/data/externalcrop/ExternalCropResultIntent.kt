@@ -3,7 +3,7 @@ package com.dot.gallery.feature_node.data.externalcrop
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
-import com.dot.gallery.feature_node.domain.model.editor.crop.CropPixelRect
+import com.dot.gallery.feature_node.data.model.editor.crop.CropPixelRect
 
 private const val EXTRA_CROPPED_RECT = "cropped-rect"
 private const val EXTRA_DATA = "data"

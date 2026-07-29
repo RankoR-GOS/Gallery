@@ -9,11 +9,11 @@ import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.domain.model.LibraryIndicatorState
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysisSettings
-import com.dot.gallery.feature_node.domain.util.MediaOrder
+import com.dot.gallery.feature_node.data.util.MediaOrder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine

@@ -4,10 +4,10 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.RectF
 import android.net.Uri
-import com.dot.gallery.feature_node.domain.model.editor.crop.CropImage
-import com.dot.gallery.feature_node.domain.model.editor.crop.ExternalCropRequest
-import com.dot.gallery.feature_node.domain.model.editor.crop.NormalizedCropRect
-import com.dot.gallery.feature_node.domain.repository.ExternalCropRepository
+import com.dot.gallery.feature_node.data.model.editor.crop.CropImage
+import com.dot.gallery.feature_node.data.model.editor.crop.ExternalCropRequest
+import com.dot.gallery.feature_node.data.model.editor.crop.NormalizedCropRect
+import com.dot.gallery.feature_node.data.repository.ExternalCropRepository
 import com.dot.gallery.testutil.MainDispatcherRule
 import io.mockk.CapturingSlot
 import io.mockk.coEvery

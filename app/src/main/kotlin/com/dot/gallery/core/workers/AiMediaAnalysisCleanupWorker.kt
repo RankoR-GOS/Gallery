@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.dot.gallery.feature_node.domain.repository.AiMediaAnalysisRepository
+import com.dot.gallery.feature_node.data.repository.AiMediaAnalysisRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException

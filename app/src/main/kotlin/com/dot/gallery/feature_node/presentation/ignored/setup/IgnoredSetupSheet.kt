@@ -70,9 +70,9 @@ import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Album.rememberAlbumGridSize
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.NavigationBackButton
-import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.data.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
-import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
+import com.dot.gallery.feature_node.data.model.IgnoredAlbum
 import com.dot.gallery.feature_node.presentation.ignored.setup.components.ConfirmationCard
 import com.dot.gallery.feature_node.presentation.ignored.setup.components.RegexExample
 import com.dot.gallery.feature_node.presentation.ignored.setup.components.SectionHeader

@@ -1,8 +1,8 @@
 package com.dot.gallery.feature_node.presentation.edit.crop
 
 import androidx.compose.runtime.Immutable
-import com.dot.gallery.feature_node.domain.model.editor.crop.CropImage
-import com.dot.gallery.feature_node.domain.model.editor.crop.NormalizedCropRect
+import com.dot.gallery.feature_node.data.model.editor.crop.CropImage
+import com.dot.gallery.feature_node.data.model.editor.crop.NormalizedCropRect
 
 @Immutable
 internal data class CropUiState(

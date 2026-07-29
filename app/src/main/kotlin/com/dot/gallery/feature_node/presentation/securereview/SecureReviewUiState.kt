@@ -1,7 +1,7 @@
 package com.dot.gallery.feature_node.presentation.securereview
 
 import androidx.compose.runtime.Immutable
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.data.model.Media
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable

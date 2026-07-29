@@ -61,9 +61,9 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Settings.Misc.allowVibrations
 import com.dot.gallery.core.Settings.Misc.rememberFullBrightnessView
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.getUri
-import com.dot.gallery.feature_node.domain.util.isImage
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.getUri
+import com.dot.gallery.feature_node.data.util.isImage
 import com.dot.gallery.feature_node.presentation.edit.EditActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

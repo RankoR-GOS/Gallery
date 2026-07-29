@@ -9,7 +9,7 @@ import com.dot.gallery.benchmark.BenchmarkUtils.logInfo
 import com.dot.gallery.benchmark.BenchmarkUtils.logSection
 import com.dot.gallery.benchmark.BenchmarkUtils.logSummaryHeader
 import com.dot.gallery.core.Constants
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
 import kotlinx.coroutines.runBlocking
 import org.junit.FixMethodOrder

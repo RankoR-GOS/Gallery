@@ -6,7 +6,7 @@
 package com.dot.gallery.feature_node.presentation.search
 
 import androidx.compose.runtime.Stable
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.data.model.Media
 
 /**
  * A generic item for dynamic search carousels (MIME types, lens models, media modes, etc.).

@@ -25,7 +25,7 @@ import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.core.workers.MediaCopyScheduler
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.repository.MediaRepositoryImpl
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.presentation.search.SearchHelper
 import com.dot.gallery.feature_node.presentation.search.SearchHelperImpl

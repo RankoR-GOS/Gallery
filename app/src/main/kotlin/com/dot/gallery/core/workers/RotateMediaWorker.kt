@@ -20,8 +20,8 @@ import androidx.work.workDataOf
 import com.dot.gallery.core.util.MAX_ENCODED_MEDIA_BYTES
 import com.dot.gallery.core.util.SizeLimitExceededException
 import com.dot.gallery.core.util.SizeLimitedInputStream
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.getUri
 import com.github.panpf.sketch.util.rotate
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject

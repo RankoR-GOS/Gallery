@@ -20,7 +20,7 @@ import com.dot.gallery.core.sandbox.IsolatedImageDecoder
 import com.dot.gallery.core.sandbox.MediaPreviewDecoder
 import com.dot.gallery.core.sandbox.SandboxedDecoderHolder
 import com.dot.gallery.core.workers.MetadataCollectionWorker
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
 import com.github.panpf.sketch.PlatformContext
 import com.github.panpf.sketch.SingletonSketch

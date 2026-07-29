@@ -36,9 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.model.editor.crop.CropImage
-import com.dot.gallery.feature_node.domain.model.editor.crop.ExternalCropRequest
-import com.dot.gallery.feature_node.domain.model.editor.crop.NormalizedCropRect
+import com.dot.gallery.feature_node.data.model.editor.crop.CropImage
+import com.dot.gallery.feature_node.data.model.editor.crop.ExternalCropRequest
+import com.dot.gallery.feature_node.data.model.editor.crop.NormalizedCropRect
 import com.smarttoolfactory.cropper.ImageCropper
 import com.smarttoolfactory.cropper.model.AspectRatio
 import com.smarttoolfactory.cropper.model.OutlineType

@@ -1,7 +1,7 @@
 package com.dot.gallery.feature_node.domain.use_case
 
 import com.dot.gallery.feature_node.domain.model.AiMediaAnalysisWorkState
-import com.dot.gallery.feature_node.domain.repository.AiMediaAnalysisRepository
+import com.dot.gallery.feature_node.data.repository.AiMediaAnalysisRepository
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

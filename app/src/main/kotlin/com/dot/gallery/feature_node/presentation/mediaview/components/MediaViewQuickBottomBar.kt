@@ -21,11 +21,11 @@ import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberShowFavoriteButton
 import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.core.setFollowTheme
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.canMakeActions
-import com.dot.gallery.feature_node.domain.util.isTrashed
-import com.dot.gallery.feature_node.domain.util.isVideo
-import com.dot.gallery.feature_node.domain.util.readUriOnly
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.canMakeActions
+import com.dot.gallery.feature_node.data.util.isTrashed
+import com.dot.gallery.feature_node.data.util.isVideo
+import com.dot.gallery.feature_node.data.util.readUriOnly
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.CopyToClipboardButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.EditButton
 import com.dot.gallery.feature_node.presentation.mediaview.components.actionbuttons.FavoriteButton

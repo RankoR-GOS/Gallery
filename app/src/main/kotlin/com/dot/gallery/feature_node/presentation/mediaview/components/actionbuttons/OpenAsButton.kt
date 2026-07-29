@@ -7,8 +7,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.isVideo
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.isVideo
 import com.dot.gallery.feature_node.presentation.util.launchOpenWithIntent
 import com.dot.gallery.feature_node.presentation.util.launchUseAsIntent
 import kotlinx.coroutines.launch

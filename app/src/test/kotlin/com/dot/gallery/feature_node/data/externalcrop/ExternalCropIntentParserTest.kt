@@ -4,8 +4,8 @@ import android.app.ComponentCaller
 import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
-import com.dot.gallery.feature_node.domain.externalcrop.ExternalCropIntentParser
-import com.dot.gallery.feature_node.domain.model.editor.crop.ExternalCropRequest
+import com.dot.gallery.feature_node.data.externalcrop.ExternalCropIntentParser
+import com.dot.gallery.feature_node.data.model.editor.crop.ExternalCropRequest
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals

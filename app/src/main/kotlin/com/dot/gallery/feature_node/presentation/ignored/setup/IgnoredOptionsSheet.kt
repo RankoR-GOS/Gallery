@@ -26,9 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.core.presentation.components.DragHandle
-import com.dot.gallery.feature_node.domain.model.Album
+import com.dot.gallery.feature_node.data.model.Album
 import com.dot.gallery.feature_node.domain.model.AlbumState
-import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
+import com.dot.gallery.feature_node.data.model.IgnoredAlbum
 import com.dot.gallery.feature_node.presentation.ignored.setup.components.EditAlbumsStep
 import com.dot.gallery.feature_node.presentation.ignored.setup.components.EditConfirmationStep
 import com.dot.gallery.feature_node.presentation.ignored.setup.components.EditLocationStep

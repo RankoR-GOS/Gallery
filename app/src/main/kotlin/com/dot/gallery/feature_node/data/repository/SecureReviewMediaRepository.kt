@@ -2,8 +2,8 @@ package com.dot.gallery.feature_node.data.repository
 
 import android.content.ContentResolver
 import android.net.Uri
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.securereview.AuthorizedSecureReviewRequest
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.model.securereview.AuthorizedSecureReviewRequest
 import com.dot.gallery.injection.qualifier.IoDispatcher
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList

@@ -3,10 +3,10 @@ package com.dot.gallery.feature_node.presentation.edit.crop
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dot.gallery.feature_node.domain.model.editor.crop.CropImage
-import com.dot.gallery.feature_node.domain.model.editor.crop.ExternalCropRequest
-import com.dot.gallery.feature_node.domain.model.editor.crop.NormalizedCropRect
-import com.dot.gallery.feature_node.domain.repository.ExternalCropRepository
+import com.dot.gallery.feature_node.data.model.editor.crop.CropImage
+import com.dot.gallery.feature_node.data.model.editor.crop.ExternalCropRequest
+import com.dot.gallery.feature_node.data.model.editor.crop.NormalizedCropRect
+import com.dot.gallery.feature_node.data.repository.ExternalCropRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job

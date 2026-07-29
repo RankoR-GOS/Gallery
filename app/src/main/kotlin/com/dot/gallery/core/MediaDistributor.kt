@@ -1,17 +1,17 @@
 package com.dot.gallery.core
 
 import com.dot.gallery.feature_node.domain.model.AlbumState
-import com.dot.gallery.feature_node.domain.model.CollectionWithCount
-import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
-import com.dot.gallery.feature_node.domain.model.ImageEmbedding
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.MediaGroupType
+import com.dot.gallery.feature_node.data.model.CollectionWithCount
+import com.dot.gallery.feature_node.data.model.IgnoredAlbum
+import com.dot.gallery.feature_node.data.model.ImageEmbedding
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.MediaGroupType
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.model.LockedAlbum
-import com.dot.gallery.feature_node.domain.model.MergedSubfolderAlbum
-import com.dot.gallery.feature_node.domain.model.PinnedAlbum
-import com.dot.gallery.feature_node.domain.model.TimelineSettings
+import com.dot.gallery.feature_node.data.model.LockedAlbum
+import com.dot.gallery.feature_node.data.model.MergedSubfolderAlbum
+import com.dot.gallery.feature_node.data.model.PinnedAlbum
+import com.dot.gallery.feature_node.data.model.TimelineSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow

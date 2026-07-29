@@ -3,7 +3,7 @@ package com.dot.gallery.feature_node.data.data_source
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
-import com.dot.gallery.feature_node.domain.model.AlbumThumbnail
+import com.dot.gallery.feature_node.data.model.AlbumThumbnail
 import kotlinx.coroutines.flow.Flow
 
 @Dao

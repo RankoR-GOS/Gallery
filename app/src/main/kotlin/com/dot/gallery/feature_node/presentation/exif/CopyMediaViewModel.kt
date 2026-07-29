@@ -8,8 +8,8 @@ import com.dot.gallery.core.workers.MediaCopyBatch
 import com.dot.gallery.core.workers.MediaCopyBatchStatus
 import com.dot.gallery.core.workers.MediaCopyRequest
 import com.dot.gallery.core.workers.MediaCopyScheduler
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.getUri
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException

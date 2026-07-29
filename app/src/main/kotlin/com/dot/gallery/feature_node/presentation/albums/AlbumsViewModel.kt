@@ -13,18 +13,18 @@ import com.dot.gallery.R
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.FilterKind
 import com.dot.gallery.core.presentation.components.FilterOption
-import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.AlbumGroup
-import com.dot.gallery.feature_node.domain.model.AlbumGroupMember
+import com.dot.gallery.feature_node.data.model.Album
+import com.dot.gallery.feature_node.data.model.AlbumGroup
+import com.dot.gallery.feature_node.data.model.AlbumGroupMember
 import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
-import com.dot.gallery.feature_node.domain.model.IgnoredAlbum
-import com.dot.gallery.feature_node.domain.model.LockedAlbum
-import com.dot.gallery.feature_node.domain.model.MergedSubfolderAlbum
-import com.dot.gallery.feature_node.domain.model.PinnedAlbum
-import com.dot.gallery.feature_node.domain.model.TimelineSettings
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
-import com.dot.gallery.feature_node.domain.util.MediaOrder
-import com.dot.gallery.feature_node.domain.util.OrderType
+import com.dot.gallery.feature_node.data.model.IgnoredAlbum
+import com.dot.gallery.feature_node.data.model.LockedAlbum
+import com.dot.gallery.feature_node.data.model.MergedSubfolderAlbum
+import com.dot.gallery.feature_node.data.model.PinnedAlbum
+import com.dot.gallery.feature_node.data.model.TimelineSettings
+import com.dot.gallery.feature_node.data.repository.MediaRepository
+import com.dot.gallery.feature_node.data.util.MediaOrder
+import com.dot.gallery.feature_node.data.util.OrderType
 import com.dot.gallery.feature_node.presentation.util.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -189,7 +189,7 @@ class AlbumsViewModel @Inject constructor(
     fun createCollection(name: String) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.insertCollection(
-                com.dot.gallery.feature_node.domain.model.Collection(label = name)
+                com.dot.gallery.feature_node.data.model.Collection(label = name)
             )
         }
     }
@@ -215,7 +215,7 @@ class AlbumsViewModel @Inject constructor(
     fun createCollectionWithAlbums(name: String, albumIds: List<Long>) {
         viewModelScope.launch(Dispatchers.IO) {
             val collectionId = repository.insertCollection(
-                com.dot.gallery.feature_node.domain.model.Collection(label = name)
+                com.dot.gallery.feature_node.data.model.Collection(label = name)
             )
             repository.addAlbumsToCollection(collectionId, albumIds)
             for (albumId in albumIds) {

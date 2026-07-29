@@ -7,7 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.MediaStore
-import com.dot.gallery.feature_node.domain.model.securereview.AuthorizedSecureReviewRequest
+import com.dot.gallery.feature_node.data.model.securereview.AuthorizedSecureReviewRequest
 import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
 

@@ -11,9 +11,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
 import com.dot.gallery.core.LocalMediaHandler
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.util.isFavorite
-import com.dot.gallery.feature_node.domain.util.readUriOnly
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.isFavorite
+import com.dot.gallery.feature_node.data.util.readUriOnly
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import kotlinx.coroutines.launch
 

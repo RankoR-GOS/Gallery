@@ -15,11 +15,11 @@ import com.dot.gallery.core.ml.ImageEmbeddingGenerator
 import com.dot.gallery.core.ml.ImageEmbeddingSession
 import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.sandbox.MediaPreviewDecoder
-import com.dot.gallery.feature_node.domain.model.AiMediaAnalysisPreferences
-import com.dot.gallery.feature_node.domain.model.ImageEmbedding
-import com.dot.gallery.feature_node.domain.model.Media.UriMedia
-import com.dot.gallery.feature_node.domain.repository.AiMediaAnalysisRepository
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.model.AiMediaAnalysisPreferences
+import com.dot.gallery.feature_node.data.model.ImageEmbedding
+import com.dot.gallery.feature_node.data.model.Media.UriMedia
+import com.dot.gallery.feature_node.data.repository.AiMediaAnalysisRepository
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coJustRun

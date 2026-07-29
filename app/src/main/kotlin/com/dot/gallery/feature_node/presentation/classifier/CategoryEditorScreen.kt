@@ -114,10 +114,10 @@ import com.dot.gallery.core.Settings.Misc.rememberGridSize
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.EmptyMedia
 import com.dot.gallery.core.presentation.components.NavigationBackButton
-import com.dot.gallery.feature_node.domain.model.Category
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.data.model.Category
+import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
-import com.dot.gallery.feature_node.domain.util.getUri
+import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.search.ImageSearchPickerSheet
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
@@ -736,7 +736,7 @@ private fun SensitivitySection(
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 private fun InlinePreviewSection(
-    previewMedia: List<com.dot.gallery.feature_node.domain.model.Media.UriMedia>,
+    previewMedia: List<com.dot.gallery.feature_node.data.model.Media.UriMedia>,
     previewCount: Int,
     isLoading: Boolean,
     searchTerms: String,

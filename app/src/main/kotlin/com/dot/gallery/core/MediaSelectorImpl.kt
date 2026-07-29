@@ -1,7 +1,7 @@
 package com.dot.gallery.core
 
 import androidx.compose.runtime.compositionLocalOf
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
 import kotlinx.coroutines.flow.MutableStateFlow
 

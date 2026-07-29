@@ -12,11 +12,11 @@ import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.ml.ManagedOrtSession
 import com.dot.gallery.core.ml.ModelInferenceException
-import com.dot.gallery.feature_node.domain.model.Category
-import com.dot.gallery.feature_node.domain.model.ImageEmbedding
-import com.dot.gallery.feature_node.domain.model.Media
+import com.dot.gallery.feature_node.data.model.Category
+import com.dot.gallery.feature_node.data.model.ImageEmbedding
+import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.domain.repository.MediaRepository
+import com.dot.gallery.feature_node.data.repository.MediaRepository
 import com.dot.gallery.feature_node.presentation.search.SearchHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem

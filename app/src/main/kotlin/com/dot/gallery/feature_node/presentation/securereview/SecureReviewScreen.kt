@@ -31,8 +31,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import com.dot.gallery.R
-import com.dot.gallery.feature_node.domain.model.Media
-import com.dot.gallery.feature_node.domain.model.securereview.AuthorizedSecureReviewRequest
+import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.model.securereview.AuthorizedSecureReviewRequest
 import com.dot.gallery.feature_node.presentation.mediaview.components.media.MediaPreviewComponent
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoPlayerController
 import com.dot.gallery.ui.theme.GalleryTheme

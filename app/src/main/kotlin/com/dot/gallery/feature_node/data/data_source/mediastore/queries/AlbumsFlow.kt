@@ -18,8 +18,8 @@ import com.dot.gallery.core.util.ext.queryFlow
 import com.dot.gallery.core.util.ext.tryGetString
 import com.dot.gallery.core.util.join
 import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
-import com.dot.gallery.feature_node.domain.model.Album
-import com.dot.gallery.feature_node.domain.model.MediaType
+import com.dot.gallery.feature_node.data.model.Album
+import com.dot.gallery.feature_node.data.model.MediaType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
