@@ -78,6 +78,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -1091,9 +1092,31 @@ internal class MediaRepositoryImpl(
     override fun getAllCollections(): Flow<List<Collection>> =
         collectionDao.getAllCollections()
 
+    /**
+     * The count and total size are recomputed here against the live media set instead of in SQL.
+     * The `media` table is only the search index cache and stays empty unless AI media analysis is
+     * enabled, so a SQL `SUM` over it would report a size of zero for most users. See
+     * [CollectionWithCount].
+     */
     override fun getCollectionsWithCount(): Flow<List<CollectionWithCount>> =
-        collectionDao.getCollectionsWithCount().map { list ->
-            list.map { it.toCollectionWithCount() }
+        combine(
+            collectionDao.getCollectionsWithCount(),
+            collectionDao.getAllCollectionMedia(),
+            getMedia().map { it.data.orEmpty() }
+        ) { collections, membership, media ->
+            val sizeById = media.associate { it.id to it.size }
+            val membersByCollection = membership.groupBy { it.collectionId }
+            collections.map { collection ->
+                val liveSizes = membersByCollection[collection.collection.id]
+                    ?.mapNotNull { sizeById[it.mediaId] }
+                    .orEmpty()
+                CollectionWithCount(
+                    collection = collection.collection,
+                    mediaCount = liveSizes.size,
+                    thumbnailMediaId = collection.thumbnailMediaId,
+                    totalSize = liveSizes.sum()
+                )
+            }
         }
 
     override suspend fun updateCollectionLabel(collectionId: Long, label: String) =

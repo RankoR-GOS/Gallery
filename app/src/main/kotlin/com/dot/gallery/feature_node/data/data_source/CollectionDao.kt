@@ -15,6 +15,7 @@ import androidx.room.Update
 import com.dot.gallery.feature_node.data.model.Collection
 import com.dot.gallery.feature_node.data.model.CollectionAlbum
 import com.dot.gallery.feature_node.data.model.CollectionMedia
+import com.dot.gallery.feature_node.data.model.CollectionWithThumbnail
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -117,54 +118,19 @@ interface CollectionDao {
     @Query("SELECT albumId FROM collection_albums WHERE collectionId = :collectionId")
     fun getAlbumIdsInCollection(collectionId: Long): Flow<List<Long>>
 
-    // Collections with count for UI display
+    @Query("SELECT * FROM collection_media")
+    fun getAllCollectionMedia(): Flow<List<CollectionMedia>>
+
+    // Collections with their resolved thumbnail for UI display. The count and total size are
+    // derived from live media in the repository — see [CollectionWithCount].
     @Query("""
-        SELECT c.*, COUNT(cm.mediaId) as mediaCount,
+        SELECT c.*,
                COALESCE(
                    c.coverMediaId,
-                   (SELECT cm2.mediaId FROM collection_media cm2 WHERE cm2.collectionId = c.id ORDER BY cm2.addedAt DESC LIMIT 1)
-               ) as thumbnailMediaId,
-               COALESCE(
-                   (SELECT SUM(m.size) FROM collection_media cm3 INNER JOIN media m ON cm3.mediaId = m.id WHERE cm3.collectionId = c.id),
-                   0
-               ) as totalSize
+                   (SELECT cm.mediaId FROM collection_media cm WHERE cm.collectionId = c.id ORDER BY cm.addedAt DESC LIMIT 1)
+               ) as thumbnailMediaId
         FROM collections c
-        LEFT JOIN collection_media cm ON c.id = cm.collectionId
-        GROUP BY c.id
         ORDER BY c.isPinned DESC, c.sortOrder ASC, c.updatedAt DESC
     """)
-    fun getCollectionsWithCount(): Flow<List<CollectionWithMediaCount>>
-}
-
-/**
- * Helper class for queries that return collection with media count
- */
-data class CollectionWithMediaCount(
-    val id: Long,
-    val label: String,
-    val coverMediaId: Long?,
-    val isPinned: Boolean,
-    val sortOrder: Int,
-    val createdAt: Long,
-    val updatedAt: Long,
-    val mediaCount: Int,
-    val thumbnailMediaId: Long?,
-    val totalSize: Long
-) {
-    fun toCollection() = Collection(
-        id = id,
-        label = label,
-        coverMediaId = coverMediaId,
-        isPinned = isPinned,
-        sortOrder = sortOrder,
-        createdAt = createdAt,
-        updatedAt = updatedAt
-    )
-
-    fun toCollectionWithCount() = com.dot.gallery.feature_node.data.model.CollectionWithCount(
-        collection = toCollection(),
-        mediaCount = mediaCount,
-        thumbnailMediaId = thumbnailMediaId,
-        totalSize = totalSize
-    )
+    fun getCollectionsWithCount(): Flow<List<CollectionWithThumbnail>>
 }
