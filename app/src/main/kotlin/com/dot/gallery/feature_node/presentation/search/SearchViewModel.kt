@@ -665,9 +665,12 @@ class SearchViewModel @Inject internal constructor(
     }
 
     fun setQuery(query: String, apply: Boolean = true) {
+        // Publish synchronously, before the cancel: emitting from inside the job means a keystroke
+        // that cancels its predecessor also drops that predecessor's query, so the field and the
+        // keyboard action handlers can end up acting on a stale value.
+        _query.value = query
         searchJob?.cancel()
         searchJob = viewModelScope.launch(ioDispatcher) {
-            _query.tryEmit(query)
             if (query.isEmpty() || !apply) {
                 _searchResultsState.tryEmit(SearchResultsState())
                 return@launch

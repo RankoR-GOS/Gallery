@@ -26,8 +26,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -53,11 +51,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,8 +68,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.dot.gallery.feature_node.presentation.common.components.GridPinchZoomLayout
-import com.dot.gallery.feature_node.presentation.common.components.rememberGridPinchZoomState
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants.Animation.enterAnimation
 import com.dot.gallery.core.Constants.Animation.exitAnimation
@@ -93,11 +91,13 @@ import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.classifier.components.CategoryCarousel
 import com.dot.gallery.feature_node.presentation.classifier.components.SearchCarousel
+import com.dot.gallery.feature_node.presentation.common.components.GridPinchZoomLayout
 import com.dot.gallery.feature_node.presentation.common.components.MediaGridView
 import com.dot.gallery.feature_node.presentation.common.components.MosaicMediaGrid
 import com.dot.gallery.feature_node.presentation.common.components.MosaicPinchZoomLayout
 import com.dot.gallery.feature_node.presentation.common.components.SettingsOptionLayout
 import com.dot.gallery.feature_node.presentation.common.components.TimelineScroller
+import com.dot.gallery.feature_node.presentation.common.components.rememberGridPinchZoomState
 import com.dot.gallery.feature_node.presentation.common.components.rememberMosaicPinchZoomState
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
@@ -123,6 +123,13 @@ fun SearchScreen(
     val distributor = LocalMediaDistributor.current
     val searchResults by viewModel.searchResultsState.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
+    // The field owns its text so a keystroke lands in the same frame it is typed. Round-tripping it
+    // through the view model instead makes fast typing drop and reorder characters.
+    var queryText by rememberSaveable { mutableStateOf(query) }
+    // Pick up programmatic changes (clearQuery, mime type queries, history and category taps).
+    LaunchedEffect(query) {
+        if (query != queryText) queryText = query
+    }
     val selectedImageMedia by viewModel.selectedImageMedia.collectAsStateWithLifecycle()
     val analysisSettings by viewModel.analysisSettings.collectAsStateWithLifecycle()
     val isAiAnalysisEnabled = analysisSettings.analysisEnabled
@@ -203,7 +210,7 @@ fun SearchScreen(
                                     shape = CircleShape
                                 ),
                             onClick = {
-                                if (query.isNotEmpty() || selectedImageMedia != null) {
+                                if (queryText.isNotEmpty() || selectedImageMedia != null) {
                                     viewModel.clearQuery()
                                 } else {
                                     eventHandler.navigateUp()
@@ -220,9 +227,10 @@ fun SearchScreen(
                         OutlinedTextField(
                             modifier = Modifier
                                 .fillMaxWidth(),
-                            value = query,
+                            value = queryText,
                             onValueChange = { newQuery ->
                                 if (newQuery != " ") {
+                                    queryText = newQuery
                                     viewModel.setQuery(newQuery, apply = false)
                                 }
                             },
@@ -238,20 +246,20 @@ fun SearchScreen(
                             ),
                             keyboardActions = KeyboardActions(
                                 onSearch = {
-                                    viewModel.setQuery(query, apply = true)
-                                    viewModel.addHistory(query)
+                                    viewModel.setQuery(queryText, apply = true)
+                                    viewModel.addHistory(queryText)
                                 },
                                 onDone = {
-                                    viewModel.setQuery(query, apply = true)
-                                    viewModel.addHistory(query)
+                                    viewModel.setQuery(queryText, apply = true)
+                                    viewModel.addHistory(queryText)
                                 },
                                 onGo = {
-                                    viewModel.setQuery(query, apply = true)
-                                    viewModel.addHistory(query)
+                                    viewModel.setQuery(queryText, apply = true)
+                                    viewModel.addHistory(queryText)
                                 },
                                 onSend = {
-                                    viewModel.setQuery(query, apply = true)
-                                    viewModel.addHistory(query)
+                                    viewModel.setQuery(queryText, apply = true)
+                                    viewModel.addHistory(queryText)
                                 }
                             ),
                             leadingIcon = selectedImageMedia?.let { media ->
@@ -279,7 +287,7 @@ fun SearchScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     AnimatedVisibility(
-                                        visible = query.isNotBlank() && !searchResults.isSearching && !searchResults.hasSearched,
+                                        visible = queryText.isNotBlank() && !searchResults.isSearching && !searchResults.hasSearched,
                                         enter = fadeIn() + slideInHorizontally { it },
                                         exit = fadeOut() + slideOutHorizontally { it }
                                     ) {
@@ -291,8 +299,8 @@ fun SearchScreen(
                                                     shape = CircleShape
                                                 ),
                                             onClick = {
-                                                viewModel.setQuery(query, apply = true)
-                                                viewModel.addHistory(query)
+                                                viewModel.setQuery(queryText, apply = true)
+                                                viewModel.addHistory(queryText)
                                             }
                                         ) {
                                             Icon(
