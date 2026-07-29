@@ -54,10 +54,10 @@ import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.MediaItemHeader
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.MediaItem
-import com.dot.gallery.feature_node.domain.model.MediaMetadataState
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.model.isBigHeaderKey
 import com.dot.gallery.feature_node.data.model.isHeaderKey
+import com.dot.gallery.feature_node.domain.model.MediaMetadataState
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.mediaSharedElement
 import com.dot.gallery.feature_node.presentation.util.photoGridDragHandler
@@ -239,6 +239,14 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
         val selector = LocalMediaSelector.current
         val isSelectionActive by selector.isSelectionActive.collectAsStateWithLifecycle()
         val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
+        val selectedIds = selectedMedia.value
+        val selectionOrderById = remember(selectedIds) {
+            selectedIds.withIndex().associate { (index, id) -> id to index + 1 }
+        }
+        val mediaIndexById = remember(mediaState.value.media) {
+            mediaState.value.media.withIndex().associate { (index, media) -> media.id to index }
+        }
+        val metadataById = metadataState.value.metadataById
 
         // Prune stale selection IDs when media list changes (e.g. external file deletion)
         val mediaIds = remember(mediaState.value.media) {
@@ -363,17 +371,22 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContentWithHeaders(
                                 )
                                 .pinchItem(key = it.key),
                             media = it.media,
+                            metadata = metadataById[it.media.id],
+                            selectionActive = isSelectionActive,
+                            isSelected = it.media.id in selectedIds,
+                            selectionNumber = selectionOrderById[it.media.id],
                             stackCount = it.stackCount,
                             canClick = { canScroll },
                             onMediaClick = { onMediaClick(it) },
-                            metadataState = metadataState,
                             onItemSelect = {
                                 if (allowSelection) {
                                     feedbackManager.vibrate()
-                                    selector.toggleSelection(
-                                        mediaState = mediaState.value,
-                                        index = mediaState.value.media.indexOf(it)
-                                    )
+                                    mediaIndexById[it.id]?.let { index ->
+                                        selector.toggleSelection(
+                                            mediaState = mediaState.value,
+                                            index = index,
+                                        )
+                                    }
                                 }
                             }
                         )
@@ -429,6 +442,15 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContent(
     }
     val selector = LocalMediaSelector.current
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
+    val isSelectionActive by selector.isSelectionActive.collectAsStateWithLifecycle()
+    val selectedIds = selectedMedia.value
+    val selectionOrderById = remember(selectedIds) {
+        selectedIds.withIndex().associate { (index, id) -> id to index + 1 }
+    }
+    val mediaIndexById = remember(items) {
+        items.withIndex().associate { (index, media) -> media.id to index }
+    }
+    val metadataById = metadataState.value.metadataById
 
     LazyVerticalGrid(
         state = gridState,
@@ -473,17 +495,21 @@ private fun <T : Media> GridPinchZoomScope.MediaGridContent(
                         )
                         .pinchItem(key = media.key),
                     media = media,
-                    metadataState = metadataState,
+                    metadata = metadataById[media.id],
+                    selectionActive = isSelectionActive,
+                    isSelected = media.id in selectedIds,
+                    selectionNumber = selectionOrderById[media.id],
                     canClick = { canScroll },
                     onMediaClick = { onMediaClick(it) },
                     onItemSelect = {
                         if (allowSelection) {
-                            val index = items.indexOf(it)
                             feedbackManager.vibrate()
-                            selector.toggleSelection(
-                                mediaState = mediaState.value,
-                                index = index
-                            )
+                            mediaIndexById[it.id]?.let { index ->
+                                selector.toggleSelection(
+                                    mediaState = mediaState.value,
+                                    index = index,
+                                )
+                            }
                         }
                     }
                 )

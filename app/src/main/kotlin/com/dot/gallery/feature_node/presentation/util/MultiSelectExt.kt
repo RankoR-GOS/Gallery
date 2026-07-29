@@ -26,7 +26,7 @@ private val String?.mediaIdFromKey: Long?
 private fun LazyGridState.hitKeyAt(
     raw: Offset,
     padL: Float,
-    padT: Float
+    padT: Float,
 ): String? {
     val contentOffset = raw - Offset(padL, padT)
     return layoutInfo.visibleItemsInfo
@@ -37,38 +37,46 @@ private fun LazyGridState.hitKeyAt(
         ?.key as? String
 }
 
-private data class HitInfo(val key: String, val normalizedX: Float, val normalizedY: Float)
+private class HitInfo(
+    val key: String,
+    val normalizedX: Float,
+    val normalizedY: Float,
+)
 
 private fun LazyGridState.hitInfoAt(
     raw: Offset,
     padL: Float,
-    padT: Float
+    padT: Float,
 ): HitInfo? {
     val contentOffset = raw - Offset(padL, padT)
     val info = layoutInfo.visibleItemsInfo
         .find { it.size.toIntRect().contains((contentOffset.round() - it.offset)) }
         ?: return null
     val key = info.key as? String ?: return null
-    val rel = contentOffset - Offset(info.offset.x.toFloat(), info.offset.y.toFloat())
+    val relativeOffset = contentOffset - Offset(info.offset.x.toFloat(), info.offset.y.toFloat())
     return HitInfo(
         key = key,
-        normalizedX = (rel.x / info.size.width).coerceIn(0f, 1f),
-        normalizedY = (rel.y / info.size.height).coerceIn(0f, 1f)
+        normalizedX = (relativeOffset.x / info.size.width).coerceIn(0f, 1f),
+        normalizedY = (relativeOffset.y / info.size.height).coerceIn(0f, 1f),
     )
 }
 
 private fun resolveHitIds(
     hit: HitInfo,
-    allIds: List<Long>
-): List<Long> = when {
-    hit.key.startsWith("mosaic_pair_") && allIds.size == 2 ->
-        listOf(if (hit.normalizedY < 0.5f) allIds[0] else allIds[1])
-    hit.key.startsWith("mosaic_quad_") && allIds.size == 4 -> {
-        val col = if (hit.normalizedX < 0.5f) 0 else 1
-        val row = if (hit.normalizedY < 0.5f) 0 else 1
-        listOf(allIds[row * 2 + col])
+    allIds: List<Long>,
+): List<Long> {
+    return when {
+        hit.key.startsWith("mosaic_pair_") && allIds.size == 2 ->
+            listOf(if (hit.normalizedY < 0.5f) allIds[0] else allIds[1])
+
+        hit.key.startsWith("mosaic_quad_") && allIds.size == 4 -> {
+            val column = if (hit.normalizedX < 0.5f) 0 else 1
+            val row = if (hit.normalizedY < 0.5f) 0 else 1
+            listOf(allIds[row * 2 + column])
+        }
+
+        else -> allIds
     }
-    else -> allIds
 }
 
 fun Modifier.mosaicGridDragHandler(
@@ -82,74 +90,86 @@ fun Modifier.mosaicGridDragHandler(
     layoutDirection: LayoutDirection,
     contentPadding: PaddingValues,
     orderedGridKeys: List<String>,
-    gridKeyToMediaIds: Map<String, List<Long>>
-) = pointerInput(Unit) {
-    val padL = contentPadding.calculateLeftPadding(layoutDirection).toPx()
-    val padT = contentPadding.calculateTopPadding().toPx()
+    gridKeyToMediaIds: Map<String, List<Long>>,
+): Modifier {
+    val gridKeyToIndex = orderedGridKeys.withIndex().associate { (index, key) -> key to index }
+    return pointerInput(orderedGridKeys, gridKeyToMediaIds, contentPadding, layoutDirection) {
+        val leftPadding = contentPadding.calculateLeftPadding(layoutDirection).toPx()
+        val topPadding = contentPadding.calculateTopPadding().toPx()
 
-    var initialIndex: Int? = null
-    var currentIndex: Int? = null
+        var initialIndex: Int? = null
+        var currentIndex: Int? = null
 
-    detectDragGesturesAfterLongPress(
-        onDragStart = { raw ->
-            scrollGestureActive.value = true
-            lazyGridState.hitInfoAt(raw, padL, padT)?.let { hit ->
-                val idx = orderedGridKeys.indexOf(hit.key)
-                val allIds = gridKeyToMediaIds[hit.key] ?: emptyList()
-                if (idx >= 0 && allIds.isNotEmpty()) {
-                    val hitIds = resolveHitIds(hit, allIds).toSet()
-                    if (!selectedIds.value.containsAll(hitIds)) {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        updateSelectedIds(selectedIds.value + hitIds)
-                    }
-                    initialIndex = idx
-                    currentIndex = idx
-                }
-            }
-        },
-        onDragCancel = {
-            scrollGestureActive.value = false
-            initialIndex = null
-            autoScrollSpeed.value = 0f
-        },
-        onDragEnd = {
-            scrollGestureActive.value = false
-            initialIndex = null
-            autoScrollSpeed.value = 0f
-        },
-        onDrag = { change, _ ->
-            val raw = change.position
-            if (initialIndex != null) {
-                val distB = lazyGridState.layoutInfo.viewportSize.height - raw.y
-                val distT = raw.y
-                autoScrollSpeed.value = when {
-                    distB < autoScrollThreshold -> autoScrollThreshold - distB
-                    distT < autoScrollThreshold -> -(autoScrollThreshold - distT)
-                    else -> 0f
-                }
-
-                lazyGridState.hitKeyAt(raw, padL, padT)?.let { key ->
-                    val newIdx = orderedGridKeys.indexOf(key)
-                    if (newIdx >= 0 && newIdx != currentIndex) {
-                        val start = initialIndex!!
-                        val oldEnd = currentIndex!!
-                        val oldRange = if (oldEnd >= start) start..oldEnd else oldEnd..start
-                        val newRange = if (newIdx >= start) start..newIdx else newIdx..start
-
-                        val oldIds = oldRange.flatMapTo(mutableSetOf()) {
-                            gridKeyToMediaIds[orderedGridKeys.getOrNull(it)] ?: emptyList()
+        detectDragGesturesAfterLongPress(
+            onDragStart = { rawOffset ->
+                scrollGestureActive.value = true
+                lazyGridState.hitInfoAt(rawOffset, leftPadding, topPadding)?.let { hit ->
+                    val hitIndex = gridKeyToIndex[hit.key] ?: -1
+                    val hitMediaIds = gridKeyToMediaIds[hit.key].orEmpty()
+                    if (hitIndex >= 0 && hitMediaIds.isNotEmpty()) {
+                        val selectedHitIds = resolveHitIds(hit, hitMediaIds).toSet()
+                        if (!selectedIds.value.containsAll(selectedHitIds)) {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            updateSelectedIds(selectedIds.value + selectedHitIds)
                         }
-                        val newIds = newRange.flatMapTo(mutableSetOf()) {
-                            gridKeyToMediaIds[orderedGridKeys.getOrNull(it)] ?: emptyList()
-                        }
-
-                        updateSelectedIds(selectedIds.value - oldIds + newIds)
-                        currentIndex = newIdx
+                        initialIndex = hitIndex
+                        currentIndex = hitIndex
                     }
                 }
-            }
-        },
-    )
+            },
+            onDragCancel = {
+                scrollGestureActive.value = false
+                initialIndex = null
+                autoScrollSpeed.value = 0f
+            },
+            onDragEnd = {
+                scrollGestureActive.value = false
+                initialIndex = null
+                autoScrollSpeed.value = 0f
+            },
+            onDrag = { change, _ ->
+                val rawOffset = change.position
+                val initialDragIndex = initialIndex
+                if (initialDragIndex != null) {
+                    val distanceFromBottom =
+                        lazyGridState.layoutInfo.viewportSize.height - rawOffset.y
+                    val distanceFromTop = rawOffset.y
+                    autoScrollSpeed.value = when {
+                        distanceFromBottom < autoScrollThreshold ->
+                            autoScrollThreshold - distanceFromBottom
+                        distanceFromTop < autoScrollThreshold ->
+                            -(autoScrollThreshold - distanceFromTop)
+                        else -> 0f
+                    }
+
+                    lazyGridState.hitKeyAt(rawOffset, leftPadding, topPadding)?.let { key ->
+                        val newIndex = gridKeyToIndex[key] ?: -1
+                        val previousIndex = currentIndex
+                        if (newIndex >= 0 && previousIndex != null && newIndex != previousIndex) {
+                            val oldRange = when {
+                                previousIndex >= initialDragIndex -> initialDragIndex..previousIndex
+                                else -> previousIndex..initialDragIndex
+                            }
+                            val newRange = when {
+                                newIndex >= initialDragIndex -> initialDragIndex..newIndex
+                                else -> newIndex..initialDragIndex
+                            }
+
+                            val oldIds = oldRange.flatMapTo(mutableSetOf()) { index ->
+                                gridKeyToMediaIds[orderedGridKeys[index]].orEmpty()
+                            }
+                            val newIds = newRange.flatMapTo(mutableSetOf()) { index ->
+                                gridKeyToMediaIds[orderedGridKeys[index]].orEmpty()
+                            }
+
+                            updateSelectedIds(selectedIds.value - oldIds + newIds)
+                            currentIndex = newIndex
+                        }
+                    }
+                }
+            },
+        )
+    }
 }
 
 fun Modifier.photoGridDragHandler(
@@ -162,72 +182,82 @@ fun Modifier.photoGridDragHandler(
     scrollGestureActive: MutableState<Boolean>,
     layoutDirection: LayoutDirection,
     contentPadding: PaddingValues,
-    allKeys: List<String>
-) = pointerInput(Unit) {
-    // pre-compute the corresponding IDs
-    val mediaIdsInOrder = allKeys.mapNotNull { it.mediaIdFromKey }
+    allKeys: List<String>,
+): Modifier {
+    val mediaKeysInOrder = allKeys.filter { key -> key.mediaIdFromKey != null }
+    val mediaIdsInOrder = mediaKeysInOrder.mapNotNull { key -> key.mediaIdFromKey }
+    val keyToIndex = mediaKeysInOrder.withIndex().associate { (index, key) -> key to index }
 
-    val padL = contentPadding.calculateLeftPadding(layoutDirection).toPx()
-    val padT = contentPadding.calculateTopPadding().toPx()
+    return pointerInput(allKeys, contentPadding, layoutDirection) {
+        val leftPadding = contentPadding.calculateLeftPadding(layoutDirection).toPx()
+        val topPadding = contentPadding.calculateTopPadding().toPx()
 
-    var initialMediaIndex: Int? = null
-    var currentMediaIndex: Int? = null
+        var initialMediaIndex: Int? = null
+        var currentMediaIndex: Int? = null
 
-    detectDragGesturesAfterLongPress(
-        onDragStart = { raw ->
-            scrollGestureActive.value = true
-            lazyGridState.hitKeyAt(raw, padL, padT)?.let { key ->
-                val idx = allKeys.indexOf(key)
-                val id = key.mediaIdFromKey
-                if (idx >= 0 && id != null) {
-                    if (id !in selectedIds.value) {
-                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        updateSelectedIds(selectedIds.value + id)
-                    }
-                    initialMediaIndex = idx
-                    currentMediaIndex = idx
-                }
-            }
-        },
-        onDragCancel = {
-            scrollGestureActive.value = false
-            initialMediaIndex = null
-            autoScrollSpeed.value = 0f
-        },
-        onDragEnd = {
-            scrollGestureActive.value = false
-            initialMediaIndex = null
-            autoScrollSpeed.value = 0f
-        },
-        onDrag = { change, _ ->
-            val raw = change.position
-            if (initialMediaIndex != null) {
-                val distB = lazyGridState.layoutInfo.viewportSize.height - raw.y
-                val distT = raw.y
-                autoScrollSpeed.value = when {
-                    distB < autoScrollThreshold -> autoScrollThreshold - distB
-                    distT < autoScrollThreshold -> -(autoScrollThreshold - distT)
-                    else -> 0f
-                }
-
-                lazyGridState.hitKeyAt(raw, padL, padT)?.let { key ->
-                    val newIdx = allKeys.indexOf(key)
-                    if (newIdx >= 0 && newIdx != currentMediaIndex) {
-                        val start = initialMediaIndex!!
-                        val oldEnd = currentMediaIndex!!
-                        val oldRange = if (oldEnd >= start) start..oldEnd else oldEnd..start
-                        val newRange = if (newIdx >= start) start..newIdx else newIdx..start
-
-                        // map to real IDs
-                        val oldIds = oldRange.mapNotNull { mediaIdsInOrder.getOrNull(it) }.toSet()
-                        val newIds = newRange.mapNotNull { mediaIdsInOrder.getOrNull(it) }.toSet()
-
-                        // subtract oldRange, add newRange
-                        updateSelectedIds(selectedIds.value - oldIds + newIds)
-                        currentMediaIndex = newIdx
+        detectDragGesturesAfterLongPress(
+            onDragStart = { rawOffset ->
+                scrollGestureActive.value = true
+                lazyGridState.hitKeyAt(rawOffset, leftPadding, topPadding)?.let { key ->
+                    val mediaIndex = keyToIndex[key] ?: -1
+                    val mediaId = key.mediaIdFromKey
+                    if (mediaIndex >= 0 && mediaId != null) {
+                        if (mediaId !in selectedIds.value) {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            updateSelectedIds(selectedIds.value + mediaId)
+                        }
+                        initialMediaIndex = mediaIndex
+                        currentMediaIndex = mediaIndex
                     }
                 }
-            }
-        },
-    )
+            },
+            onDragCancel = {
+                scrollGestureActive.value = false
+                initialMediaIndex = null
+                autoScrollSpeed.value = 0f
+            },
+            onDragEnd = {
+                scrollGestureActive.value = false
+                initialMediaIndex = null
+                autoScrollSpeed.value = 0f
+            },
+            onDrag = { change, _ ->
+                val rawOffset = change.position
+                val initialDragIndex = initialMediaIndex
+                if (initialDragIndex != null) {
+                    val distanceFromBottom =
+                        lazyGridState.layoutInfo.viewportSize.height - rawOffset.y
+                    val distanceFromTop = rawOffset.y
+                    autoScrollSpeed.value = when {
+                        distanceFromBottom < autoScrollThreshold ->
+                            autoScrollThreshold - distanceFromBottom
+                        distanceFromTop < autoScrollThreshold ->
+                            -(autoScrollThreshold - distanceFromTop)
+                        else -> 0f
+                    }
+
+                    lazyGridState.hitKeyAt(rawOffset, leftPadding, topPadding)?.let { key ->
+                        val newIndex = keyToIndex[key] ?: -1
+                        val previousIndex = currentMediaIndex
+                        if (newIndex >= 0 && previousIndex != null && newIndex != previousIndex) {
+                            val oldRange = when {
+                                previousIndex >= initialDragIndex -> initialDragIndex..previousIndex
+                                else -> previousIndex..initialDragIndex
+                            }
+                            val newRange = when {
+                                newIndex >= initialDragIndex -> initialDragIndex..newIndex
+                                else -> newIndex..initialDragIndex
+                            }
+
+                            val oldIds = oldRange.map { index -> mediaIdsInOrder[index] }.toSet()
+                            val newIds = newRange.map { index -> mediaIdsInOrder[index] }.toSet()
+
+                            updateSelectedIds(selectedIds.value - oldIds + newIds)
+                            currentMediaIndex = newIndex
+                        }
+                    }
+                }
+            },
+        )
+    }
 }

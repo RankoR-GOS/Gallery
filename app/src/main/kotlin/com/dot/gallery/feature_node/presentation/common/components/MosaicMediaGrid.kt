@@ -34,6 +34,7 @@ import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -62,24 +63,24 @@ import com.dot.gallery.core.presentation.components.LoadingMedia
 import com.dot.gallery.core.presentation.components.MediaItemHeader
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.MediaItem
+import com.dot.gallery.feature_node.data.model.isBigHeaderKey
+import com.dot.gallery.feature_node.data.model.isHeaderKey
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.model.MosaicDisplayItem
 import com.dot.gallery.feature_node.domain.model.MosaicTilePattern
-import com.dot.gallery.feature_node.data.model.isBigHeaderKey
-import com.dot.gallery.feature_node.data.model.isHeaderKey
 import com.dot.gallery.feature_node.domain.model.mosaicPatternsForColumns
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.mediaSharedElement
 import com.dot.gallery.feature_node.presentation.util.mosaicGridDragHandler
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
+import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.random.Random
 
 fun <T : Media> buildMosaicDisplayItems(
     mappedData: List<MediaItem<T>>,
@@ -231,9 +232,18 @@ fun <T : Media> MosaicMediaGrid(
         }
     }
 
-    val displayItems = remember(mappedData, allowHeaders, columns) {
-        if (allowHeaders) buildMosaicDisplayItems(mappedData, columns)
-        else buildMosaicDisplayItems(mappedData.filterIsInstance<MediaItem.MediaViewItem<T>>(), columns)
+    val mappedDataSnapshot by remember(mappedData) {
+        derivedStateOf { mappedData.toList() }
+    }
+    var displayItems by remember { mutableStateOf<List<MosaicDisplayItem<T>>>(emptyList()) }
+    LaunchedEffect(mappedDataSnapshot, allowHeaders, columns) {
+        displayItems = withContext(Dispatchers.Default) {
+            val source = when {
+                allowHeaders -> mappedDataSnapshot
+                else -> mappedDataSnapshot.filterIsInstance<MediaItem.MediaViewItem<T>>()
+            }
+            buildMosaicDisplayItems(mappedData = source, columns = columns)
+        }
     }
 
     val bottomContent: @Composable () -> Unit = {
@@ -281,6 +291,25 @@ fun <T : Media> MosaicMediaGrid(
     val selector = LocalMediaSelector.current
     val isSelectionActive by selector.isSelectionActive.collectAsStateWithLifecycle()
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
+    val selectedIds = selectedMedia.value
+    val selectionOrderById = remember(selectedIds) {
+        selectedIds.withIndex().associate { (index, id) -> id to index + 1 }
+    }
+    val mediaIndexById = remember(mediaState.value.media) {
+        mediaState.value.media.withIndex().associate { (index, media) -> media.id to index }
+    }
+    val metadataById = metadataState.value.metadataById
+    val selectMedia: (T) -> Unit = { media ->
+        if (allowSelection) {
+            mediaIndexById[media.id]?.let { index ->
+                feedbackManager.vibrate()
+                selector.toggleSelection(
+                    mediaState = mediaState.value,
+                    index = index,
+                )
+            }
+        }
+    }
 
     // Prune stale selection IDs when media list changes (e.g. external file deletion)
     val mediaIds = remember(mediaState.value.media) {
@@ -458,20 +487,15 @@ fun <T : Media> MosaicMediaGrid(
                                     )
                                     .animateItem(fadeInSpec = null, fadeOutSpec = spring()),
                                 media = mi.media,
+                                metadata = metadataById[mi.media.id],
+                                selectionActive = isSelectionActive,
+                                isSelected = mi.media.id in selectedIds,
+                                selectionNumber = selectionOrderById[mi.media.id],
                                 stackCount = mi.stackCount,
                                 aspectRatio = item.dynamicAspectRatio,
                                 canClick = { canScroll },
                                 onMediaClick = { onMediaClick(it) },
-                                metadataState = metadataState,
-                                onItemSelect = {
-                                    if (allowSelection) {
-                                        feedbackManager.vibrate()
-                                        selector.toggleSelection(
-                                            mediaState = mediaState.value,
-                                            index = mediaState.value.media.indexOf(it)
-                                        )
-                                    }
-                                }
+                                onItemSelect = selectMedia,
                             )
                         }
                     }
@@ -495,19 +519,14 @@ fun <T : Media> MosaicMediaGrid(
                                                             animatedVisibilityScope = animatedContentScope
                                                         ),
                                                     media = mi.media,
+                                                    metadata = metadataById[mi.media.id],
+                                                    selectionActive = isSelectionActive,
+                                                    isSelected = mi.media.id in selectedIds,
+                                                    selectionNumber = selectionOrderById[mi.media.id],
                                                     stackCount = mi.stackCount,
                                                     canClick = { canScroll },
                                                     onMediaClick = { onMediaClick(it) },
-                                                    metadataState = metadataState,
-                                                    onItemSelect = {
-                                                        if (allowSelection) {
-                                                            feedbackManager.vibrate()
-                                                            selector.toggleSelection(
-                                                                mediaState = mediaState.value,
-                                                                index = mediaState.value.media.indexOf(it)
-                                                            )
-                                                        }
-                                                    }
+                                                    onItemSelect = selectMedia,
                                                 )
                                             }
                                         } else Spacer(Modifier.weight(1f))
@@ -530,19 +549,14 @@ fun <T : Media> MosaicMediaGrid(
                                                             animatedVisibilityScope = animatedContentScope
                                                         ),
                                                     media = mi.media,
+                                                    metadata = metadataById[mi.media.id],
+                                                    selectionActive = isSelectionActive,
+                                                    isSelected = mi.media.id in selectedIds,
+                                                    selectionNumber = selectionOrderById[mi.media.id],
                                                     stackCount = mi.stackCount,
                                                     canClick = { canScroll },
                                                     onMediaClick = { onMediaClick(it) },
-                                                    metadataState = metadataState,
-                                                    onItemSelect = {
-                                                        if (allowSelection) {
-                                                            feedbackManager.vibrate()
-                                                            selector.toggleSelection(
-                                                                mediaState = mediaState.value,
-                                                                index = mediaState.value.media.indexOf(it)
-                                                            )
-                                                        }
-                                                    }
+                                                    onItemSelect = selectMedia,
                                                 )
                                             }
                                         } else Spacer(Modifier.weight(1f))
@@ -570,19 +584,14 @@ fun <T : Media> MosaicMediaGrid(
                                                         animatedVisibilityScope = animatedContentScope
                                                     ),
                                                 media = mi.media,
+                                                metadata = metadataById[mi.media.id],
+                                                selectionActive = isSelectionActive,
+                                                isSelected = mi.media.id in selectedIds,
+                                                selectionNumber = selectionOrderById[mi.media.id],
                                                 stackCount = mi.stackCount,
                                                 canClick = { canScroll },
                                                 onMediaClick = { onMediaClick(it) },
-                                                metadataState = metadataState,
-                                                onItemSelect = {
-                                                    if (allowSelection) {
-                                                        feedbackManager.vibrate()
-                                                        selector.toggleSelection(
-                                                            mediaState = mediaState.value,
-                                                            index = mediaState.value.media.indexOf(it)
-                                                        )
-                                                    }
-                                                }
+                                                onItemSelect = selectMedia,
                                             )
                                         }
                                     } else Spacer(Modifier.weight(1f))
@@ -602,19 +611,14 @@ fun <T : Media> MosaicMediaGrid(
                                     )
                                     .animateItem(fadeInSpec = null, fadeOutSpec = spring()),
                                 media = mi.media,
+                                metadata = metadataById[mi.media.id],
+                                selectionActive = isSelectionActive,
+                                isSelected = mi.media.id in selectedIds,
+                                selectionNumber = selectionOrderById[mi.media.id],
                                 stackCount = mi.stackCount,
                                 canClick = { canScroll },
                                 onMediaClick = { onMediaClick(it) },
-                                metadataState = metadataState,
-                                onItemSelect = {
-                                    if (allowSelection) {
-                                        feedbackManager.vibrate()
-                                        selector.toggleSelection(
-                                            mediaState = mediaState.value,
-                                            index = mediaState.value.media.indexOf(it)
-                                        )
-                                    }
-                                }
+                                onItemSelect = selectMedia,
                             )
                         }
                     }

@@ -2,6 +2,7 @@ package com.dot.gallery.core
 
 import android.content.Context
 import android.media.MediaScannerConnection
+import android.provider.MediaStore
 import androidx.compose.runtime.compositionLocalOf
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -13,34 +14,36 @@ import com.dot.gallery.feature_node.data.data_source.ScannedMediaDao
 import com.dot.gallery.feature_node.data.model.Album
 import com.dot.gallery.feature_node.data.model.AlbumGroup
 import com.dot.gallery.feature_node.data.model.AlbumGroupMember
-import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
-import com.dot.gallery.feature_node.domain.model.AlbumState
 import com.dot.gallery.feature_node.data.model.AlbumThumbnail
 import com.dot.gallery.feature_node.data.model.CollectionWithCount
 import com.dot.gallery.feature_node.data.model.IgnoredAlbum
-import com.dot.gallery.feature_node.data.model.ImageEmbedding
-import com.dot.gallery.feature_node.data.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaMetadataState
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.model.LockedAlbum
+import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.MergedSubfolderAlbum
 import com.dot.gallery.feature_node.data.model.PinnedAlbum
 import com.dot.gallery.feature_node.data.model.ScannedMedia
 import com.dot.gallery.feature_node.data.model.TimelineSettings
-import com.dot.gallery.feature_node.domain.model.UIEvent
 import com.dot.gallery.feature_node.data.model.shouldIgnore
 import com.dot.gallery.feature_node.data.repository.MediaRepository
-import com.dot.gallery.feature_node.domain.util.EventHandler
+import com.dot.gallery.feature_node.data.util.MediaGroupType
 import com.dot.gallery.feature_node.data.util.MediaOrder
 import com.dot.gallery.feature_node.data.util.OrderType
-import com.dot.gallery.feature_node.data.util.MediaGroupType
 import com.dot.gallery.feature_node.data.util.mapLocked
 import com.dot.gallery.feature_node.data.util.mapPinned
 import com.dot.gallery.feature_node.data.util.removeBlacklisted
+import com.dot.gallery.feature_node.domain.model.AlbumGroupWithAlbums
+import com.dot.gallery.feature_node.domain.model.AlbumState
+import com.dot.gallery.feature_node.domain.model.MediaMetadataState
+import com.dot.gallery.feature_node.domain.model.MediaState
+import com.dot.gallery.feature_node.domain.model.UIEvent
+import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
 import com.dot.gallery.feature_node.presentation.util.mediaFlow
 import dagger.hilt.android.qualifiers.ApplicationContext
-import android.provider.MediaStore
+import java.util.concurrent.ConcurrentHashMap
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -52,6 +55,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -60,9 +64,6 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
-import javax.inject.Singleton
 
 val LocalMediaDistributor = compositionLocalOf<MediaDistributor> {
     error("No MediaDistributor provided!!! This is likely due to a missing Hilt injection in the Composable hierarchy.")
@@ -116,9 +117,13 @@ class MediaDistributorImpl @Inject constructor(
     /**
      * Album Media Sort preference flow
      */
-    private val albumMediaSortFlow: StateFlow<Settings.Album.LastSort> = 
+    private val albumMediaSortFlow: StateFlow<Settings.Album.LastSort> =
         Settings.Album.getAlbumMediaSortFlow(context)
-            .stateIn(appScope, SharingStarted.Eagerly, Settings.Album.LastSort(OrderType.Descending, FilterKind.DATE))
+            .stateIn(
+                scope = appScope,
+                started = SharingStarted.Eagerly,
+                initialValue = Settings.Album.LastSort(OrderType.Descending, FilterKind.DATE),
+            )
 
     /**
      * Common
@@ -371,8 +376,37 @@ class MediaDistributorImpl @Inject constructor(
     /**
      * Media
      */
+    private val allMediaResourceFlow: SharedFlow<Resource<List<Media.UriMedia>>> =
+        repository.mediaFlow(-1L, null)
+            .shareIn(
+                scope = appScope,
+                started = sharingMethod,
+                replay = 1,
+            )
+
+    private val mediaMappingOptionsFlow: Flow<MediaMappingOptions> = combine(
+        settingsFlow,
+        dateFormatsFlow,
+        groupSimilarMedia,
+        enabledGroupTypes,
+    ) { settings, dateFormats, shouldGroupSimilar, groupTypes ->
+        MediaMappingOptions(
+            groupByMonth = settings?.groupTimelineByMonth == true,
+            groupSimilarMedia = shouldGroupSimilar,
+            enabledGroupTypes = groupTypes,
+            defaultDateFormat = dateFormats.first,
+            extendedDateFormat = dateFormats.second,
+            weeklyDateFormat = dateFormats.third,
+        )
+    }.distinctUntilChanged()
+
     override val timelineMediaFlow: SharedFlow<MediaState<Media.UriMedia>> =
-        mediaFlow(-1L, null, triggerDatabaseUpdate = true)
+        mediaFlow(
+            source = allMediaResourceFlow,
+            albumId = -1L,
+            target = null,
+            triggerDatabaseUpdate = true,
+        )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Suppress("UNCHECKED_CAST")
@@ -380,28 +414,18 @@ class MediaDistributorImpl @Inject constructor(
         hasPermission.flatMapLatest { granted ->
             if (!granted) flowOf(emptyMap())
             else combine(
-                repository.mediaFlow(-1L, null),
+                allMediaResourceFlow,
                 albumsFlow,
-                settingsFlow,
+                mediaMappingOptionsFlow,
                 blacklistedAlbumsFlow,
-                dateFormatsFlow,
                 albumMediaSortFlow,
-                groupSimilarMedia,
-                enabledGroupTypes
             ) { values ->
                 val allMediaResult = values[0] as Resource<List<Media.UriMedia>>
                 val albumState = values[1] as AlbumState
-                val settings = values[2] as TimelineSettings?
+                val options = values[2] as MediaMappingOptions
                 @Suppress("UNCHECKED_CAST")
                 val blacklistedAlbums = values[3] as List<IgnoredAlbum>
-                @Suppress("UNCHECKED_CAST")
-                val dateFormats = values[4] as Triple<String, String, String>
-                val albumSort = values[5] as Settings.Album.LastSort
-                val shouldGroupSimilar = values[6] as Boolean
-                @Suppress("UNCHECKED_CAST")
-                val groupTypes = values[7] as Set<MediaGroupType>
-
-                val (defaultDateFormat, extendedDateFormat, weeklyDateFormat) = dateFormats
+                val albumSort = values[4] as Settings.Album.LastSort
                 val allMedia = allMediaResult.data ?: emptyList()
                 val albumIds = albumState.albums.mapTo(HashSet()) { it.id }
 
@@ -428,12 +452,12 @@ class MediaDistributorImpl @Inject constructor(
                         data = sorter.sortMedia(filtered),
                         error = "",
                         albumId = albumId,
-                        groupByMonth = settings?.groupTimelineByMonth == true,
-                        groupSimilarMedia = shouldGroupSimilar,
-                        enabledGroupTypes = groupTypes,
-                        defaultDateFormat = defaultDateFormat,
-                        extendedDateFormat = extendedDateFormat,
-                        weeklyDateFormat = weeklyDateFormat
+                        groupByMonth = options.groupByMonth,
+                        groupSimilarMedia = options.groupSimilarMedia,
+                        enabledGroupTypes = options.enabledGroupTypes,
+                        defaultDateFormat = options.defaultDateFormat,
+                        extendedDateFormat = options.extendedDateFormat,
+                        weeklyDateFormat = options.weeklyDateFormat,
                     )
                 }
                 result
@@ -446,89 +470,90 @@ class MediaDistributorImpl @Inject constructor(
 
 
     override val favoritesMediaFlow: SharedFlow<MediaState<Media.UriMedia>> =
-        mediaFlow(-1L, Constants.Target.TARGET_FAVORITES)
+        mediaFlow(
+            source = repository.mediaFlow(-1L, Constants.Target.TARGET_FAVORITES),
+            albumId = -1L,
+            target = Constants.Target.TARGET_FAVORITES,
+        )
 
     override val trashMediaFlow: SharedFlow<MediaState<Media.UriMedia>> =
-        mediaFlow(-1L, Constants.Target.TARGET_TRASH)
+        mediaFlow(
+            source = repository.mediaFlow(-1L, Constants.Target.TARGET_TRASH),
+            albumId = -1L,
+            target = Constants.Target.TARGET_TRASH,
+        )
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Suppress("UNCHECKED_CAST")
-    private fun mediaFlow(albumId: Long, target: String?, triggerDatabaseUpdate: Boolean = false) = hasPermission.flatMapLatest { granted ->
-        if (!granted) flowOf(MediaState(
-            error = "No permission to access media",
-            isLoading = false
-        ))
-        else combine(
-            repository.mediaFlow(albumId, target),
-            settingsFlow,
-            blacklistedAlbumsFlow,
-            lockedAlbumsFlow,
-            dateFormatsFlow,
-            albumMediaSortFlow,
-            groupSimilarMedia,
-            enabledGroupTypes
-        ) { values ->
-            val result = values[0] as Resource<List<Media.UriMedia>>
-            val settings = values[1] as TimelineSettings?
-            @Suppress("UNCHECKED_CAST")
-            val blacklistedAlbums = values[2] as List<IgnoredAlbum>
-            @Suppress("UNCHECKED_CAST")
-            val lockedAlbums = values[3] as List<LockedAlbum>
-            @Suppress("UNCHECKED_CAST")
-            val dateFormats = values[4] as Triple<String, String, String>
-            val albumSort = values[5] as Settings.Album.LastSort
-            val shouldGroupSimilar = values[6] as Boolean
-            @Suppress("UNCHECKED_CAST")
-            val groupTypes = values[7] as Set<MediaGroupType>
-            
-            val (defaultDateFormat, extendedDateFormat, weeklyDateFormat) = dateFormats
-            
-            if (result is Resource.Error) return@combine MediaState(
-                error = result.message ?: "",
-                isLoading = false
-            )
-            // Use custom sort for album timelines, default sort for favorites/trash
-            val sorter = if (target == null && albumId > 0) {
-                when (albumSort.kind) {
-                    FilterKind.DATE -> MediaOrder.Date(albumSort.orderType)
-                    FilterKind.DATE_MODIFIED -> MediaOrder.DateModified(albumSort.orderType)
-                    FilterKind.NAME -> MediaOrder.Label(albumSort.orderType)
-                }
+    private fun mediaFlow(
+        source: Flow<Resource<List<Media.UriMedia>>>,
+        albumId: Long,
+        target: String?,
+        triggerDatabaseUpdate: Boolean = false,
+    ): SharedFlow<MediaState<Media.UriMedia>> {
+        return hasPermission.flatMapLatest { granted ->
+            if (!granted) {
+                flowOf(
+                    MediaState(
+                        error = "No permission to access media",
+                        isLoading = false,
+                    ),
+                )
             } else {
-                MediaOrder.Default
-            }
-            val lockedAlbumIds = lockedAlbums.mapTo(HashSet()) { it.id }
-            val data = (result.data ?: emptyList()).toMutableList().apply {
-                removeAll { media -> blacklistedAlbums.any { it.shouldIgnore(media, albumId) } }
-                // Hide media from locked albums in the main timeline
-                if (albumId == -1L && target == null) {
-                    removeAll { media -> media.albumID in lockedAlbumIds }
+                combine(
+                    source,
+                    mediaMappingOptionsFlow,
+                    blacklistedAlbumsFlow,
+                    lockedAlbumsFlow,
+                ) { values ->
+                    val result = values[0] as Resource<List<Media.UriMedia>>
+                    val options = values[1] as MediaMappingOptions
+                    @Suppress("UNCHECKED_CAST")
+                    val blacklistedAlbums = values[2] as List<IgnoredAlbum>
+                    @Suppress("UNCHECKED_CAST")
+                    val lockedAlbums = values[3] as List<LockedAlbum>
+
+                    if (result is Resource.Error) {
+                        return@combine MediaState(
+                            error = result.message ?: "",
+                            isLoading = false,
+                        )
+                    }
+                    val lockedAlbumIds = lockedAlbums.mapTo(HashSet()) { it.id }
+                    val data = (result.data ?: emptyList()).toMutableList().apply {
+                        removeAll { media ->
+                            blacklistedAlbums.any { it.shouldIgnore(media, albumId) }
+                        }
+                        if (albumId == -1L && target == null) {
+                            removeAll { media -> media.albumID in lockedAlbumIds }
+                        }
+                    }
+                    mapMediaToItem(
+                        data = MediaOrder.Default.sortMedia(data),
+                        error = result.message ?: "",
+                        albumId = albumId,
+                        groupByMonth = options.groupByMonth,
+                        groupSimilarMedia = options.groupSimilarMedia,
+                        enabledGroupTypes = options.enabledGroupTypes,
+                        defaultDateFormat = options.defaultDateFormat,
+                        extendedDateFormat = options.extendedDateFormat,
+                        weeklyDateFormat = options.weeklyDateFormat,
+                    )
                 }
             }
-            mapMediaToItem(
-                data = sorter.sortMedia(data),
-                error = result.message ?: "",
-                albumId = albumId,
-                groupByMonth = settings?.groupTimelineByMonth == true,
-                groupSimilarMedia = shouldGroupSimilar,
-                enabledGroupTypes = groupTypes,
-                defaultDateFormat = defaultDateFormat,
-                extendedDateFormat = extendedDateFormat,
-                weeklyDateFormat = weeklyDateFormat
-            )
-        }
-    }.mapLatest {
-        if (triggerDatabaseUpdate) {
-            eventHandler.pushEvent(UIEvent.UpdateDatabase)
-        }
-        triggerRescanForMissingDateTaken(it.media)
-        it
-    }.shareIn(
-        scope = appScope,
-        started = sharingMethod,
-        replay = 1
-    )
+        }.mapLatest { mediaState ->
+            if (triggerDatabaseUpdate) {
+                eventHandler.pushEvent(UIEvent.UpdateDatabase)
+            }
+            triggerRescanForMissingDateTaken(mediaState.media)
+            mediaState
+        }.shareIn(
+            scope = appScope,
+            started = sharingMethod,
+            replay = 1,
+        )
+    }
 
     /**
      * Media Metadata
@@ -542,6 +567,7 @@ class MediaDistributorImpl @Inject constructor(
     ) { metadata, isRunning, progress ->
         MediaMetadataState(
             metadata = metadata,
+            metadataById = metadata.associateBy { item -> item.mediaId }.toPersistentMap(),
             isLoading = isRunning,
             isLoadingProgress = progress
         )

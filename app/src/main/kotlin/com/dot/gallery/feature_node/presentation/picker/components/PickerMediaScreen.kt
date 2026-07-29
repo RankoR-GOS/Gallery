@@ -37,9 +37,9 @@ import com.dot.gallery.core.LocalMediaSelector
 import com.dot.gallery.core.presentation.components.MediaItemHeader
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.MediaItem
+import com.dot.gallery.feature_node.data.model.isHeaderKey
 import com.dot.gallery.feature_node.domain.model.MediaMetadataState
 import com.dot.gallery.feature_node.domain.model.MediaState
-import com.dot.gallery.feature_node.data.model.isHeaderKey
 import com.dot.gallery.feature_node.presentation.common.components.MediaImage
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.mediaSharedElement
@@ -82,6 +82,12 @@ fun <T: Media> PickerMediaScreen(
     }
     val selector = LocalMediaSelector.current
     val selectedMedia = selector.selectedMedia.collectAsStateWithLifecycle()
+    val isSelectionActive by selector.isSelectionActive.collectAsStateWithLifecycle()
+    val selectedIds = selectedMedia.value
+    val selectionOrderById = remember(selectedIds) {
+        selectedIds.withIndex().associate { (index, id) -> id to index + 1 }
+    }
+    val metadataById = metadataState.value.metadataById
 
     LazyVerticalGrid(
         state = gridState,
@@ -154,8 +160,11 @@ fun <T: Media> PickerMediaScreen(
                     MediaImage(
                         modifier = Modifier.animateItem().then(sharedElementModifier),
                         media = item.media,
+                        metadata = metadataById[item.media.id],
+                        selectionActive = isSelectionActive,
+                        isSelected = item.media.id in selectedIds,
+                        selectionNumber = selectionOrderById[item.media.id],
                         canClick = { true },
-                        metadataState = metadataState,
                         onMediaClick = {
                             feedbackManager.vibrate()
                             val id = it.id

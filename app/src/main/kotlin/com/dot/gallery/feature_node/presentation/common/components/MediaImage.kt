@@ -12,9 +12,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,7 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -41,20 +40,16 @@ import androidx.compose.ui.unit.dp
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberFavoriteIconPosition
-import androidx.compose.ui.util.fastFirstOrNull
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.dot.gallery.core.LocalMediaSelector
-import com.dot.gallery.core.presentation.components.LocalMediaImageRenderer
 import com.dot.gallery.core.presentation.components.CheckBox
+import com.dot.gallery.core.presentation.components.LocalMediaImageRenderer
 import com.dot.gallery.core.presentation.components.util.advancedShadow
 import com.dot.gallery.feature_node.data.model.Media
-import com.dot.gallery.feature_node.data.model.MediaMetadataState
+import com.dot.gallery.feature_node.data.model.MediaMetadata
 import com.dot.gallery.feature_node.data.model.getIcon
 import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.data.util.isFavorite
 import com.dot.gallery.feature_node.data.util.isVideo
 import com.dot.gallery.feature_node.presentation.mediaview.components.video.VideoDurationHeader
-import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -67,23 +62,16 @@ import dev.chrisbanes.haze.rememberHazeState
 fun <T : Media> MediaImage(
     modifier: Modifier = Modifier,
     media: T,
-    metadataState: State<MediaMetadataState>,
+    metadata: MediaMetadata?,
+    selectionActive: Boolean,
+    isSelected: Boolean,
+    selectionNumber: Int?,
     stackCount: Int = 1,
     aspectRatio: Float = 1f,
     canClick: () -> Boolean,
     onMediaClick: (T) -> Unit,
     onItemSelect: (T) -> Unit,
 ) {
-    val selector = LocalMediaSelector.current
-    val selectionState by selector.isSelectionActive.collectAsStateWithLifecycle()
-    val selectedMedia by selector.selectedMedia.collectAsStateWithLifecycle()
-    val isSelected by rememberedDerivedState(selectionState, selectedMedia, media) {
-        selectionState && selectedMedia.any { it == media.id }
-    }
-    val metadata by rememberedDerivedState(metadataState.value) {
-        metadataState.value.metadata.fastFirstOrNull { it.mediaId == media.id }
-    }
-
     val selectedSize by animateDpAsState(
         targetValue = if (isSelected) 12.dp else 0.dp,
         label = "selectedSize"
@@ -117,13 +105,13 @@ fun <T : Media> MediaImage(
             .combinedClickable(
                 enabled = canClick(),
                 onClick = {
-                    if (selectionState) {
+                    if (selectionActive) {
                         onItemSelect(media)
                     } else {
                         onMediaClick(media)
                     }
                 },
-                onLongClick = if (selectionState) {
+                onLongClick = if (selectionActive) {
                     null // No long click action when selection is active
                 } else {
                     { onItemSelect(media) }
@@ -221,7 +209,8 @@ fun <T : Media> MediaImage(
             )
         }
 
-        if (metadata != null && metadata!!.isRelevant) {
+        val metadataIcon = metadata?.takeIf { value -> value.isRelevant }?.getIcon()
+        if (metadataIcon != null) {
             Icon(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -234,26 +223,21 @@ fun <T : Media> MediaImage(
                         shadowBlurRadius = 6.dp,
                         alpha = 0.3f
                     ),
-                imageVector = metadata!!.getIcon()!!,
+                imageVector = metadataIcon,
                 tint = Color.White,
                 contentDescription = null
             )
         }
 
-        if (selectionState) {
+        if (selectionActive) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(4.dp)
             ) {
-                val number by rememberedDerivedState {
-                    if (isSelected) {
-                        selectedMedia.indexOf(media.id) + 1
-                    } else null
-                }
                 CheckBox(
                     isChecked = isSelected,
-                    number = number
+                    number = selectionNumber,
                 )
             }
         }

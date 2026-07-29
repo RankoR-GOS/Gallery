@@ -27,9 +27,9 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -80,10 +80,10 @@ import com.dot.gallery.core.presentation.components.MediaItemHeader
 import com.dot.gallery.feature_node.data.model.Album
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.MediaItem
-import com.dot.gallery.feature_node.domain.model.MediaMetadataState
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.model.isHeaderKey
 import com.dot.gallery.feature_node.data.util.getUri
+import com.dot.gallery.feature_node.domain.model.MediaMetadataState
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.albums.components.AlbumImage
 import com.dot.gallery.feature_node.presentation.common.components.MediaImage
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
@@ -422,6 +422,7 @@ private fun <T : Media> ImagePickerMediaGrid(
     val stringToday = stringResource(id = R.string.header_today)
     val stringYesterday = stringResource(id = R.string.header_yesterday)
     val gridState = rememberLazyGridState()
+    val metadataById = metadataState.value.metadataById
 
     if (mediaState.media.isEmpty() && !mediaState.isLoading) {
         Box(
@@ -468,7 +469,10 @@ private fun <T : Media> ImagePickerMediaGrid(
                         MediaImage(
                             modifier = Modifier.animateItem(),
                             media = item.media,
-                            metadataState = metadataState,
+                            metadata = metadataById[item.media.id],
+                            selectionActive = false,
+                            isSelected = false,
+                            selectionNumber = null,
                             canClick = { true },
                             onMediaClick = { onMediaClick(it) },
                             onItemSelect = { onMediaClick(it) }
