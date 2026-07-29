@@ -38,13 +38,35 @@ internal class SecureReviewManifestTest {
         assertEquals(setOf(StandaloneActivity::class.java.name), activityNames)
     }
 
+    @Test
+    fun declaredJpegXlViewIntent_resolvesToStandaloneActivity() {
+        val activityNames = resolveActivityNames(
+            action = Intent.ACTION_VIEW,
+            mimeType = "image/jxl",
+            uri = Uri.parse("content://provider/image/1"),
+        )
+
+        assertEquals(setOf(StandaloneActivity::class.java.name), activityNames)
+    }
+
+    @Test
+    fun genericMimeJpegXlFilename_doesNotResolveToStandaloneActivity() {
+        val activityNames = resolveActivityNames(
+            action = Intent.ACTION_VIEW,
+            mimeType = "application/octet-stream",
+            uri = Uri.parse("content://provider/image.jxl"),
+        )
+
+        assertEquals(emptySet<String>(), activityNames)
+    }
+
     @Suppress("DEPRECATION")
     private fun resolveActivityNames(
         action: String,
         mimeType: String? = "image/jpeg",
+        uri: Uri = Uri.parse("content://camera/image/1"),
     ): Set<String> {
         val application = RuntimeEnvironment.getApplication()
-        val uri = Uri.parse("content://camera/image/1")
         val intent = Intent(action).apply {
             when (mimeType) {
                 null -> data = uri
