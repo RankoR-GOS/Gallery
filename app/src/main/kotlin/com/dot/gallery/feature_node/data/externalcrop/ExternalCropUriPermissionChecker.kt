@@ -46,20 +46,24 @@ internal class ComponentCallerExternalCropUriPermissionChecker @Inject construct
     }
 
     /**
-     * The caller's own write access to the output uri cannot be verified, so this only allowlists
-     * the authority and confirms the row is reachable from here.
+     * The output uri must be shared media that either the caller or we own.
      *
-     * The output uri arrives in [android.provider.MediaStore.EXTRA_OUTPUT], a plain extra, so it is
-     * never part of the launch grant set that [ComponentCaller.checkContentUriPermission] accepts —
-     * that method throws [IllegalArgumentException] for anything not passed via `Intent#getData`,
-     * `EXTRA_STREAM` or `Intent#getClipData`. Uid-based [Context.checkUriPermission] is no
-     * substitute either: it consults explicit uri grants and the provider's manifest permission
-     * only, not MediaProvider's ownership model, so it denies media uris even for our own uid.
+     * Neither platform permission api can answer this. The output uri arrives in
+     * [android.provider.MediaStore.EXTRA_OUTPUT], a plain extra, so it is never part of the launch
+     * grant set that [ComponentCaller.checkContentUriPermission] accepts — that method throws
+     * [IllegalArgumentException] for anything not passed via `Intent#getData`, `EXTRA_STREAM` or
+     * `Intent#getClipData`. Uid-based [Context.checkUriPermission] is no substitute either: it
+     * consults explicit uri grants and the provider's manifest permission only, not MediaProvider's
+     * ownership model, so it denies media uris even for our own uid.
      *
-     * Known risk, accepted to keep the legacy `ACTION_CROP` contract working: a hostile caller can
-     * point [android.provider.MediaStore.EXTRA_OUTPUT] at media it cannot write itself and have us
-     * overwrite it. The exposure is bounded — the authority allowlist keeps it inside shared media,
-     * and nothing is written until the user confirms the crop in our own ui.
+     * So ownership is resolved directly, from
+     * [android.provider.MediaStore.MediaColumns.OWNER_PACKAGE_NAME]. Without it a hostile caller
+     * could point the output at media it cannot write itself and have us overwrite it — the crop ui
+     * only ever shows the source, so the user confirming the crop is not consenting to the
+     * destination.
+     *
+     * This deliberately narrows the legacy `ACTION_CROP` contract: an output row owned by a third
+     * party, or with no recorded owner (a legacy file picked up by the media scanner), is refused.
      */
     override fun canWriteContentUri(
         uri: Uri,
@@ -69,7 +73,37 @@ internal class ComponentCallerExternalCropUriPermissionChecker @Inject construct
             return true
         }
 
-        return isMediaStoreUri(uri) && isReachable(uri)
+        return isMediaStoreUri(uri) && isReachable(uri) && isOwnedByCallerOrUs(uri, caller)
+    }
+
+    private fun isOwnedByCallerOrUs(uri: Uri, caller: ComponentCaller): Boolean {
+        val owner = getOwnerPackageName(uri)?.takeIf { it.isNotBlank() } ?: return false
+
+        return owner == context.packageName || owner in getCallerPackageNames(caller)
+    }
+
+    private fun getOwnerPackageName(uri: Uri): String? {
+        return try {
+            context.contentResolver.query(
+                uri,
+                arrayOf(MediaStore.MediaColumns.OWNER_PACKAGE_NAME),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
+        } catch (_: SecurityException) {
+            null
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+    }
+
+    private fun getCallerPackageNames(caller: ComponentCaller): Set<String> {
+        val uidPackages = packageManager.getPackagesForUid(caller.uid)?.toSet().orEmpty()
+
+        return uidPackages + setOfNotNull(caller.getPackage())
     }
 
     private fun isMediaStoreUri(uri: Uri): Boolean {

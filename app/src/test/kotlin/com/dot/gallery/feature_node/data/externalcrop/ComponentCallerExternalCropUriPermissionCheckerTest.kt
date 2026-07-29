@@ -4,9 +4,12 @@ import android.app.ComponentCaller
 import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
+import android.database.Cursor
+import android.database.MatrixCursor
 import android.net.Uri
 import android.os.Environment
 import android.os.Process
+import android.provider.MediaStore
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -21,8 +24,84 @@ import org.robolectric.RobolectricTestRunner
 class ComponentCallerExternalCropUriPermissionCheckerTest {
 
     @Test
-    fun canWriteContentUri_acceptsReachableMediaStoreUri() {
-        val fixture = permissionChecker(resolvedType = "image/jpeg")
+    fun canWriteContentUri_acceptsOutputOwnedByCaller() {
+        val fixture = permissionChecker(resolvedType = "image/jpeg", owner = CALLER_PACKAGE)
+
+        assertTrue(
+            fixture.checker.canWriteContentUri(
+                uri = OUTPUT_URI,
+                caller = fixture.caller,
+            ),
+        )
+    }
+
+    @Test
+    fun canWriteContentUri_acceptsOutputOwnedByUs() {
+        val fixture = permissionChecker(resolvedType = "image/jpeg", owner = OUR_PACKAGE)
+
+        assertTrue(
+            fixture.checker.canWriteContentUri(
+                uri = OUTPUT_URI,
+                caller = fixture.caller,
+            ),
+        )
+    }
+
+    /**
+     * The confused deputy guard: we hold write access to all of shared media, the caller does not.
+     * Cropping into a row owned by someone else would let the caller overwrite media it cannot
+     * touch itself, and our crop ui only ever shows the source, so the user cannot catch it.
+     */
+    @Test
+    fun canWriteContentUri_rejectsOutputOwnedByThirdParty() {
+        val fixture = permissionChecker(resolvedType = "image/jpeg", owner = "com.example.victim")
+
+        assertFalse(
+            fixture.checker.canWriteContentUri(
+                uri = OUTPUT_URI,
+                caller = fixture.caller,
+            ),
+        )
+    }
+
+    @Test
+    fun canWriteContentUri_rejectsOutputWithoutRecordedOwner() {
+        val fixture = permissionChecker(resolvedType = "image/jpeg", owner = null)
+
+        assertFalse(
+            fixture.checker.canWriteContentUri(
+                uri = OUTPUT_URI,
+                caller = fixture.caller,
+            ),
+        )
+    }
+
+    @Test
+    fun canWriteContentUri_rejectsOutputWithNoRow() {
+        val fixture = permissionChecker(
+            resolvedType = "image/jpeg",
+            owner = null,
+            ownerRowPresent = false,
+        )
+
+        assertFalse(
+            fixture.checker.canWriteContentUri(
+                uri = OUTPUT_URI,
+                caller = fixture.caller,
+            ),
+        )
+    }
+
+    /**
+     * A caller sharing a uid with other packages owns everything any of them owns.
+     */
+    @Test
+    fun canWriteContentUri_acceptsOutputOwnedByAnotherPackageInTheCallerUid() {
+        val fixture = permissionChecker(
+            resolvedType = "image/jpeg",
+            owner = "com.example.sibling",
+            callerPackages = arrayOf(CALLER_PACKAGE, "com.example.sibling"),
+        )
 
         assertTrue(
             fixture.checker.canWriteContentUri(
@@ -163,9 +242,14 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
     private fun permissionChecker(
         resolvedType: String? = null,
         resolveException: RuntimeException? = null,
+        owner: String? = CALLER_PACKAGE,
+        ownerRowPresent: Boolean = true,
+        callerPackages: Array<String> = arrayOf(CALLER_PACKAGE),
     ): PermissionCheckerFixture {
+        val callerUid = Process.myUid() + 1
         val caller = mockk<ComponentCaller>()
-        every { caller.uid } returns Process.myUid() + 1
+        every { caller.uid } returns callerUid
+        every { caller.getPackage() } returns callerPackages.firstOrNull()
 
         val contentResolver = mockk<ContentResolver>(relaxed = true)
         val typeCheck = every { contentResolver.getType(any()) }
@@ -174,18 +258,30 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
         } else {
             typeCheck throws resolveException
         }
+        every { contentResolver.query(any(), any(), any(), any(), any()) } returns
+                ownerCursor(owner = owner, rowPresent = ownerRowPresent)
 
         val context = mockk<Context>()
         every { context.contentResolver } returns contentResolver
+        every { context.packageName } returns OUR_PACKAGE
+
+        val packageManager = mockk<PackageManager>(relaxed = true)
+        every { packageManager.getPackagesForUid(callerUid) } returns callerPackages
 
         return PermissionCheckerFixture(
             checker = ComponentCallerExternalCropUriPermissionChecker(
                 context = context,
-                packageManager = mockk<PackageManager>(relaxed = true),
+                packageManager = packageManager,
             ),
             caller = caller,
             contentResolver = contentResolver,
         )
+    }
+
+    private fun ownerCursor(owner: String?, rowPresent: Boolean): Cursor {
+        return MatrixCursor(arrayOf(MediaStore.MediaColumns.OWNER_PACKAGE_NAME)).apply {
+            if (rowPresent) addRow(arrayOf(owner))
+        }
     }
 
     private fun currentProcessCaller(): ComponentCaller {
@@ -201,6 +297,8 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
     )
 
     private companion object {
+        const val CALLER_PACKAGE = "com.example.caller"
+        const val OUR_PACKAGE = "com.dot.gallery"
         val OUTPUT_URI: Uri = Uri.parse("content://media/external/images/media/42")
     }
 }
