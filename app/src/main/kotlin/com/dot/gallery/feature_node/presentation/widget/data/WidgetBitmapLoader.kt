@@ -8,12 +8,13 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.annotation.WorkerThread
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.dot.gallery.feature_node.presentation.util.toGlideModel
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
 
 object WidgetBitmapLoader {
 
@@ -42,9 +43,10 @@ object WidgetBitmapLoader {
     }
 
     /**
-     * Reads a previously cached bitmap from file. This is a synchronous call
-     * safe to use from AppWidgetProvider.onUpdate.
+     * Reads a previously cached bitmap from file. Synchronous: it hits the disk and decodes a
+     * full-size JPEG, so callers must already be off the main thread.
      */
+    @WorkerThread
     fun loadCachedBitmap(context: Context, widgetId: Int, index: Int): Bitmap? {
         val file = getBitmapFile(context, widgetId, index)
         if (!file.exists()) return null

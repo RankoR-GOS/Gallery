@@ -828,4 +828,5 @@
     <string name="ai_media_analysis_running" tools:ignore="MissingTranslation">Analysing your media…</string>
     <string name="ai_media_analysis_progress" tools:ignore="MissingTranslation">Analysing your media… %d%%</string>
     <string name="ai_media_analysis_updating" tools:ignore="MissingTranslation">Applying changes…</string>
+    <string name="widget_save_failed" tools:ignore="MissingTranslation">Couldn’t save this widget. Try again.</string>
 </resources>

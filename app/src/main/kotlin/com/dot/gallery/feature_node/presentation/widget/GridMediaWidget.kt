@@ -12,38 +12,74 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
+import androidx.annotation.WorkerThread
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.scale
 import com.dot.gallery.R
+import com.dot.gallery.core.util.ext.goAsync
+import com.dot.gallery.feature_node.data.repository.WidgetRepository
 import com.dot.gallery.feature_node.presentation.main.MainActivity
 import com.dot.gallery.feature_node.presentation.widget.data.WidgetBitmapLoader
-import com.dot.gallery.feature_node.presentation.widget.data.WidgetPreferences
+import com.dot.gallery.injection.qualifier.IoDispatcher
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 
+@AndroidEntryPoint
 class GridMediaWidgetReceiver : AppWidgetProvider() {
+
+    @Inject
+    internal lateinit var widgetRepository: WidgetRepository
+
+    @Inject
+    @IoDispatcher
+    lateinit var ioDispatcher: CoroutineDispatcher
 
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        for (appWidgetId in appWidgetIds) {
-            updateWidget(context, appWidgetManager, appWidgetId)
+        goAsync(tag = TAG, dispatcher = ioDispatcher) {
+            appWidgetIds.forEach { widgetId ->
+                updateWidget(
+                    context = context,
+                    appWidgetManager = appWidgetManager,
+                    appWidgetId = widgetId,
+                    uris = widgetRepository.getMediaUris(widgetId = widgetId),
+                )
+            }
         }
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         super.onDeleted(context, appWidgetIds)
-        appWidgetIds.forEach { id ->
-            WidgetPreferences.deleteWidgetData(context, id)
-            WidgetBitmapLoader.clearCache(context, id)
+        goAsync(tag = TAG, dispatcher = ioDispatcher) {
+            appWidgetIds.forEach { widgetId ->
+                widgetRepository.deleteWidgetData(widgetId = widgetId)
+                WidgetBitmapLoader.clearCache(context, widgetId)
+            }
         }
     }
 
     companion object {
+        private const val TAG = "GridMediaWidgetReceiver"
         private const val GRID_SPACING = 2
 
-        fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
-            val uris = WidgetPreferences.getMediaUris(context, appWidgetId)
+        /**
+         * Reads the cached bitmaps from disk and composites the grid, so it must not run on the
+         * main thread.
+         */
+        @WorkerThread
+        fun updateWidget(
+            context: Context,
+            appWidgetManager: AppWidgetManager,
+            appWidgetId: Int,
+            uris: List<Uri>,
+        ) {
             val bitmaps = uris.indices.mapNotNull { index ->
                 WidgetBitmapLoader.loadCachedBitmap(context, appWidgetId, index)
             }
@@ -81,7 +117,7 @@ class GridMediaWidgetReceiver : AppWidgetProvider() {
             val totalWidth = cols * cellSize + (cols - 1) * GRID_SPACING
             val totalHeight = rows * cellSize + (rows - 1) * GRID_SPACING
 
-            val result = Bitmap.createBitmap(totalWidth, totalHeight, Bitmap.Config.ARGB_8888)
+            val result = createBitmap(totalWidth, totalHeight)
             val canvas = Canvas(result)
             canvas.drawColor(Color.DKGRAY)
 
@@ -91,7 +127,7 @@ class GridMediaWidgetReceiver : AppWidgetProvider() {
                 val x = col * (cellSize + GRID_SPACING)
                 val y = row * (cellSize + GRID_SPACING)
 
-                val scaled = Bitmap.createScaledBitmap(bitmap, cellSize, cellSize, true)
+                val scaled = bitmap.scale(cellSize, cellSize, true)
                 canvas.drawBitmap(scaled, x.toFloat(), y.toFloat(), null)
                 if (scaled !== bitmap) scaled.recycle()
             }
