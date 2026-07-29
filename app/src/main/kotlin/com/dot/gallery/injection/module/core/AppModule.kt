@@ -52,8 +52,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDatabase(app: Application): InternalDatabase {
+        // No destructive fallback on upgrade: this database holds state the user authored by hand —
+        // pinned, ignored and locked albums, groups, collections, categories, timeline settings —
+        // and wiping it on the first schema bump would be silent data loss. Schemas are exported to
+        // app/schemas, so every version bump from here on ships a migration.
         return Room.databaseBuilder(app, InternalDatabase::class.java, InternalDatabase.NAME)
-            .fallbackToDestructiveMigration(true)
+            .fallbackToDestructiveMigrationOnDowngrade(true)
             .build()
     }
 
