@@ -10,25 +10,25 @@ sealed interface SaveFormat {
     val fileExtension: String
     val mimeType: String
 
-    data object PNG : SaveFormat {
+    data object Png : SaveFormat {
         override val compressFormat: CompressFormat = CompressFormat.PNG
         override val fileExtension: String = "png"
         override val mimeType: String = "image/png"
     }
 
-    data object JPEG : SaveFormat {
+    data object Jpeg : SaveFormat {
         override val compressFormat: CompressFormat = CompressFormat.JPEG
         override val fileExtension: String = "jpg"
         override val mimeType: String = "image/jpeg"
     }
 
-    data object WEBP_LOSSLESS : SaveFormat {
+    data object WebpLossless : SaveFormat {
         override val compressFormat: CompressFormat = CompressFormat.WEBP_LOSSLESS
         override val fileExtension: String = "webp"
         override val mimeType: String = "image/webp"
     }
 
-    data object WEBP_LOSSY : SaveFormat {
+    data object WebpLossy : SaveFormat {
         override val compressFormat: CompressFormat = CompressFormat.WEBP_LOSSY
         override val fileExtension: String = "webp"
         override val mimeType: String = "image/webp"

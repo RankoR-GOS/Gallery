@@ -218,9 +218,9 @@ class EditViewModel @Inject constructor(
     private fun bestSaveFormat(): SaveFormat {
         val mime = activeMedia.value?.mimeType?.lowercase()
         return when {
-            mime?.contains("png") == true -> SaveFormat.PNG
-            mime?.contains("webp") == true -> SaveFormat.WEBP_LOSSY
-            else -> SaveFormat.JPEG // JPEG is the fast default for photos
+            mime?.contains("png") == true -> SaveFormat.Png
+            mime?.contains("webp") == true -> SaveFormat.WebpLossy
+            else -> SaveFormat.Jpeg // JPEG is the fast default for photos
         }
     }
 
