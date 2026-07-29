@@ -578,7 +578,7 @@
       },
       {
         "tableName": "image_embeddings",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `date` INTEGER NOT NULL, `embedding` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `date` INTEGER NOT NULL, `embedding` BLOB NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -595,7 +595,7 @@
           {
             "fieldPath": "embedding",
             "columnName": "embedding",
-            "affinity": "TEXT",
+            "affinity": "BLOB",
             "notNull": true
           }
         ],
@@ -608,7 +608,7 @@
       },
       {
         "tableName": "categories",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `searchTerms` TEXT NOT NULL, `embedding` TEXT, `referenceImageIds` TEXT NOT NULL DEFAULT '[]', `threshold` REAL NOT NULL, `isUserCreated` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `searchTerms` TEXT NOT NULL, `embedding` BLOB, `referenceImageIds` TEXT NOT NULL DEFAULT '[]', `threshold` REAL NOT NULL, `isUserCreated` INTEGER NOT NULL, `isPinned` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -631,7 +631,7 @@
           {
             "fieldPath": "embedding",
             "columnName": "embedding",
-            "affinity": "TEXT"
+            "affinity": "BLOB"
           },
           {
             "fieldPath": "referenceImageIds",

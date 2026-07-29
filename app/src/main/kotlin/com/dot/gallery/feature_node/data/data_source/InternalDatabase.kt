@@ -16,19 +16,20 @@ import com.dot.gallery.feature_node.data.model.Collection
 import com.dot.gallery.feature_node.data.model.CollectionAlbum
 import com.dot.gallery.feature_node.data.model.CollectionMedia
 import com.dot.gallery.feature_node.data.model.IgnoredAlbum
-import com.dot.gallery.feature_node.data.model.LockedAlbum
 import com.dot.gallery.feature_node.data.model.ImageEmbedding
+import com.dot.gallery.feature_node.data.model.LockedAlbum
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.MediaCategory
 import com.dot.gallery.feature_node.data.model.MediaMetadataCore
 import com.dot.gallery.feature_node.data.model.MediaMetadataFlags
 import com.dot.gallery.feature_node.data.model.MediaMetadataVideo
-import com.dot.gallery.feature_node.data.model.MergedSubfolderAlbum
 import com.dot.gallery.feature_node.data.model.MediaVersion
+import com.dot.gallery.feature_node.data.model.MergedSubfolderAlbum
 import com.dot.gallery.feature_node.data.model.PinnedAlbum
 import com.dot.gallery.feature_node.data.model.ScannedMedia
 import com.dot.gallery.feature_node.data.model.TimelineSettings
 import com.dot.gallery.feature_node.data.util.Converters
+import com.dot.gallery.feature_node.data.util.EmbeddingBlobConverter
 
 @Database(
     entities = [
@@ -57,7 +58,7 @@ import com.dot.gallery.feature_node.data.util.Converters
     version = 1,
     exportSchema = true,
 )
-@TypeConverters(Converters::class)
+@TypeConverters(Converters::class, EmbeddingBlobConverter::class)
 abstract class InternalDatabase : RoomDatabase() {
 
     abstract fun getPinnedDao(): PinnedDao
