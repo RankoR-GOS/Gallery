@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,7 +51,11 @@ fun CategoryViewScreen(
 
     MediaScreen(
         albumName = category,
-        customDateHeader = stringResource(R.string.s_items,  mediaState.value.media.size),
+        customDateHeader = pluralStringResource(
+            id = R.plurals.item_count,
+            count = mediaState.value.media.size,
+            mediaState.value.media.size
+        ),
         mediaState = mediaState,
         metadataState = metadataState,
         target = "category_$category",
@@ -98,7 +103,11 @@ fun CategoryViewScreen(
 
     MediaScreen(
         albumName = categoryName,
-        customDateHeader = stringResource(R.string.s_items, mediaState.value.media.size),
+        customDateHeader = pluralStringResource(
+            id = R.plurals.item_count,
+            count = mediaState.value.media.size,
+            mediaState.value.media.size
+        ),
         mediaState = mediaState,
         metadataState = metadataState,
         target = "category_id_$categoryId",

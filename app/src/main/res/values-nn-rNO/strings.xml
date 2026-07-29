@@ -110,7 +110,6 @@
     <string name="edit_metadata">Rediger metadata</string>
     <string name="dialog_to_trash">Flytt til papirkorga</string>
     <string name="dialog_delete">Deleting Permanently</string>
-    <string name="s_items">%1$s items</string>
     <string name="trashing_items">Flyttar %1$s element til papirkorga …</string>
     <string name="deleting_items">Deleting %1$s items...</string>
     <string name="long_press_to_remove">Trykk lenge for å fjerna</string>

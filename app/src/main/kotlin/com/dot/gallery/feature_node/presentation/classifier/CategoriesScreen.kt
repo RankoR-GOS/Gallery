@@ -62,6 +62,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -412,7 +413,11 @@ private fun CategoryGridItem(
             )
             if (categoryWithCount.mediaCount > 0) {
                 Text(
-                    text = stringResource(R.string.category_media_count, categoryWithCount.mediaCount),
+                    text = pluralStringResource(
+                        id = R.plurals.item_count,
+                        count = categoryWithCount.mediaCount,
+                        categoryWithCount.mediaCount
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center

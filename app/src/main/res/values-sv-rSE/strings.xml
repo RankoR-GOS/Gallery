@@ -110,7 +110,6 @@
     <string name="edit_metadata">Redigera metadata</string>
     <string name="dialog_to_trash">Flyttar till skräp</string>
     <string name="dialog_delete">Permanent radering</string>
-    <string name="s_items">%1$s objekt</string>
     <string name="trashing_items">Slänger %1$s objekt ...</string>
     <string name="deleting_items">Raderar %1$s objekt ...</string>
     <string name="long_press_to_remove">Långtryck för att ta bort</string>

@@ -110,7 +110,6 @@
     <string name="edit_metadata">メタデータを編集</string>
     <string name="dialog_to_trash">ゴミ箱に移動</string>
     <string name="dialog_delete">永久に削除</string>
-    <string name="s_items">%1$s アイテム</string>
     <string name="trashing_items">%1$s 個のアイテムをゴミ箱に移動中...</string>
     <string name="deleting_items">%1$s 個のアイテムを削除中...</string>
     <string name="long_press_to_remove">長押しで削除</string>

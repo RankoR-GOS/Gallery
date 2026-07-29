@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -167,7 +168,13 @@ fun <T : Media> TrashDialog(
                                         letterSpacing = MaterialTheme.typography.bodyMedium.letterSpacing
                                     )
                                 ) {
-                                    append(stringResource(R.string.s_items, dataCopy.size))
+                                    append(
+                                        pluralStringResource(
+                                            id = R.plurals.item_count,
+                                            count = dataCopy.size,
+                                            dataCopy.size
+                                        )
+                                    )
                                 }
                             },
                             textAlign = TextAlign.Center,

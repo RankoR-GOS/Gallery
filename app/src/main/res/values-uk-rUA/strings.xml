@@ -110,7 +110,6 @@
     <string name="edit_metadata">Редагувати метадані</string>
     <string name="dialog_to_trash">Переміщення до кошика</string>
     <string name="dialog_delete">Остаточне видалення</string>
-    <string name="s_items">%1$s елементів</string>
     <string name="trashing_items">Переміщення у кошик %1$s елементів...</string>
     <string name="deleting_items">Видалення %1$s елементів...</string>
     <string name="long_press_to_remove">Утримуйте, щоби видалити</string>

@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -224,7 +225,11 @@ fun AddToCollectionSheet(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = stringResource(R.string.n_items_in_collection, cwc.mediaCount),
+                                text = pluralStringResource(
+                                    id = R.plurals.item_count,
+                                    count = cwc.mediaCount,
+                                    cwc.mediaCount
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

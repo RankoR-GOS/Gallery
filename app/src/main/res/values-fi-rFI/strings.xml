@@ -110,7 +110,6 @@
     <string name="edit_metadata">Muokkaa Metatietoja</string>
     <string name="dialog_to_trash">Siirretään roskakoriin</string>
     <string name="dialog_delete">Poistetaan Pysyvästi</string>
-    <string name="s_items">%1$s tiedostoa</string>
     <string name="trashing_items">Siirretään %1$s tiedostoa roskakoriin..</string>
     <string name="deleting_items">Poistetaan %1$s tiedostoa...</string>
     <string name="long_press_to_remove">Paina pitkään poistaaksesi</string>

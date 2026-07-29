@@ -110,7 +110,6 @@
     <string name="edit_metadata">تعديل البيانات الوصفية</string>
     <string name="dialog_to_trash">Moving to Trash</string>
     <string name="dialog_delete">الحذف نهائيًا</string>
-    <string name="s_items">%1$s items</string>
     <string name="trashing_items">Trashing %1$s items..</string>
     <string name="deleting_items">Deleting %1$s items...</string>
     <string name="long_press_to_remove">اضغط مطوّلا للإزالة</string>

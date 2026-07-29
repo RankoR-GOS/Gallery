@@ -110,7 +110,6 @@
     <string name="edit_metadata">Metadaten bearbeiten</string>
     <string name="dialog_to_trash">In den Papierkorb verschieben</string>
     <string name="dialog_delete">Endgültig löschen</string>
-    <string name="s_items">%1$s Dateien</string>
     <string name="trashing_items">Verschiebe %1$s Dateien in den Papierkorb...</string>
     <string name="deleting_items">Lösche %1$s Dateien...</string>
     <string name="long_press_to_remove">Lang drücken zum Entfernen</string>

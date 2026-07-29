@@ -110,7 +110,6 @@
     <string name="edit_metadata">编辑元数据</string>
     <string name="dialog_to_trash">移至回收站</string>
     <string name="dialog_delete">永久删除</string>
-    <string name="s_items">%1$s 个项目</string>
     <string name="trashing_items">正在回收 %1$s 个项目..</string>
     <string name="deleting_items">正在删除 %1$s 个项目..</string>
     <string name="long_press_to_remove">长按移除</string>

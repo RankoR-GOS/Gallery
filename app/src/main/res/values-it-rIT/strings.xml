@@ -110,7 +110,6 @@
     <string name="edit_metadata">Modifica i metadati</string>
     <string name="dialog_to_trash">Sposta nel Cestino</string>
     <string name="dialog_delete">Elimina definitivamente</string>
-    <string name="s_items">%1$s elementi</string>
     <string name="trashing_items">Cestino %1$s elementi...</string>
     <string name="deleting_items">Cancello %1$s elementi...</string>
     <string name="long_press_to_remove">Premi a lungo per rimuovere</string>

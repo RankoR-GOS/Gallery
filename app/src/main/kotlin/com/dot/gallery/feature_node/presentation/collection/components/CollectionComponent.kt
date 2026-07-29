@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -268,8 +269,9 @@ fun CollectionComponent(
                 modifier = Modifier
                     .padding(top = 2.dp, bottom = 16.dp)
                     .padding(horizontal = 16.dp),
-                text = stringResource(
-                    R.string.n_items_in_collection,
+                text = pluralStringResource(
+                    id = R.plurals.item_count,
+                    count = collectionWithCount.mediaCount,
                     collectionWithCount.mediaCount
                 ) + sizeText,
                 overflow = TextOverflow.Ellipsis,
@@ -456,8 +458,9 @@ fun CollectionRowComponent(
                     " (${formatSize(collectionWithCount.totalSize)})"
                 } else ""
                 Text(
-                    text = stringResource(
-                        R.string.n_items_in_collection,
+                    text = pluralStringResource(
+                        id = R.plurals.item_count,
+                        count = collectionWithCount.mediaCount,
                         collectionWithCount.mediaCount
                     ) + sizeText,
                     style = MaterialTheme.typography.labelMedium,

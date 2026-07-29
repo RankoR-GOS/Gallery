@@ -110,7 +110,6 @@
     <string name="edit_metadata">Editează metadatele</string>
     <string name="dialog_to_trash">Se mută la Gunoi</string>
     <string name="dialog_delete">Ștergere permanentă</string>
-    <string name="s_items">%1$s articole</string>
     <string name="trashing_items">Se șterg %1$s elemente..</string>
     <string name="deleting_items">Se șterg %1$s elemente...</string>
     <string name="long_press_to_remove">Apasă lung pentru a șterge</string>

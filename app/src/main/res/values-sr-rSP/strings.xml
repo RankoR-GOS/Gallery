@@ -110,7 +110,6 @@
     <string name="edit_metadata">Измените метаподатке</string>
     <string name="dialog_to_trash">Премештање у смеће</string>
     <string name="dialog_delete">Трајно брисање</string>
-    <string name="s_items">%1$s предмета</string>
     <string name="trashing_items">Бацање у смеће %1$s предмета...</string>
     <string name="deleting_items">Брисање %1$s предмета...</string>
     <string name="long_press_to_remove">Дуго притисните да бисте уклонили</string>

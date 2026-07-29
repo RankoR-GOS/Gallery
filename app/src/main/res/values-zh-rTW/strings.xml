@@ -110,7 +110,6 @@
     <string name="edit_metadata">編輯相關資訊</string>
     <string name="dialog_to_trash">移至垃圾桶</string>
     <string name="dialog_delete">永久刪除</string>
-    <string name="s_items">%1$s 個項目</string>
     <string name="trashing_items">正在移除 %1$s 個項目至垃圾桶...</string>
     <string name="deleting_items">正在刪除 %1$s 個項目...</string>
     <string name="long_press_to_remove">長按以移除項目</string>

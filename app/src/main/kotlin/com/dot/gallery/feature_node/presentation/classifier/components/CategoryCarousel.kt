@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -157,8 +158,9 @@ fun CategoryCarousel(
                             maxLines = 1
                         )
                         Text(
-                            text = stringResource(
-                                R.string.category_media_count,
+                            text = pluralStringResource(
+                                id = R.plurals.item_count,
+                                count = categoryMedia.category.mediaCount,
                                 categoryMedia.category.mediaCount
                             ),
                             style = MaterialTheme.typography.bodySmall,
@@ -276,8 +278,9 @@ fun SearchCarousel(
                         )
                         if (item.count > 0) {
                             Text(
-                                text = stringResource(
-                                    R.string.category_media_count,
+                                text = pluralStringResource(
+                                    id = R.plurals.item_count,
+                                    count = item.count,
                                     item.count
                                 ),
                                 style = MaterialTheme.typography.bodySmall,

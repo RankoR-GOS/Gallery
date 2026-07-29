@@ -110,7 +110,6 @@
     <string name="edit_metadata">Editar metadados</string>
     <string name="dialog_to_trash">Mover para a lixeira</string>
     <string name="dialog_delete">Exclusão permanente</string>
-    <string name="s_items">%1$s itens</string>
     <string name="trashing_items">Movendo %1$s itens para a lixeira...</string>
     <string name="deleting_items">Excluindo %1$s itens...</string>
     <string name="long_press_to_remove">Toque longo para remover</string>

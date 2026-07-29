@@ -110,7 +110,6 @@
     <string name="edit_metadata">Upravit Metadata</string>
     <string name="dialog_to_trash">Přesouvání do koše</string>
     <string name="dialog_delete">Trvalé mazání</string>
-    <string name="s_items">%1$s položek</string>
     <string name="trashing_items">Vyhazování %1$s položek..</string>
     <string name="deleting_items">Mazání %1$s položky...</string>
     <string name="long_press_to_remove">Dlouhým stiskem odeberete</string>

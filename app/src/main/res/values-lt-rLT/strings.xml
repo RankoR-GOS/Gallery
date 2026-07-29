@@ -110,7 +110,6 @@
     <string name="edit_metadata">Redaguoti metaduomenis</string>
     <string name="dialog_to_trash">Perkėlimas į šiukšliadėžę</string>
     <string name="dialog_delete">Ištrynimas visam laikui</string>
-    <string name="s_items">%1$s elementų</string>
     <string name="trashing_items">Perkeliama %1$s elementų į šiukšliadėžę...</string>
     <string name="deleting_items">Ištrinama %1$s elementų...</string>
     <string name="long_press_to_remove">Ilgai palaikykite nuspaudę, kad ištrintumėte</string>

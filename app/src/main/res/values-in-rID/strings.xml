@@ -110,7 +110,6 @@
     <string name="edit_metadata">Edit Metadata</string>
     <string name="dialog_to_trash">Pindah ke Sampah</string>
     <string name="dialog_delete">Menghapus Secara Permanen</string>
-    <string name="s_items">%1$s item</string>
     <string name="trashing_items">Sampah %1$s item..</string>
     <string name="deleting_items">Menghapus %1$sitem...</string>
     <string name="long_press_to_remove">Tekan lama untuk menghapus</string>

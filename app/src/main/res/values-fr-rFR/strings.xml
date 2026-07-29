@@ -110,7 +110,6 @@
     <string name="edit_metadata">Modifier les métadonnées</string>
     <string name="dialog_to_trash">Déplacement vers la corbeille</string>
     <string name="dialog_delete">Suppression définitive</string>
-    <string name="s_items">%1$s éléments</string>
     <string name="trashing_items">Suppression de %1$s éléments..</string>
     <string name="deleting_items">Suppression définitive de %1$s éléments...</string>
     <string name="long_press_to_remove">Appui long pour retirer</string>

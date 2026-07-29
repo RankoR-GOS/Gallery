@@ -540,8 +540,9 @@ fun AlbumOptionSheet(
                             )
                         ) {
                             append(
-                                stringResource(
-                                    R.string.s_items,
+                                pluralStringResource(
+                                    id = R.plurals.item_count,
+                                    count = album.count.toInt(),
                                     album.count
                                 ) + " (${formatSize(album.size)})"
                             )

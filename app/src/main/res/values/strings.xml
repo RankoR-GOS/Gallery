@@ -145,7 +145,6 @@
     <string name="edit_metadata">Edit Metadata</string>
     <string name="dialog_to_trash">Moving to Trash</string>
     <string name="dialog_delete">Deleting Permanently</string>
-    <string name="s_items">%1$s items</string>
     <string name="trashing_items">Trashing %1$s items..</string>
     <string name="deleting_items">Deleting %1$s items...</string>
     <string name="long_press_to_remove">Long press to remove</string>
@@ -395,7 +394,6 @@
     <string name="create">Create</string>
     <string name="save">Save</string>
     <string name="browse_categories">Browse categories</string>
-    <string name="category_media_count">%1$d items</string>
     <string name="media_in_category">Media (%1$d)</string>
     <string name="no_media_in_category">No media in this category</string>
     <string name="remove_media">Select to remove</string>
@@ -771,7 +769,6 @@
     <string name="no_collections_description">Create a collection to organize your photos and videos without moving them.</string>
     <string name="collection_empty">This collection is empty</string>
     <string name="collection_empty_description">Add photos and videos to this collection.</string>
-    <string name="n_items_in_collection">%1$d items</string>
     <string name="select_collection">Select collection</string>
     <string name="create_and_add">Create &amp; add</string>
     <string name="added_to_collection">Added to %1$s</string>

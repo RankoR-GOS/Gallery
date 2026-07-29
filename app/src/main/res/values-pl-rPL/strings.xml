@@ -110,7 +110,6 @@
     <string name="edit_metadata">Edytuj metadane</string>
     <string name="dialog_to_trash">Przenoszenie do kosza</string>
     <string name="dialog_delete">Trwa Trwałe Usuwanie</string>
-    <string name="s_items">%1$s pozycji</string>
     <string name="trashing_items">Usuwanie %1$s elementów..</string>
     <string name="deleting_items">Usuwanie %1$s elementów...</string>
     <string name="long_press_to_remove">Przytrzymaj, aby usunąć</string>

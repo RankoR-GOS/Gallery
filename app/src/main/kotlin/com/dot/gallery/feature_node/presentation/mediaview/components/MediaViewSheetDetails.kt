@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toUpperCase
@@ -537,8 +538,9 @@ fun <T : Media> MediaViewSheetDetails(
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp),
                                     label = category!!,
-                                    content = stringResource(
-                                        R.string.s_items,
+                                    content = pluralStringResource(
+                                        id = R.plurals.item_count,
+                                        count = mediaCategoryCounter,
                                         mediaCategoryCounter
                                     ),
                                     iconBackgroundModifier = Modifier

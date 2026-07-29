@@ -110,7 +110,6 @@
     <string name="edit_metadata">Meta Veriyi Düzenle</string>
     <string name="dialog_to_trash">Çöpe Taşınıyor</string>
     <string name="dialog_delete">Kalıcı Olarak Siliniyor</string>
-    <string name="s_items">%1$s öğe</string>
     <string name="trashing_items">%1$s öğe çöp kutusuna taşınıyor..</string>
     <string name="deleting_items">%1$s öğe siliniyor...</string>
     <string name="long_press_to_remove">Kaldırmak için uzun basın</string>

@@ -110,7 +110,6 @@
     <string name="edit_metadata">Editar metadatos</string>
     <string name="dialog_to_trash">Mover a la papelera</string>
     <string name="dialog_delete">Borrar permanentemente</string>
-    <string name="s_items">%1$s elementos</string>
     <string name="trashing_items">A papelera %1$s elementos..</string>
     <string name="deleting_items">Borrando %1$s elementos...</string>
     <string name="long_press_to_remove">Pulsación larga para quitar</string>

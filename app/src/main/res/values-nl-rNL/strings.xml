@@ -110,7 +110,6 @@
     <string name="edit_metadata">Metagegevens bewerken</string>
     <string name="dialog_to_trash">Verplaatsen naar prullenbak</string>
     <string name="dialog_delete">Permanent verwijderen</string>
-    <string name="s_items">%1$s items</string>
     <string name="trashing_items">%1$s Items naar de prullenbak..</string>
     <string name="deleting_items">%1$s items verwijderen...</string>
     <string name="long_press_to_remove">Lang indrukken om te verwijderen</string>

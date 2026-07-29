@@ -110,7 +110,6 @@
     <string name="edit_metadata">Chỉnh sửa siêu dữ liệu</string>
     <string name="dialog_to_trash">Dời vô sọt rác</string>
     <string name="dialog_delete">Xóa vĩnh viễn</string>
-    <string name="s_items">%1$s mục</string>
     <string name="trashing_items">Đang dời %1$s mục vào sọt rác..</string>
     <string name="deleting_items">Đang xóa %1$s mục...</string>
     <string name="long_press_to_remove">Nhấn giữ để loại bỏ</string>

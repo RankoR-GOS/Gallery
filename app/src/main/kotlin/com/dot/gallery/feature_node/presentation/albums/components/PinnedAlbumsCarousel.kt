@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -169,7 +170,13 @@ fun CarouselPinnedAlbums(
                                 letterSpacing = MaterialTheme.typography.bodyMedium.letterSpacing
                             )
                         ) {
-                            append(stringResource(R.string.s_items, currentAlbum!!.count))
+                            append(
+                                pluralStringResource(
+                                    id = R.plurals.item_count,
+                                    count = currentAlbum!!.count.toInt(),
+                                    currentAlbum!!.count
+                                )
+                            )
                         }
                     },
                     textAlign = TextAlign.Center,

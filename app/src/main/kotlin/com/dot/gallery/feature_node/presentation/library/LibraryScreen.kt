@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -418,8 +419,9 @@ fun LibraryScreen(
                                                     maxLines = 1
                                                 )
                                                 Text(
-                                                    text = stringResource(
-                                                        R.string.category_media_count,
+                                                    text = pluralStringResource(
+                                                        id = R.plurals.item_count,
+                                                        count = category.mediaCount,
                                                         category.mediaCount
                                                     ),
                                                     style = MaterialTheme.typography.bodySmall,

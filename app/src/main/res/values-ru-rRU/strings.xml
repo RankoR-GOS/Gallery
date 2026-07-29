@@ -110,7 +110,6 @@
     <string name="edit_metadata">Редактировать метаданные</string>
     <string name="dialog_to_trash">Перемещение в Корзину</string>
     <string name="dialog_delete">Безвозвратное удаление</string>
-    <string name="s_items">%1$s элементов</string>
     <string name="trashing_items">Перемещение в корзину %1$s элементов...</string>
     <string name="deleting_items">Удаление %1$s элементов...</string>
     <string name="long_press_to_remove">Зажмите и удержите, чтобы удалить</string>
