@@ -45,7 +45,9 @@ class MediaFlow(
     private val contentResolver: ContentResolver,
     private val buckedId: Long,
     private val mimeType: String? = null,
-    private val skipBatching: Boolean = false
+    private val skipBatching: Boolean = false,
+    private val afterId: Long? = null,
+    private val limit: Int? = null,
 ) : QueryFlow<Media.UriMedia>() {
     init {
         assert(buckedId != MediaStoreBuckets.MEDIA_STORE_BUCKET_PLACEHOLDER.id) {
@@ -102,31 +104,47 @@ class MediaFlow(
         }
 
         // Join all the non-null queries
-        val selection = listOfNotNull(
+        val mediaSelection = listOfNotNull(
             imageOrVideo,
             albumFilter,
             mimeTypeQuery,
         ).join(Query::and)
 
-        val selectionArgs = listOfNotNull(
+        val idSelection = afterId?.let {
+            "${MediaStore.Files.FileColumns._ID} > ${Query.ARG}"
+        }
+        val selection = listOfNotNull(
+            mediaSelection?.build(),
+            idSelection,
+        )
+            .takeIf { clauses -> clauses.isNotEmpty() }
+            ?.joinToString(separator = " AND ") { clause -> "($clause)" }
+
+        val selectionArgs = buildList {
             buckedId.takeIf {
                 MediaStoreBuckets.entries.toTypedArray().none { bucket -> it == bucket.id }
-            }?.toString(),
-            rawMimeType,
-        ).toTypedArray()
+            }
+                ?.toString()
+                ?.let(::add)
+            rawMimeType?.let(::add)
+            afterId?.toString()?.let(::add)
+        }.toTypedArray()
 
-        val sortOrder = when (buckedId) {
-            MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id ->
+        val sortOrder = when {
+            afterId != null -> "${MediaStore.Files.FileColumns._ID} ASC"
+            buckedId == MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id ->
                 if (SdkCompat.supportsTrash) "${MediaStore.Files.FileColumns.DATE_EXPIRES} DESC"
                 else "${MediaStore.Files.FileColumns.DATE_MODIFIED} DESC"
-
             else -> "${MediaStore.Files.FileColumns.DATE_MODIFIED} DESC"
         }
 
         val queryArgs = Bundle().apply {
-            putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection?.build())
+            putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
             putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs)
             putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, sortOrder)
+            limit?.let { pageLimit ->
+                putInt(ContentResolver.QUERY_ARG_LIMIT, pageLimit)
+            }
 
             // Exclude trashed media unless we want data for the trashed album
             // QUERY_ARG_MATCH_TRASHED is only available on API 30+
@@ -141,66 +159,81 @@ class MediaFlow(
             }
         }
         return if (skipBatching) {
-             contentResolver.queryFlow(
-                uri,
-                projection,
-                queryArgs,
+            contentResolver.queryFlow(
+                uri = uri,
+                projection = projection,
+                queryArgs = queryArgs,
             )
-        } else contentResolver.querySteppedFlow(
-            uri,
-            projection,
-            queryArgs,
-        )
+        } else {
+            contentResolver.querySteppedFlow(
+                uri = uri,
+                projection = projection,
+                queryArgs = queryArgs,
+            )
+        }
     }
 
-    override fun flowData() = flowCursor().mapEachRow(
-        when (buckedId) {
-            MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id -> MediaQuery.MediaProjectionTrash
-            else -> MediaQuery.MediaProjection
-        }
-    ) { it, indexCache ->
-        var i = 0
+    override fun flowData(): Flow<List<Media.UriMedia>> {
+        return flowCursor().mapEachRow(
+            projection = when (buckedId) {
+                MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id -> MediaQuery.MediaProjectionTrash
+                else -> MediaQuery.MediaProjection
+            },
+        ) { it, indexCache ->
+            var i = 0
 
-        val id = it.getLong(indexCache[i++])
-        val path = it.getString(indexCache[i++])
-        val relativePath = it.getString(indexCache[i++])
-        val title = it.getString(indexCache[i++])
-        val albumID = it.getLong(indexCache[i++])
-        val albumLabel = it.tryGetString(indexCache[i++], Build.MODEL)
-        val takenTimestamp = it.tryGetLong(indexCache[i++])
-            ?: title.parseTimestampFromFilename()
-        val modifiedTimestamp = it.getLong(indexCache[i++])
-        val duration = it.tryGetString(indexCache[i++])
-        val size = it.getLong(indexCache[i++])
-        val mimeType = it.getString(indexCache[i++])
-        // IS_FAVORITE and IS_TRASHED are only available on API 30+
-        val isFavorite = if (SdkCompat.supportsFavorites) it.getInt(indexCache[i++]) else 0
-        val isTrashAlbum = buckedId == MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id
-        val isTrashed = if (SdkCompat.supportsTrash) it.getInt(indexCache[if (isTrashAlbum) i++ else i]) else 0
-        val expiryTimestamp = if (isTrashAlbum && SdkCompat.supportsTrash) it.tryGetLong(indexCache[i]) else null
-        val contentUri = if (mimeType.contains("image"))
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        else
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-        val uri = ContentUris.withAppendedId(contentUri, id)
-        val formattedDate = (takenTimestamp?.div(1000) ?: modifiedTimestamp).getDate(Constants.FULL_DATE_FORMAT)
-        Media.UriMedia(
-            id = id,
-            label = title,
-            uri = uri,
-            path = path,
-            relativePath = relativePath,
-            albumID = albumID,
-            albumLabel = albumLabel ?: Build.MODEL,
-            timestamp = modifiedTimestamp,
-            takenTimestamp = takenTimestamp,
-            expiryTimestamp = expiryTimestamp,
-            fullDate = formattedDate,
-            duration = duration,
-            favorite = isFavorite,
-            trashed = isTrashed,
-            size = size,
-            mimeType = mimeType
-        )
+            val id = it.getLong(indexCache[i++])
+            val path = it.getString(indexCache[i++])
+            val relativePath = it.getString(indexCache[i++])
+            val title = it.getString(indexCache[i++])
+            val albumID = it.getLong(indexCache[i++])
+            val albumLabel = it.tryGetString(indexCache[i++], Build.MODEL)
+            val takenTimestamp = it.tryGetLong(indexCache[i++])
+                ?: title.parseTimestampFromFilename()
+            val modifiedTimestamp = it.getLong(indexCache[i++])
+            val duration = it.tryGetString(indexCache[i++])
+            val size = it.getLong(indexCache[i++])
+            val mimeType = it.getString(indexCache[i++])
+            // IS_FAVORITE and IS_TRASHED are only available on API 30+
+            val isFavorite = if (SdkCompat.supportsFavorites) it.getInt(indexCache[i++]) else 0
+            val isTrashAlbum = buckedId == MediaStoreBuckets.MEDIA_STORE_BUCKET_TRASH.id
+            val isTrashed = if (SdkCompat.supportsTrash) {
+                it.getInt(indexCache[if (isTrashAlbum) i++ else i])
+            } else {
+                0
+            }
+            val expiryTimestamp = if (isTrashAlbum && SdkCompat.supportsTrash) {
+                it.tryGetLong(indexCache[i])
+            } else {
+                null
+            }
+            val contentUri = if (mimeType.contains("image")) {
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            } else {
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            }
+            val uri = ContentUris.withAppendedId(contentUri, id)
+            val formattedDate = (takenTimestamp?.div(1000) ?: modifiedTimestamp).getDate(
+                Constants.FULL_DATE_FORMAT,
+            )
+            Media.UriMedia(
+                id = id,
+                label = title,
+                uri = uri,
+                path = path,
+                relativePath = relativePath,
+                albumID = albumID,
+                albumLabel = albumLabel ?: Build.MODEL,
+                timestamp = modifiedTimestamp,
+                takenTimestamp = takenTimestamp,
+                expiryTimestamp = expiryTimestamp,
+                fullDate = formattedDate,
+                duration = duration,
+                favorite = isFavorite,
+                trashed = isTrashed,
+                size = size,
+                mimeType = mimeType,
+            )
+        }
     }
 }
