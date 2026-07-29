@@ -23,15 +23,6 @@ or create a keystore in `app/release_key.jks`.
 
 Set `GOS_ROOT` env variable pointing to the root of your GrapheneOS checkout.
 
-### Syncing with the upstream
-
-#### Resources overrides
-
-Gallery has custom resource overrides for certain features and UI elements located in `app/src/gos`.
-
-After syncing with the upstream, make sure that all strings are overridden correctly (for example, upstream may
-introduce new translations). To do this, use `./gradlew :app:checkGosStringOverrides --no-daemon`.
-
 ### Running CTS tests
 
 ```shell

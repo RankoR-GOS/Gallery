@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Галерея</string>
     <string name="nav_albums">Альбомы</string>
     <string name="searchbar_title"><![CDATA[Поиск фото и видео]]></string>
     <string name="header_today">Сегодня</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Хронология</string>
     <string name="location_cd">Расположение медиа</string>
     <string name="location_map_cd">Карта</string>
-    <string name="app_dev">от %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Пожертвовать</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">Кнопка пожертвования</string>
     <string name="github_button_cd">Кнопка GitHub</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Игнорированное</string>
     <string name="location">Путь</string>
     <string name="update_file_name">Изменить имя файла</string>
-    <string name="support_the_project">Поддержать проект</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Нажмите, чтобы скопировать</string>
     <string name="take_audio_focus_title">Забирать аудио фокус</string>
     <string name="take_audio_focus_summary">Когда включено, аудио фокус будет переключен при проигрывании медиа. Медиа проигрываемое в фоне остановится пока видео воспроизводится. (Требуется перезапуск приложения)</string>

@@ -12,4 +12,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "build-logic"
 include(":gradle-versioning-plugin")
-include(":gos-string-overrides-plugin")

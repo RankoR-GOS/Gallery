@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">Галерија</string>
-    <string name="app_dev">Based on ReFra by %s</string>
-    <string name="manage_media_title">Дозволите апликацији „Галерија” да управља вашим медијима</string>
-    <string name="blacklist_summary">Игноришите албуме из галерије</string>
-    <string name="add_to_ignored_summary">Уклоните албум из приказивања унутар галерије</string>
-    <string name="donate">Donate to ReFra</string>
-    <string name="support_the_project">Support ReFra</string>
-</resources>

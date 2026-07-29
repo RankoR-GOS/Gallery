@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galleri</string>
     <string name="nav_albums">Albummer</string>
     <string name="searchbar_title"><![CDATA[Søg i fotos og videoer]]></string>
     <string name="header_today">I dag</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Tidslinje</string>
     <string name="location_cd">Medie lokation</string>
     <string name="location_map_cd">Placeringskort</string>
-    <string name="app_dev">af %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Doner</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">Github</string>
     <string name="donate_button_cd">Donerknap</string>
     <string name="github_button_cd">Github-knap</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Ignoreret</string>
     <string name="location">Placering</string>
     <string name="update_file_name">Opdater filnavn</string>
-    <string name="support_the_project">Støt projektet</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Tryk for at kopiere</string>
     <string name="take_audio_focus_title">Tag lydfokus</string>
     <string name="take_audio_focus_summary">Hvis du aktiverer dette, får du lydfokus, når du afspiller medier. Alle medier, der afspilles i baggrunden, vil blive sat på pause, mens videoen afspilles. (Genstart af app påkrævet)</string>

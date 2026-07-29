@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galerie</string>
     <string name="nav_albums">Albums</string>
     <string name="searchbar_title"><![CDATA[Rechercher des photos et vidéos]]></string>
     <string name="header_today">Aujourd\'hui</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Chronologie</string>
     <string name="location_cd">Emplacement des médias</string>
     <string name="location_map_cd">Carte de localisation</string>
-    <string name="app_dev">par %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Faire un don</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">Github</string>
     <string name="donate_button_cd">Bouton de donation</string>
     <string name="github_button_cd">Bouton Github</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Ignoré</string>
     <string name="location">Emplacement</string>
     <string name="update_file_name">Mettre à jour le nom du fichier</string>
-    <string name="support_the_project">Soutenir le projet</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Cliquer pour copier</string>
     <string name="take_audio_focus_title">Prendre la priorité sur l\'audio</string>
     <string name="take_audio_focus_summary">L\'activation de cette option permet de prendre la priorité de l\'audio lors de la lecture d\'un média. Tout média en cours de lecture en arrière-plan sera mis en pause pendant la lecture de la vidéo. (Redémarrage de l\'application nécessaire)</string>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">المعرض</string>
     <string name="nav_albums">الألبومات</string>
     <string name="searchbar_title"><![CDATA[البحث في الصور والفيديوهات]]></string>
     <string name="header_today">اليوم</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">الخط الزمني</string>
     <string name="location_cd">موقع الوسائط</string>
     <string name="location_map_cd">خريطة الموقع</string>
-    <string name="app_dev">بواسطة %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">تبرع</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">غيت هاب</string>
     <string name="donate_button_cd">زر التبرع</string>
     <string name="github_button_cd">زر غيت هاب</string>
@@ -154,9 +154,9 @@
     <string name="copy">Copy</string>
     <string name="ignored_albums">Ignored Albums</string>
     <string name="select_an_album">Select an album</string>
-    <string name="blacklist_summary">Ignore albums from ReFra</string>
+    <string name="blacklist_summary">Ignore albums from Gallery</string>
     <string name="add_to_ignored">Add to ignored albums</string>
-    <string name="add_to_ignored_summary">Remove an album from showing inside the ReFra</string>
+    <string name="add_to_ignored_summary">Remove an album from showing inside the Gallery</string>
     <string name="remove_from_ignored">Remove from ignored list</string>
     <string name="remove_from_ignored_summary">Remove from the ignored list the album named %1$s</string>
     <string name="override">Override</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Ignored</string>
     <string name="location">Location</string>
     <string name="update_file_name">Update file name</string>
-    <string name="support_the_project">Support the project</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Click to copy</string>
     <string name="take_audio_focus_title">Take Audio Focus</string>
     <string name="take_audio_focus_summary">Enabling this will take audio focus when playing media. Any media playing in background will pause while the video is playing. (Restart app required)</string>

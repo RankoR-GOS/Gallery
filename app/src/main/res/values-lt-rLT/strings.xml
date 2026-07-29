@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galerija</string>
     <string name="nav_albums">Albumai</string>
     <string name="searchbar_title"><![CDATA[Ieškoti nuotraukos ar vaizdo įrašo]]></string>
     <string name="header_today">Šiandien</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Išklotinė</string>
     <string name="location_cd">Medijos sukūrimo vieta</string>
     <string name="location_map_cd">Vietovės žemėlapis</string>
-    <string name="app_dev">Sukūrė %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Paremti</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">Github</string>
     <string name="donate_button_cd">Paramos mygtukas</string>
     <string name="github_button_cd">„Github“ mygtukas</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Praleista</string>
     <string name="location">Vietovė</string>
     <string name="update_file_name">Atnaujinti failo pavadinimą</string>
-    <string name="support_the_project">Paremti šį projektą</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Spustelėkite norėdami nukopijuoti</string>
     <string name="take_audio_focus_title">Suteikti prioritetą programėlės garsui</string>
     <string name="take_audio_focus_summary">Programėlės garsui bus skirtas prioritetas. Fone grojanti medija bus pristabdyta, kol pasibaigs rodomas vaizdo įrašas. (Reikia iš naujo paleisti programą)</string>

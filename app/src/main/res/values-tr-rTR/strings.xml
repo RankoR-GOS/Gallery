@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galeri</string>
     <string name="nav_albums">Albümler</string>
     <string name="searchbar_title"><![CDATA[Fotoğraf ve videoları ara]]></string>
     <string name="header_today">Bugün</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Zaman Çizelgesi</string>
     <string name="location_cd">Medya Konumu</string>
     <string name="location_map_cd">Konum Haritası</string>
-    <string name="app_dev">%s tarafından</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Bağış yap</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">Bağış Düğmesi</string>
     <string name="github_button_cd">GitHub Butonu</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Yoksayıldı</string>
     <string name="location">Konum</string>
     <string name="update_file_name">Dosya adını güncelle</string>
-    <string name="support_the_project">Projeyi destekleyin</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Kopyalamak için tıklayın</string>
     <string name="take_audio_focus_title">Ses Odaklanmasını Al</string>
     <string name="take_audio_focus_summary">Bunu etkinleştirmek, medya oynatılırken ses odağını alır. Arka planda çalan herhangi bir medya, video oynatılırken duraklatılır. (Uygulamanın yeniden başlatılması gerekir)</string>

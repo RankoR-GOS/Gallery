@@ -14,13 +14,18 @@
     <!-- Required to access GPS Data of Media -->
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
 
-    <!-- Required to download Map Preview for Media -->
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- Remove unwanted permissions from being added -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove"/>
+
+    <!-- Network access is not used; block it from being reintroduced by dependencies -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
 
     <!-- Required to access media for SDK < 33 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -37,11 +42,12 @@
     -->
     <uses-permission android:name="android.permission.MANAGE_MEDIA" />
 
-    <!--
-        (OPTIONAL)
-        Requested to create albums outside Internal Storage/Pictures or Internal Storage/DCIM
-    -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+    <!-- Broad storage access is not used; block it from being reintroduced by dependencies -->
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage"
+        tools:node="remove" />
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <queries>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Галерея</string>
     <string name="nav_albums">Альбоми</string>
     <string name="searchbar_title"><![CDATA[Пошук фото та відео]]></string>
     <string name="header_today">Сьогодні</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Хронологія</string>
     <string name="location_cd">Розташування медіафайлу</string>
     <string name="location_map_cd">Мапа розташування</string>
-    <string name="app_dev">від %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Пожертвувати</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">Кнопка пожертви</string>
     <string name="github_button_cd">Кнопка GitHub</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Ігнорується</string>
     <string name="location">Розташування</string>
     <string name="update_file_name">Оновити назву файлу</string>
-    <string name="support_the_project">Підтримати проєкт</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Натисніть, щоб скопіювати</string>
     <string name="take_audio_focus_title">Отримання фокусу звуку</string>
     <string name="take_audio_focus_summary">Якщо увімкнути цей параметр, під час відтворення медіафайлів фокус буде зосереджено на звуці. Будь-який медіафайл, що відтворюється у фоновому режимі, буде призупинено під час відтворення відео. (Потрібно перезапустити застосунок)</string>

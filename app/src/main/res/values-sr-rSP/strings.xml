@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Галерија</string>
     <string name="nav_albums">Албуми</string>
     <string name="searchbar_title"><![CDATA[Претрага]]></string>
     <string name="header_today">Данас</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Временска линија</string>
     <string name="location_cd">Локација медија</string>
     <string name="location_map_cd">Мапа локације</string>
-    <string name="app_dev">од %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Донирај</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">Дугме „Донирај”</string>
     <string name="github_button_cd">Дугме „GitHub”</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Ignored</string>
     <string name="location">Location</string>
     <string name="update_file_name">Update file name</string>
-    <string name="support_the_project">Support the project</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Click to copy</string>
     <string name="take_audio_focus_title">Take Audio Focus</string>
     <string name="take_audio_focus_summary">Enabling this will take audio focus when playing media. Any media playing in background will pause while the video is playing. (Restart app required)</string>

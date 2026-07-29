@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galleri</string>
     <string name="nav_albums">Album</string>
     <string name="searchbar_title"><![CDATA[Sök foton & videor]]></string>
     <string name="header_today">I dag</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Tidslinje</string>
     <string name="location_cd">Medieplats</string>
     <string name="location_map_cd">Platskarta</string>
-    <string name="app_dev">av %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Donera</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">Github</string>
     <string name="donate_button_cd">Donera-knapp</string>
     <string name="github_button_cd">Github-knapp</string>
@@ -84,7 +84,7 @@
     <string name="photo">Foto</string>
     <string name="video">Video</string>
     <string name="close">Stäng</string>
-    <string name="manage_media_title">Tillåt att ReFra hanterar dina medier</string>
+    <string name="manage_media_title">Tillåt att Gallery hanterar dina medier</string>
     <string name="manage_media_summary">Denna inställning hoppar bara över eventuella ytterligare bekräftelsedialogrutor när diverse handlingar, såsom att markera som favorit, utförs.</string>
     <string name="skip">Hoppa över</string>
     <string name="allow">Tillåt</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Ignored</string>
     <string name="location">Location</string>
     <string name="update_file_name">Update file name</string>
-    <string name="support_the_project">Support the project</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Click to copy</string>
     <string name="take_audio_focus_title">Take Audio Focus</string>
     <string name="take_audio_focus_summary">Enabling this will take audio focus when playing media. Any media playing in background will pause while the video is playing. (Restart app required)</string>

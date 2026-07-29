@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galerie</string>
     <string name="nav_albums">Alben</string>
     <string name="searchbar_title"><![CDATA[Fotos & Videos suchen]]></string>
     <string name="header_today">Heute</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Zeitleiste</string>
     <string name="location_cd">Medienstandort</string>
     <string name="location_map_cd">Standortkarte</string>
-    <string name="app_dev">von %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Spenden</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">\"Spenden\"-Knopf</string>
     <string name="github_button_cd">\"GitHub\"-Knopf</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Ignoriert</string>
     <string name="location">Standort</string>
     <string name="update_file_name">Dateiname aktualisieren</string>
-    <string name="support_the_project">Das Projekt unterstützen</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Zum Kopieren anklicken</string>
     <string name="take_audio_focus_title">Audio-Fokus übernehmen</string>
     <string name="take_audio_focus_summary">Ist diese Option aktiviert, wird bei der Wiedergabe von Medien der Audio-Fokus übernommen. Alle Medien, die im Hintergrund abgespielt werden, werden angehalten, während das Video abgespielt wird. (Neustart der App erforderlich)</string>

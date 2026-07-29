@@ -8,7 +8,6 @@ plugins {
     alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.baselineProfilePlugin)
     alias(libs.plugins.kotlin.compose.compiler)
-    id("gos-string-overrides")
     id("kotlin-parcelize")
     alias(libs.plugins.kotlinSerialization)
 }
@@ -128,11 +127,6 @@ android {
             if (!isBundleBuild) {
                 assets.srcDirs("src/main/assets", "../ml-models/src/main/assets")
             }
-        }
-
-        buildTypes.configureEach {
-            getByName(name).manifest.srcFile("src/gos/AndroidManifest.xml")
-            getByName(name).res.directories += "src/gos/res"
         }
     }
 

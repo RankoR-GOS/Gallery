@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">ギャラリー</string>
     <string name="nav_albums">アルバム</string>
     <string name="searchbar_title"><![CDATA[写真と動画を検索]]></string>
     <string name="header_today">今日</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">タイムライン</string>
     <string name="location_cd">メディアの位置情報</string>
     <string name="location_map_cd">地図</string>
-    <string name="app_dev">作成者: %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">寄付</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">寄付ボタン</string>
     <string name="github_button_cd">GitHub ボタン</string>
@@ -84,7 +84,7 @@
     <string name="photo">写真</string>
     <string name="video">動画</string>
     <string name="close">閉じる</string>
-    <string name="manage_media_title">ReFraにメディアの管理を許可する</string>
+    <string name="manage_media_title">Galleryにメディアの管理を許可する</string>
     <string name="manage_media_summary">この設定は、お気に入り登録などの様々なアクションを実行する際に、追加の確認ダイアログをスキップします。</string>
     <string name="skip">スキップ</string>
     <string name="allow">許可</string>
@@ -245,7 +245,7 @@
     <string name="ignored">非表示</string>
     <string name="location">ロケーション</string>
     <string name="update_file_name">ファイル名を更新する</string>
-    <string name="support_the_project">プロジェクトをサポートする</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">クリックしてコピー</string>
     <string name="take_audio_focus_title">オーディオフォーカス</string>
     <string name="take_audio_focus_summary">これを有効にすると、メディア再生時にオーディオフォーカスがかかります。バックグラウンドで再生中のメディアは、ビデオ再生中に一時停止します。(アプリの再起動が必要です)</string>

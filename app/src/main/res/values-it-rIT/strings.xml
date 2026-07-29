@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galleria</string>
     <string name="nav_albums">Album</string>
     <string name="searchbar_title"><![CDATA[Cerca foto e video]]></string>
     <string name="header_today">Oggi</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Storico</string>
     <string name="location_cd">Percorso dei media</string>
     <string name="location_map_cd">Posizione</string>
-    <string name="app_dev">di %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Dona</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">Tasto per le donazioni</string>
     <string name="github_button_cd">Tasto Github</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Ignorato</string>
     <string name="location">Posizione</string>
     <string name="update_file_name">Aggiorna nome file</string>
-    <string name="support_the_project">Supporta il progetto</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Clicca per copiare</string>
     <string name="take_audio_focus_title">Prendi il controllo dell\'audio</string>
     <string name="take_audio_focus_summary">Abilitando questa opzione, l\'audio viene messo in primo piano durante la riproduzione dei media. Qualsiasi media in riproduzione in background verrà messo in pausa durante la riproduzione del video. (È necessario riavviare l\'applicazione)</string>

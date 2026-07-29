@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">Галерея</string>
-    <string name="app_dev">Based on ReFra by %s</string>
-    <string name="manage_media_title">Дозволити галереї керувати вашими медіафайлами</string>
-    <string name="blacklist_summary">Ігнорувати альбоми з «Галереї»</string>
-    <string name="add_to_ignored_summary">Прибрати альбом з показу у «Галереї»</string>
-    <string name="donate">Donate to ReFra</string>
-    <string name="support_the_project">Support ReFra</string>
-</resources>

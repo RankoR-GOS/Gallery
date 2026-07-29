@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galerie</string>
     <string name="nav_albums">Alba</string>
     <string name="searchbar_title"><![CDATA[Hledat fotky a videa]]></string>
     <string name="header_today">Dnes</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Časová osa</string>
     <string name="location_cd">Umístění médií</string>
     <string name="location_map_cd">Mapa polohy</string>
-    <string name="app_dev">od %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Přispět</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">Tlačítko přispění</string>
     <string name="github_button_cd">Tlačítko GitHub</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Ignorováno</string>
     <string name="location">Umístění</string>
     <string name="update_file_name">Aktualizovat název souboru</string>
-    <string name="support_the_project">Podpořit tento projekt</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Kliknutím zkopírujete</string>
     <string name="take_audio_focus_title">Výhradní zvukový výstup</string>
     <string name="take_audio_focus_summary">Při přehrávání videa pozastavit média přehrávaná na pozadí. (restartuje aplikaci)</string>

@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">圖片庫</string>
-    <string name="app_dev">Based on ReFra by %s</string>
-    <string name="manage_media_title">允許相片庫管理媒體</string>
-    <string name="blacklist_summary">在相片庫中隱藏相簿</string>
-    <string name="add_to_ignored_summary">不要在相片庫中顯示特定相簿</string>
-    <string name="donate">Donate to ReFra</string>
-    <string name="support_the_project">Support ReFra</string>
-</resources>

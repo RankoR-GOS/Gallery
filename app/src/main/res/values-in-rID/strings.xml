@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galeri</string>
     <string name="nav_albums">Album</string>
     <string name="searchbar_title"><![CDATA[Cari foto & video]]></string>
     <string name="header_today">Hari ini</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Waktu</string>
     <string name="location_cd">Lokasi Media</string>
     <string name="location_map_cd">Lokasi Map</string>
-    <string name="app_dev">Dibuat Oleh %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Donasi</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">Github</string>
     <string name="donate_button_cd">Tombol Donasi</string>
     <string name="github_button_cd">Tombol Github</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Abaikan</string>
     <string name="location">Lokasi</string>
     <string name="update_file_name">Update nama file</string>
-    <string name="support_the_project">Dukung proyeknya</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Klik untuk menyalin</string>
     <string name="take_audio_focus_title">Ambil Fokus Audio</string>
     <string name="take_audio_focus_summary">Mengaktifkan ini akan memfokuskan audio saat memutar media. Semua media yang diputar di latar belakang akan dijeda saat video diputar. (Diperlukan memulai ulang aplikasi)</string>

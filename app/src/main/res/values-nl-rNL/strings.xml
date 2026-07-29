@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galerij</string>
     <string name="nav_albums">Albums</string>
     <string name="searchbar_title"><![CDATA[Foto\'s en video\'s zoeken]]></string>
     <string name="header_today">Vandaag</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Tijdlijn</string>
     <string name="location_cd">Media locatie</string>
     <string name="location_map_cd">Kaartlocatie</string>
-    <string name="app_dev">door %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Doneer</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">Github</string>
     <string name="donate_button_cd">Doneer knop</string>
     <string name="github_button_cd">Github-knop</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Genegeerd</string>
     <string name="location">Locatie</string>
     <string name="update_file_name">Bestandsnaam bijwerken</string>
-    <string name="support_the_project">Support the project</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Click to copy</string>
     <string name="take_audio_focus_title">Take Audio Focus</string>
     <string name="take_audio_focus_summary">Enabling this will take audio focus when playing media. Any media playing in background will pause while the video is playing. (Restart app required)</string>

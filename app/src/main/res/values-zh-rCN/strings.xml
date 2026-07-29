@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">图库</string>
     <string name="nav_albums">专辑</string>
     <string name="searchbar_title"><![CDATA[搜索图片和视频]]></string>
     <string name="header_today">今天</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">时间轴</string>
     <string name="location_cd">媒体位置</string>
     <string name="location_map_cd">位置地图</string>
-    <string name="app_dev">由 %s 开发</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">捐赠</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">GitHub</string>
     <string name="donate_button_cd">捐赠按钮</string>
     <string name="github_button_cd">Github按钮</string>
@@ -245,7 +245,7 @@
     <string name="ignored">忽略</string>
     <string name="location">地点</string>
     <string name="update_file_name">更新文件名</string>
-    <string name="support_the_project">支持该项目</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">点击复制</string>
     <string name="take_audio_focus_title">获取音频焦点</string>
     <string name="take_audio_focus_summary">启用此功能将在播放媒体时获取音频焦点。播放视频时，后台播放的任何媒体都将暂停。（需要重启应用程序）</string>

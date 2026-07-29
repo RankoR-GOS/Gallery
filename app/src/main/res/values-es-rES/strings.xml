@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galería</string>
     <string name="nav_albums">Álbumes</string>
     <string name="searchbar_title"><![CDATA[Buscar fotos y vídeos]]></string>
     <string name="header_today">Hoy</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Cronología</string>
     <string name="location_cd">Ubicación de archivos</string>
     <string name="location_map_cd">Mapa de ubicaciones</string>
-    <string name="app_dev">por %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Donar</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">Github</string>
     <string name="donate_button_cd">Botón para donar</string>
     <string name="github_button_cd">Botón hacia GitHub</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Ignorado</string>
     <string name="location">Ubicación</string>
     <string name="update_file_name">Actualizar nombre del archivo</string>
-    <string name="support_the_project">Apoya el proyecto</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Haz clic para copiar</string>
     <string name="take_audio_focus_title">Tomar enfoque de audio</string>
     <string name="take_audio_focus_summary">Al activar esta opción, el audio se centrará en la reproducción multimedia. Cualquier medio que se reproduzca en segundo plano se detendrá mientras se reproduce el vídeo. (Es necesario reiniciar la aplicación)</string>

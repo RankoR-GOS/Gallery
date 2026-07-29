@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">图库</string>
-    <string name="app_dev">Based on ReFra by %s</string>
-    <string name="manage_media_title">允许图库管理您的媒体文件</string>
-    <string name="blacklist_summary">隐藏图库中的相册</string>
-    <string name="add_to_ignored_summary">隐藏相册，使其不在图库中显示</string>
-    <string name="donate">Donate to ReFra</string>
-    <string name="support_the_project">Support ReFra</string>
-</resources>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ReFra</string>
+    <string name="app_name">Galleri</string>
     <string name="nav_albums">Album</string>
     <string name="searchbar_title"><![CDATA[Søk etter bilete og videoar]]></string>
     <string name="header_today">I dag</string>
@@ -52,9 +52,9 @@
     <string name="nav_timeline">Tidslinje</string>
     <string name="location_cd">Media Location</string>
     <string name="location_map_cd">Location Map</string>
-    <string name="app_dev">er laga av %s</string>
+    <string name="app_dev">Based on ReFra by %s</string>
     <string name="app_dev_name">IacobIonut01</string>
-    <string name="donate">Doner</string>
+    <string name="donate">Donate to ReFra</string>
     <string name="github">Github</string>
     <string name="donate_button_cd">Doner-knapp</string>
     <string name="github_button_cd">Github-knapp</string>
@@ -84,7 +84,7 @@
     <string name="photo">Bilete</string>
     <string name="video">Video</string>
     <string name="close">Lukk</string>
-    <string name="manage_media_title">Gje ReFra løyve til å handsame medium</string>
+    <string name="manage_media_title">Gje Gallery løyve til å handsame medium</string>
     <string name="manage_media_summary">This setting just skips any extra confirmation dialogs while performing various actions like marking as favorite.</string>
     <string name="skip">Hopp over</string>
     <string name="allow">Tillat</string>
@@ -154,9 +154,9 @@
     <string name="copy">Copy</string>
     <string name="ignored_albums">Ignored Albums</string>
     <string name="select_an_album">Select an album</string>
-    <string name="blacklist_summary">Ignore albums from ReFra</string>
+    <string name="blacklist_summary">Ignore albums from Gallery</string>
     <string name="add_to_ignored">Add to ignored albums</string>
-    <string name="add_to_ignored_summary">Remove an album from showing inside the ReFra</string>
+    <string name="add_to_ignored_summary">Remove an album from showing inside the Gallery</string>
     <string name="remove_from_ignored">Remove from ignored list</string>
     <string name="remove_from_ignored_summary">Remove from the ignored list the album named %1$s</string>
     <string name="override">Override</string>
@@ -245,7 +245,7 @@
     <string name="ignored">Ignored</string>
     <string name="location">Location</string>
     <string name="update_file_name">Update file name</string>
-    <string name="support_the_project">Support the project</string>
+    <string name="support_the_project">Support ReFra</string>
     <string name="click_to_copy">Click to copy</string>
     <string name="take_audio_focus_title">Fokuser lyd</string>
     <string name="take_audio_focus_summary">Viss det er kryssa av her, tek appen over lydfokus ved avspeling av medium. Bakgrunnsmedium vert satt på pause under avspeling av videoar. (Appen må startast på nytt).</string>
