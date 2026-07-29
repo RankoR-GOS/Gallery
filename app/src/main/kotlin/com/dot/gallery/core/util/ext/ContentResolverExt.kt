@@ -355,18 +355,57 @@ suspend fun ContentResolver.saveVideoStream(
 private suspend fun ContentResolver.performInsertWrite(
     baseUri: Uri,
     values: ContentValues,
-    writeBlock: (OutputStream) -> Unit
-): Uri? = withContext(Dispatchers.IO) {
-    var tmp: Uri? = null
+    writeBlock: (OutputStream) -> Unit,
+): Uri? {
+    return withContext(Dispatchers.IO) {
+        var destinationUri: Uri? = null
+        try {
+            val pendingValues = ContentValues(values).apply {
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            destinationUri = insert(baseUri, pendingValues)
+                ?: throw IOException("Insert returned null")
+
+            openOutputStream(destinationUri)?.use { outputStream ->
+                writeBlock(outputStream)
+                outputStream.flush()
+            } ?: throw IOException("Stream open failed")
+
+            currentCoroutineContext().ensureActive()
+            withContext(NonCancellable) {
+                val publishedRows = update(
+                    destinationUri,
+                    ContentValues().apply {
+                        put(MediaStore.MediaColumns.IS_PENDING, 0)
+                        put(
+                            MediaStore.MediaColumns.DATE_MODIFIED,
+                            System.currentTimeMillis() / MILLIS_PER_SECOND,
+                        )
+                    },
+                    null,
+                    null,
+                )
+                if (publishedRows != 1) {
+                    throw IOException("Unable to publish inserted media")
+                }
+            }
+            destinationUri
+        } catch (exception: CancellationException) {
+            destinationUri?.let { uri -> deleteUnpublishedMedia(uri = uri) }
+            throw exception
+        } catch (exception: Exception) {
+            destinationUri?.let { uri -> deleteUnpublishedMedia(uri = uri) }
+            printWarning(exception.message.orEmpty())
+            null
+        }
+    }
+}
+
+private fun ContentResolver.deleteUnpublishedMedia(uri: Uri) {
     runCatching {
-        insert(baseUri, values)?.also { uri ->
-            tmp = uri
-            openOutputStream(uri)?.use(writeBlock)
-                ?: throw IOException("Stream open failed")
-        } ?: throw IOException("Insert returned null")
-    }.getOrElse {
-        tmp?.let { delete(it, null, null) }
-        null
+        delete(uri, null, null)
+    }.onFailure { exception ->
+        printWarning("Unable to delete unpublished media: ${exception.message.orEmpty()}")
     }
 }
 
