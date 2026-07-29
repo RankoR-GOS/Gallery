@@ -232,7 +232,8 @@ internal class AiMediaAnalysisSchedulingTest {
         override suspend fun removeMediaData(mediaIds: Set<Long>) {
         }
 
-        override suspend fun removeMissingCategoryMappings(validMediaIds: Set<Long>) {
+        override suspend fun getClassifiedMediaIdPage(afterId: Long, limit: Int): List<Long> {
+            return emptyList()
         }
 
         override suspend fun clearAllGeneratedData() {

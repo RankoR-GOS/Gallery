@@ -13,15 +13,15 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.ml.ManagedOrtSession
 import com.dot.gallery.core.ml.ModelInferenceException
 import com.dot.gallery.feature_node.data.model.Category
-import com.dot.gallery.feature_node.data.model.ImageEmbedding
 import com.dot.gallery.feature_node.data.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
 import com.dot.gallery.feature_node.presentation.search.SearchHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 /**
  * Unified ViewModel for both creating and editing categories.
@@ -116,12 +115,11 @@ class CategoryEditorViewModel @Inject internal constructor(
 
     private var textSession: ManagedOrtSession? = null
     private var searchJob: Job? = null
-    private var imageEmbeddings: List<ImageEmbedding> = emptyList()
-
     private val _allMedia = MutableStateFlow<List<Media.UriMedia>>(emptyList())
     val allMedia: StateFlow<List<Media.UriMedia>> = _allMedia.asStateFlow()
 
     private var allMediaList: List<Media.UriMedia> = emptyList()
+    private var mediaById: Map<Long, Media.UriMedia> = emptyMap()
 
     init {
         loadData()
@@ -129,9 +127,9 @@ class CategoryEditorViewModel @Inject internal constructor(
 
     private fun loadData() {
         viewModelScope.launch(Dispatchers.IO) {
-            imageEmbeddings = repository.getImageEmbeddings().first()
             val mediaResource = repository.getMedia().first()
             allMediaList = mediaResource.data?.filterIsInstance<Media.UriMedia>() ?: emptyList()
+            mediaById = allMediaList.associateBy { media -> media.id }
             _allMedia.value = allMediaList
             _isDataReady.value = true
         }
@@ -251,43 +249,30 @@ class CategoryEditorViewModel @Inject internal constructor(
 
                 // Collect reference image embeddings
                 val refEmbeddings = if (refIds.isNotEmpty()) {
-                    imageEmbeddings.filter { it.id in refIds }
+                    repository.getImageEmbeddingsByIds(ids = refIds.toSet())
                 } else emptyList()
 
                 if (textEmbedding == null && refEmbeddings.isEmpty()) return@withContext
 
-                val matches = mutableListOf<Pair<Long, Float>>()
                 val currentThreshold = _threshold.value
                 val refIdSet = refIds.toSet()
-
-                imageEmbeddings.forEach { imageEmbedding ->
-                    // Skip reference images themselves
-                    if (imageEmbedding.id in refIdSet) return@forEach
-
+                val sortedMatches = scoreImageEmbeddingPages(repository = repository) { imageEmbedding ->
+                    if (imageEmbedding.id in refIdSet) {
+                        return@scoreImageEmbeddingPages null
+                    }
                     var bestScore = 0f
-
-                    // Text-to-image similarity
                     if (textEmbedding != null) {
                         bestScore = maxOf(bestScore, textEmbedding.dot(imageEmbedding.embedding))
                     }
-
-                    // Image-to-image similarity (against each reference)
                     refEmbeddings.forEach { ref ->
                         bestScore = maxOf(bestScore, ref.embedding.dot(imageEmbedding.embedding))
                     }
-
-                    if (bestScore >= currentThreshold) {
-                        matches.add(imageEmbedding.id to bestScore)
+                    when {
+                        bestScore >= currentThreshold -> bestScore
+                        else -> null
                     }
                 }
-
-                val sortedMatches = matches.sortedByDescending { it.second }
-                val matchingIds = sortedMatches.map { it.first }.toSet()
-
-                val matchingMedia = allMediaList.filter { it.id in matchingIds }
-                    .sortedByDescending { media ->
-                        sortedMatches.find { it.first == media.id }?.second ?: 0f
-                    }
+                val matchingMedia = sortedMatches.mapNotNull { (mediaId, _) -> mediaById[mediaId] }
 
                 _previewCount.value = sortedMatches.size
                 _previewMedia.value = matchingMedia

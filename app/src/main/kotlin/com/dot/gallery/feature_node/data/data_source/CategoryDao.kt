@@ -158,6 +158,12 @@ interface CategoryDao {
     @Query("SELECT DISTINCT mediaId FROM media_category")
     suspend fun getAllClassifiedMediaIds(): List<Long>
 
+    @Query(
+        "SELECT DISTINCT mediaId FROM media_category " +
+            "WHERE mediaId > :afterId ORDER BY mediaId LIMIT :limit",
+    )
+    suspend fun getClassifiedMediaIdPage(afterId: Long, limit: Int): List<Long>
+
     // Get categories with media count - for displaying in the grid
     @Query("""
         SELECT c.*, COUNT(mc.mediaId) as mediaCount, 

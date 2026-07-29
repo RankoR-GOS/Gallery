@@ -13,15 +13,15 @@ import com.dot.gallery.core.Settings
 import com.dot.gallery.core.ml.ManagedOrtSession
 import com.dot.gallery.core.ml.ModelInferenceException
 import com.dot.gallery.feature_node.data.model.Category
-import com.dot.gallery.feature_node.data.model.ImageEmbedding
 import com.dot.gallery.feature_node.data.model.Media
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.repository.MediaRepository
+import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
 import com.dot.gallery.feature_node.presentation.search.SearchHelper
 import com.dot.gallery.feature_node.presentation.search.util.dot
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 @HiltViewModel
 class EditCategoryViewModel @Inject internal constructor(
@@ -86,21 +85,18 @@ class EditCategoryViewModel @Inject internal constructor(
     private var textSession: ManagedOrtSession? = null
     private var searchJob: Job? = null
 
-    // Image embeddings cache
-    private var imageEmbeddings: List<ImageEmbedding> = emptyList()
-
-    // Media cache for building MediaState
-    private var allMedia: List<Media.UriMedia> = emptyList()
+    private var mediaById: Map<Long, Media.UriMedia> = emptyMap()
 
     fun loadCategory(categoryId: Long) {
         _categoryId.value = categoryId
         viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
             try {
-                // Load embeddings and media first
-                imageEmbeddings = repository.getImageEmbeddings().first()
                 val mediaResource = repository.getMedia().first()
-                allMedia = mediaResource.data?.filterIsInstance<Media.UriMedia>() ?: emptyList()
+                mediaById = mediaResource.data
+                    ?.filterIsInstance<Media.UriMedia>()
+                    ?.associateBy { media -> media.id }
+                    .orEmpty()
 
                 // Load category details
                 val cat = repository.getCategoryAsync(categoryId)
@@ -164,26 +160,15 @@ class EditCategoryViewModel @Inject internal constructor(
                 // Get text embedding for search terms
                 val textEmbedding = searchHelper.getTextEmbedding(session, terms)
 
-                // Find matching images
-                val matches = mutableListOf<Pair<Long, Float>>()
                 val currentThreshold = _threshold.value
-
-                imageEmbeddings.forEach { imageEmbedding ->
+                val sortedMatches = scoreImageEmbeddingPages(repository = repository) { imageEmbedding ->
                     val similarity = textEmbedding.dot(imageEmbedding.embedding)
-                    if (similarity >= currentThreshold) {
-                        matches.add(imageEmbedding.id to similarity)
+                    when {
+                        similarity >= currentThreshold -> similarity
+                        else -> null
                     }
                 }
-
-                // Sort by similarity
-                val sortedMatches = matches.sortedByDescending { it.second }
-                val matchingIds = sortedMatches.map { it.first }.toSet()
-
-                // Get the actual media objects
-                val matchingMedia = allMedia.filter { it.id in matchingIds }
-                    .sortedByDescending { media ->
-                        sortedMatches.find { it.first == media.id }?.second ?: 0f
-                    }
+                val matchingMedia = sortedMatches.mapNotNull { (mediaId, _) -> mediaById[mediaId] }
 
                 _previewCount.value = sortedMatches.size
 

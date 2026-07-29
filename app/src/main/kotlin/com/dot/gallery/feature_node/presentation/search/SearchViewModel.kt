@@ -17,15 +17,15 @@ import com.dot.gallery.core.ml.ModelStatus
 import com.dot.gallery.core.sandbox.MediaPreviewDecoder
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.MediaMetadata
-import com.dot.gallery.feature_node.domain.model.MediaMetadataState
-import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.data.repository.MediaRepository
-import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
-import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysisSettings
 import com.dot.gallery.feature_node.data.util.MediaGroupType
 import com.dot.gallery.feature_node.data.util.classifyGroupType
 import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.data.util.groupKey
+import com.dot.gallery.feature_node.domain.model.MediaMetadataState
+import com.dot.gallery.feature_node.domain.model.MediaState
+import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysis
+import com.dot.gallery.feature_node.domain.use_case.AiMediaAnalysisSettings
 import com.dot.gallery.feature_node.presentation.library.CategoryMedia
 import com.dot.gallery.feature_node.presentation.util.mapMediaToItem
 import com.dot.gallery.injection.qualifier.IoDispatcher
@@ -33,6 +33,7 @@ import com.frosch2010.fuzzywuzzy_kotlin.FuzzySearch
 import com.frosch2010.fuzzywuzzy_kotlin.ToStringFunction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -54,7 +55,6 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 @Stable
 data class SearchResultsState(
@@ -70,7 +70,7 @@ class SearchViewModel @Inject internal constructor(
     mediaDistributor: MediaDistributor,
     workManager: WorkManager,
     private val searchHelper: SearchHelper,
-    repository: MediaRepository,
+    private val repository: MediaRepository,
     modelManager: ModelManager,
     private val aiMediaAnalysis: AiMediaAnalysis,
     private val previewDecoder: MediaPreviewDecoder,
@@ -95,13 +95,6 @@ class SearchViewModel @Inject internal constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = modelManager.isReady
-        )
-
-    private val imageRecords = mediaDistributor.imageEmbeddingsFlow
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = emptyList()
         )
 
     private var _query = MutableStateFlow("")
@@ -442,15 +435,14 @@ class SearchViewModel @Inject internal constructor(
                             bitmap = bitmap,
                         )
                         currentCoroutineContext().ensureActive()
-                        val searchResultsPair = searchHelper.sortByCosineDistance(
+                        val searchResultsPair = scoreImageEmbeddings(
                             searchEmbedding = imageEmbedding,
-                            imageEmbeddingsList = imageRecords.value.map { it.embedding },
-                            imageIdxList = imageRecords.value.map { it.id },
                         )
                         val allMediaList = allMedia.value.media
+                        val mediaById = allMediaList.associateBy { item -> item.id }
                         val results = searchResultsPair.mapNotNull { (id, score) ->
                             if (id == media.id) return@mapNotNull null
-                            val resultMedia = allMediaList.find { item -> item.id == id }
+                            val resultMedia = mediaById[id]
                             if (resultMedia != null) score to resultMedia else null
                         }
                         val mediaState = mapMediaToItem(
@@ -739,13 +731,12 @@ class SearchViewModel @Inject internal constructor(
                         if (!analysisSettings.value.analysisEnabled) {
                             return@launch
                         }
-                        val searchResultsPair = searchHelper.sortByCosineDistance(
+                        val searchResultsPair = scoreImageEmbeddings(
                             searchEmbedding = textEmbedding,
-                            imageEmbeddingsList = imageRecords.value.map { it.embedding },
-                            imageIdxList = imageRecords.value.map { it.id },
                         )
+                        val mediaById = allMedia.associateBy { media -> media.id }
                         val searchResultsMedia = searchResultsPair.mapNotNull { (id, score) ->
-                            val media = allMedia.find { it.id == id }
+                            val media = mediaById[id]
                             if (media != null) score to media else null
                         }
 
@@ -829,6 +820,33 @@ class SearchViewModel @Inject internal constructor(
         addAll(merged)
     }
 
+    private suspend fun scoreImageEmbeddings(
+        searchEmbedding: FloatArray,
+    ): List<Pair<Long, Float>> {
+        val results = mutableListOf<Pair<Long, Float>>()
+        var afterId = Long.MIN_VALUE
+        while (true) {
+            currentCoroutineContext().ensureActive()
+            if (!analysisSettings.value.analysisEnabled) {
+                return emptyList()
+            }
+            val page = repository.getImageEmbeddingPage(
+                afterId = afterId,
+                limit = EMBEDDING_PAGE_SIZE,
+            )
+            if (page.isEmpty()) {
+                break
+            }
+            results += searchHelper.sortByCosineDistance(
+                searchEmbedding = searchEmbedding,
+                imageEmbeddingsList = page.map { record -> record.embedding },
+                imageIdxList = page.map { record -> record.id },
+            )
+            afterId = page.last().id
+        }
+        return results.sortedByDescending { (_, score) -> score }
+    }
+
     private suspend fun <T> List<T>.parseFuzzySearch(query: String): List<Pair<Float, T>> {
         return withContext(ioDispatcher) {
             if (query.isEmpty())
@@ -859,6 +877,7 @@ class SearchViewModel @Inject internal constructor(
 
 
     private companion object {
+        private const val EMBEDDING_PAGE_SIZE = 256
         private const val TAG = "SearchViewModel"
     }
 }

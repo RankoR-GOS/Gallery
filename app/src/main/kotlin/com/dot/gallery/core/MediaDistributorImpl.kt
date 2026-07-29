@@ -598,17 +598,6 @@ class MediaDistributorImpl @Inject constructor(
         }.stateIn(appScope, sharingMethod, MediaState())
 
     /**
-     * Search
-     */
-    override val imageEmbeddingsFlow: StateFlow<List<ImageEmbedding>> =
-        repository.getImageEmbeddings()
-            .stateIn(
-                scope = appScope,
-                started = prioritySharingMethod,
-                initialValue = emptyList()
-            )
-
-    /**
      * Triggers a MediaStore rescan for media items that have null DATE_TAKEN.
      * When files are transferred between devices, MediaStore may not have
      * processed their EXIF data yet, so DATE_TAKEN is null and the app falls

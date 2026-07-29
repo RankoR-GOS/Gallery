@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.room.withTransaction
 import com.dot.gallery.core.dataStore
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
+import com.dot.gallery.feature_node.data.data_source.forEachIdChunk
 import com.dot.gallery.feature_node.data.model.AiMediaAnalysisPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -37,7 +38,7 @@ internal interface AiMediaAnalysisRepository {
 
     suspend fun removeMediaData(mediaIds: Set<Long>)
 
-    suspend fun removeMissingCategoryMappings(validMediaIds: Set<Long>)
+    suspend fun getClassifiedMediaIdPage(afterId: Long, limit: Int): List<Long>
 
     suspend fun clearAllGeneratedData()
 
@@ -128,25 +129,29 @@ internal class AiMediaAnalysisRepositoryImpl @Inject constructor(
 
     override suspend fun invalidateGeneratedData(mediaIds: Set<Long>) {
         database.withTransaction {
-            database.getImageEmbeddingDao().deleteByIds(ids = mediaIds)
-            database.getCategoryDao().removeGeneratedMediaFromAllCategories(mediaIds = mediaIds)
+            forEachIdChunk(ids = mediaIds) { mediaIdChunk ->
+                database.getImageEmbeddingDao().deleteByIds(ids = mediaIdChunk)
+                database.getCategoryDao().removeGeneratedMediaFromAllCategories(
+                    mediaIds = mediaIdChunk,
+                )
+            }
         }
     }
 
     override suspend fun removeMediaData(mediaIds: Set<Long>) {
         database.withTransaction {
-            database.getImageEmbeddingDao().deleteByIds(ids = mediaIds)
-            database.getCategoryDao().removeMediaFromAllCategories(mediaIds = mediaIds)
+            forEachIdChunk(ids = mediaIds) { mediaIdChunk ->
+                database.getImageEmbeddingDao().deleteByIds(ids = mediaIdChunk)
+                database.getCategoryDao().removeMediaFromAllCategories(mediaIds = mediaIdChunk)
+            }
         }
     }
 
-    override suspend fun removeMissingCategoryMappings(validMediaIds: Set<Long>) {
-        val missingMediaIds = database.getCategoryDao()
-            .getAllClassifiedMediaIds()
-            .filterNotTo(mutableSetOf()) { mediaId -> mediaId in validMediaIds }
-        if (missingMediaIds.isNotEmpty()) {
-            database.getCategoryDao().removeMediaFromAllCategories(mediaIds = missingMediaIds)
-        }
+    override suspend fun getClassifiedMediaIdPage(afterId: Long, limit: Int): List<Long> {
+        return database.getCategoryDao().getClassifiedMediaIdPage(
+            afterId = afterId,
+            limit = limit,
+        )
     }
 
     override suspend fun clearAllGeneratedData() {

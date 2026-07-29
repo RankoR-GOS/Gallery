@@ -65,7 +65,6 @@ open class MockedMediaDistributor: MediaDistributor {
     override val favoritesMediaFlow: StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
     override val trashMediaFlow: StateFlow<MediaState<Media.UriMedia>> = MutableStateFlow(MediaState())
     override val metadataFlow: StateFlow<MediaMetadataState> = MutableStateFlow(MediaMetadataState())
-    override val imageEmbeddingsFlow: StateFlow<List<ImageEmbedding>> = MutableStateFlow(emptyList())
     override val collectionsFlow: StateFlow<List<CollectionWithCount>> = MutableStateFlow(emptyList())
     override val collectionAlbumIdsFlow: StateFlow<Set<Long>> = MutableStateFlow(emptySet())
     override fun collectionAlbumIdsInCollection(collectionId: Long): Flow<List<Long>> = emptyFlow()

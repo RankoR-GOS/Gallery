@@ -208,6 +208,49 @@ internal class AiMediaAnalysisRepositoryTest {
     }
 
     @Test
+    fun largeChangedAndRemovedIdSets_areProcessedWithoutExceedingSqliteBindLimits() {
+        runTest {
+            database.getCategoryDao().insertCategory(
+                category = Category(
+                    id = CATEGORY_ID,
+                    name = "Generated category",
+                    searchTerms = "term",
+                ),
+            )
+            val mediaIds = (1L..LARGE_ID_SET_SIZE.toLong()).toSet()
+            val embeddings = mediaIds.map { mediaId ->
+                ImageEmbedding(
+                    id = mediaId,
+                    date = 1L,
+                    embedding = floatArrayOf(0.1f),
+                )
+            }
+            val mappings = mediaIds.map { mediaId ->
+                MediaCategory(
+                    mediaId = mediaId,
+                    categoryId = CATEGORY_ID,
+                    similarityScore = 0.5f,
+                )
+            }
+            database.getImageEmbeddingDao().addImageEmbeddings(imageEmbeddings = embeddings)
+            database.getCategoryDao().insertGeneratedMediaCategories(mediaCategories = mappings)
+
+            repository.invalidateGeneratedData(mediaIds = mediaIds)
+
+            assertEquals(0, database.getImageEmbeddingDao().getCount())
+            assertTrue(database.getCategoryDao().getAllClassifiedMediaIds().isEmpty())
+
+            database.getImageEmbeddingDao().addImageEmbeddings(imageEmbeddings = embeddings)
+            database.getCategoryDao().insertGeneratedMediaCategories(mediaCategories = mappings)
+
+            repository.removeMediaData(mediaIds = mediaIds)
+
+            assertEquals(0, database.getImageEmbeddingDao().getCount())
+            assertTrue(database.getCategoryDao().getAllClassifiedMediaIds().isEmpty())
+        }
+    }
+
+    @Test
     fun disablingAnalysis_persistsCleanupPendingUntilCleanupCompletes() {
         runTest {
             repository.setAnalysisEnabled(enabled = false)
@@ -255,7 +298,7 @@ internal class AiMediaAnalysisRepositoryTest {
     }
 
     @Test
-    fun removeMissingCategoryMappings_usesActualMediaIdsAndPreservesExistingManualMappings() {
+    fun getClassifiedMediaIdPage_returnsManualAndGeneratedMappingsInKeysetOrder() {
         runTest {
             insertCategoryAndMembership(isManuallyAdded = true)
             database.getCategoryDao().insertMediaCategory(
@@ -267,12 +310,17 @@ internal class AiMediaAnalysisRepositoryTest {
                 ),
             )
 
-            repository.removeMissingCategoryMappings(validMediaIds = setOf(MEDIA_ID))
-
-            assertEquals(
-                listOf(MEDIA_ID),
-                database.getCategoryDao().getAllClassifiedMediaIds(),
+            val firstPage = repository.getClassifiedMediaIdPage(
+                afterId = Long.MIN_VALUE,
+                limit = 1,
             )
+            val secondPage = repository.getClassifiedMediaIdPage(
+                afterId = firstPage.last(),
+                limit = 1,
+            )
+
+            assertEquals(listOf(MEDIA_ID), firstPage)
+            assertEquals(listOf(OTHER_MEDIA_ID), secondPage)
         }
     }
 
@@ -298,6 +346,7 @@ internal class AiMediaAnalysisRepositoryTest {
 
     companion object {
         private const val CATEGORY_ID = 42L
+        private const val LARGE_ID_SET_SIZE = 1_001
         private const val MEDIA_ID = 7L
         private const val OTHER_MEDIA_ID = 8L
     }

@@ -70,9 +70,4 @@ interface MediaDistributor {
     fun collectionAlbumIdsInCollection(collectionId: Long): Flow<List<Long>>
     fun collectionMediaFlow(collectionId: Long): StateFlow<MediaState<Media.UriMedia>>
 
-    /**
-     * Search
-     */
-    val imageEmbeddingsFlow: StateFlow<List<ImageEmbedding>>
-
 }

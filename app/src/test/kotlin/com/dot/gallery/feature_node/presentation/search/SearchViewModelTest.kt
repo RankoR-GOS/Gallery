@@ -114,7 +114,6 @@ internal class SearchViewModelTest {
         }
         val mediaDistributor = mockk<MediaDistributor>(relaxed = true) {
             every { dateFormatsFlow } returns MutableStateFlow(Triple("", "", ""))
-            every { imageEmbeddingsFlow } returns MutableStateFlow(emptyList())
             every { metadataFlow } returns flowOf(MediaMetadataState())
             every { timelineMediaFlow } returns timelineMedia
         }

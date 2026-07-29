@@ -1,8 +1,8 @@
 package com.dot.gallery.feature_node.domain.use_case
 
 import com.dot.gallery.feature_node.data.model.AiMediaAnalysisPreferences
-import com.dot.gallery.feature_node.domain.model.AiMediaAnalysisWorkState
 import com.dot.gallery.feature_node.data.repository.AiMediaAnalysisRepository
+import com.dot.gallery.feature_node.domain.model.AiMediaAnalysisWorkState
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -359,7 +359,8 @@ internal class AiMediaAnalysisTest {
         override suspend fun removeMediaData(mediaIds: Set<Long>) {
         }
 
-        override suspend fun removeMissingCategoryMappings(validMediaIds: Set<Long>) {
+        override suspend fun getClassifiedMediaIdPage(afterId: Long, limit: Int): List<Long> {
+            return emptyList()
         }
 
         override suspend fun clearAllGeneratedData() {

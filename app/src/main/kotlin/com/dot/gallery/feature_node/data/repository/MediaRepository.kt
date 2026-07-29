@@ -36,6 +36,7 @@ import com.dot.gallery.core.workers.MediaCopyScheduler
 import com.dot.gallery.core.workers.updateDatabase
 import com.dot.gallery.feature_node.data.data_source.CategoryWithMediaCount
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
+import com.dot.gallery.feature_node.data.data_source.flatMapIdChunks
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.AlbumsFlow
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.MediaFlow
 import com.dot.gallery.feature_node.data.data_source.mediastore.queries.MediaUriFlow
@@ -49,6 +50,7 @@ import com.dot.gallery.feature_node.data.model.CollectionMedia
 import com.dot.gallery.feature_node.data.model.CollectionWithCount
 import com.dot.gallery.feature_node.data.model.IgnoredAlbum
 import com.dot.gallery.feature_node.data.model.ImageEmbedding
+import com.dot.gallery.feature_node.data.model.ImageEmbeddingStamp
 import com.dot.gallery.feature_node.data.model.LockedAlbum
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.Media.ClassifiedMedia
@@ -77,6 +79,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -91,6 +94,8 @@ interface MediaRepository {
     fun getMedia(): Flow<Resource<List<UriMedia>>>
 
     fun getCompleteMedia(): Flow<Resource<List<UriMedia>>>
+
+    suspend fun getCompleteMediaPage(afterId: Long, limit: Int): List<UriMedia>
 
     fun getMediaByType(allowedMedia: AllowedMedia): Flow<Resource<List<UriMedia>>>
 
@@ -266,7 +271,11 @@ interface MediaRepository {
 
     suspend fun getRecord(id: Long): ImageEmbedding?
 
-    fun getImageEmbeddings(): Flow<List<ImageEmbedding>>
+    suspend fun getImageEmbeddingStampPage(afterId: Long, limit: Int): List<ImageEmbeddingStamp>
+
+    suspend fun getImageEmbeddingPage(afterId: Long, limit: Int): List<ImageEmbedding>
+
+    suspend fun getImageEmbeddingsByIds(ids: Set<Long>): List<ImageEmbedding>
 
     // ============ Album Groups ============
 
@@ -402,6 +411,16 @@ internal class MediaRepositoryImpl(
         ).flowData().map {
             Resource.Success(MediaOrder.Date(OrderType.Descending).sortMedia(it))
         }.flowOn(Dispatchers.IO)
+
+    override suspend fun getCompleteMediaPage(afterId: Long, limit: Int): List<UriMedia> {
+        return MediaFlow(
+            contentResolver = contentResolver,
+            buckedId = MediaStoreBuckets.MEDIA_STORE_BUCKET_TIMELINE.id,
+            skipBatching = true,
+            afterId = afterId,
+            limit = limit,
+        ).flowData().first()
+    }
 
     override fun getMediaByType(allowedMedia: AllowedMedia): Flow<Resource<List<UriMedia>>> =
         MediaFlow(
@@ -984,8 +1003,21 @@ internal class MediaRepositoryImpl(
         return database.getImageEmbeddingDao().getRecord(id)
     }
 
-    override fun getImageEmbeddings(): Flow<List<ImageEmbedding>> {
-        return database.getImageEmbeddingDao().getRecords()
+    override suspend fun getImageEmbeddingStampPage(
+        afterId: Long,
+        limit: Int,
+    ): List<ImageEmbeddingStamp> {
+        return database.getImageEmbeddingDao().getStampPage(afterId = afterId, limit = limit)
+    }
+
+    override suspend fun getImageEmbeddingPage(afterId: Long, limit: Int): List<ImageEmbedding> {
+        return database.getImageEmbeddingDao().getPage(afterId = afterId, limit = limit)
+    }
+
+    override suspend fun getImageEmbeddingsByIds(ids: Set<Long>): List<ImageEmbedding> {
+        return flatMapIdChunks(ids = ids) { idChunk ->
+            database.getImageEmbeddingDao().getByIds(ids = idChunk)
+        }
     }
 
     // ============ Album Groups ============
