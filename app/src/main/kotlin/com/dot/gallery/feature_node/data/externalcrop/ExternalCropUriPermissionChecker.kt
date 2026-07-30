@@ -46,24 +46,30 @@ internal class ComponentCallerExternalCropUriPermissionChecker @Inject construct
     }
 
     /**
-     * The output uri must be shared media that either the caller or we own.
+     * The caller must be able to write the output itself. We must never write where the caller could
+     * not: the crop ui only ever shows the source, so a user confirming the crop is not consenting
+     * to the destination, and a hostile caller pointing the output at media it cannot write would
+     * make us its deputy.
      *
-     * Neither platform permission api can answer this. The output uri arrives in
-     * [android.provider.MediaStore.EXTRA_OUTPUT], a plain extra, so it is never part of the launch
-     * grant set that [ComponentCaller.checkContentUriPermission] accepts — that method throws
-     * [IllegalArgumentException] for anything not passed via `Intent#getData`, `EXTRA_STREAM` or
-     * `Intent#getClipData`. Uid-based [Context.checkUriPermission] is no substitute either: it
-     * consults explicit uri grants and the provider's manifest permission only, not MediaProvider's
-     * ownership model, so it denies media uris even for our own uid.
+     * Which api can establish that depends on the authority.
      *
-     * So ownership is resolved directly, from
-     * [android.provider.MediaStore.MediaColumns.OWNER_PACKAGE_NAME]. Without it a hostile caller
-     * could point the output at media it cannot write itself and have us overwrite it — the crop ui
-     * only ever shows the source, so the user confirming the crop is not consenting to the
-     * destination.
+     * For a non-MediaStore output, [ComponentCaller.checkContentUriPermission] answers, provided the
+     * caller also passed the uri via `Intent#getData`, `EXTRA_STREAM` or `Intent#getClipData` with a
+     * write grant — that is the launch grant set the method consults. AvatarPicker does exactly
+     * that: it puts one uri from its own `FileProvider` in both the intent data and
+     * [android.provider.MediaStore.EXTRA_OUTPUT], with
+     * [Intent.FLAG_GRANT_WRITE_URI_PERMISSION]. An output uri that arrives *only* as the plain
+     * extra is outside the launch grant set, the platform throws [IllegalArgumentException], and we
+     * reject — the caller proved nothing, so that is the right answer rather than a shortcoming.
      *
-     * This deliberately narrows the legacy `ACTION_CROP` contract: an output row owned by a third
-     * party, or with no recorded owner (a legacy file picked up by the media scanner), is refused.
+     * For a MediaStore output the launch grant api genuinely cannot answer, because legacy callers
+     * pass media uris in the extra alone. Uid-based [Context.checkUriPermission] is no substitute
+     * either: it consults explicit uri grants and the provider's manifest permission only, not
+     * MediaProvider's ownership model, so it denies media uris even for our own uid. So ownership is
+     * resolved directly, from [android.provider.MediaStore.MediaColumns.OWNER_PACKAGE_NAME]. This
+     * deliberately narrows the legacy `ACTION_CROP` contract: an output row owned by a third party,
+     * or with no recorded owner (a legacy file picked up by the media scanner), is refused, and no
+     * generic uri check can widen it back.
      */
     override fun canWriteContentUri(
         uri: Uri,
@@ -73,7 +79,15 @@ internal class ComponentCallerExternalCropUriPermissionChecker @Inject construct
             return true
         }
 
-        return isMediaStoreUri(uri) && isReachable(uri) && isOwnedByCallerOrUs(uri, caller)
+        return when {
+            isMediaStoreUri(uri) -> isReachable(uri) && isOwnedByCallerOrUs(uri, caller)
+
+            else -> hasContentUriPermission(
+                caller = caller,
+                uri = uri,
+                modeFlags = Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
+        }
     }
 
     private fun isOwnedByCallerOrUs(uri: Uri, caller: ComponentCaller): Boolean {

@@ -53,9 +53,15 @@ internal sealed interface ExternalCropSaveResult {
 
     /**
      * The caller-supplied output uri is not writable by us. Scoped storage only lets an app write
-     * media it owns, and the caller cannot delegate its own access through
-     * [android.provider.MediaStore.EXTRA_OUTPUT] — a plain extra carries no uri grant. The user
-     * resolves it by approving [intentSender], which also makes the overwrite explicit to them.
+     * media it owns, and a caller that passes the output as the plain
+     * [android.provider.MediaStore.EXTRA_OUTPUT] extra alone delegates no uri grant along with it.
+     * The user resolves it by approving [intentSender], which also makes the overwrite explicit to
+     * them.
+     *
+     * This recovery path is MediaStore-specific: the request is built by
+     * [android.provider.MediaStore.createWriteRequest], which cannot describe a foreign authority. A
+     * non-MediaStore output reaches us only when the caller did delegate a write grant, so it needs
+     * no recovery; if such a write fails anyway, the throw is caught and degrades to [Failed].
      */
     data class OutputPermissionRequired(val intentSender: IntentSender) : ExternalCropSaveResult
 

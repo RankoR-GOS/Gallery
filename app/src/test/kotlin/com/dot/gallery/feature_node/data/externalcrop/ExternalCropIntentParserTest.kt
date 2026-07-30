@@ -102,6 +102,30 @@ class ExternalCropIntentParserTest {
         assertEquals(outputUri, request?.outputUri)
     }
 
+    /**
+     * AvatarPicker passes one uri from its own provider as both the source and the output, so the
+     * crop is read from and written back to the same file. Nothing else pins that shape surviving the
+     * parser.
+     */
+    @Test
+    fun parse_acceptsAvatarPickerShapeWhereOutputIsAlsoTheSource() {
+        val uri = Uri.parse("content://com.android.avatarpicker.tempprovider/output.png")
+        val request = parse(
+            intent = cropIntent(
+                sourceUri = uri,
+                outputUri = uri,
+            ),
+            uriPermissionChecker = uriPermissionChecker(
+                readableContentUris = setOf(uri),
+                writableContentUris = setOf(uri),
+            ),
+        )
+
+        assertNotNull(request)
+        assertEquals(uri, request?.sourceUri)
+        assertEquals(uri, request?.outputUri)
+    }
+
     @Test
     fun parse_rejectsContentOutputWithoutCallerWritePermission() {
         val sourceUri = Uri.parse("content://source/image")

@@ -3,6 +3,7 @@ package com.dot.gallery.feature_node.data.externalcrop
 import android.app.ComponentCaller
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.database.MatrixCursor
@@ -124,15 +125,118 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
     }
 
     @Test
-    fun canWriteContentUri_rejectsForeignAuthority() {
+    fun canWriteContentUri_rejectsForeignAuthorityWithoutGrant() {
         val fixture = permissionChecker(resolvedType = "image/jpeg")
 
         assertFalse(
             fixture.checker.canWriteContentUri(
-                uri = Uri.parse("content://com.example.provider/output"),
+                uri = FOREIGN_OUTPUT_URI,
                 caller = fixture.caller,
             ),
         )
+    }
+
+    /**
+     * AvatarPicker's shape: one uri from its own [androidx.core.content.FileProvider], passed as both
+     * the intent data and [MediaStore.EXTRA_OUTPUT] with
+     * [android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION]. That puts it in the launch grant set,
+     * so the caller has proven it can write the output itself and we are not acting as its deputy.
+     */
+    @Test
+    fun canWriteContentUri_acceptsNonMediaStoreOutputWithWriteGrant() {
+        val fixture = permissionChecker(grantResult = PackageManager.PERMISSION_GRANTED)
+
+        assertTrue(
+            fixture.checker.canWriteContentUri(
+                uri = AVATAR_PICKER_OUTPUT_URI,
+                caller = fixture.caller,
+            ),
+        )
+    }
+
+    @Test
+    fun canWriteContentUri_rejectsNonMediaStoreOutputWithoutWriteGrant() {
+        val fixture = permissionChecker(grantResult = PackageManager.PERMISSION_DENIED)
+
+        assertFalse(
+            fixture.checker.canWriteContentUri(
+                uri = AVATAR_PICKER_OUTPUT_URI,
+                caller = fixture.caller,
+            ),
+        )
+    }
+
+    /**
+     * The extra-only shape: the caller named an output uri it never granted, so the platform throws
+     * rather than answering. Rejecting is the correct answer — the caller proved nothing.
+     */
+    @Test
+    fun canWriteContentUri_rejectsNonMediaStoreOutputOutsideLaunchGrantSet() {
+        val fixture = permissionChecker(
+            grantException = IllegalArgumentException("uri not in the launch grant set"),
+        )
+
+        assertFalse(
+            fixture.checker.canWriteContentUri(
+                uri = AVATAR_PICKER_OUTPUT_URI,
+                caller = fixture.caller,
+            ),
+        )
+    }
+
+    @Test
+    fun canWriteContentUri_rejectsNonMediaStoreOutputWhenGrantCheckThrowsSecurityException() {
+        val fixture = permissionChecker(
+            grantException = SecurityException("not accessible"),
+        )
+
+        assertFalse(
+            fixture.checker.canWriteContentUri(
+                uri = AVATAR_PICKER_OUTPUT_URI,
+                caller = fixture.caller,
+            ),
+        )
+    }
+
+    /**
+     * A write grant on a media uri must not buy access to a row the caller does not own. MediaStore
+     * ownership is the stricter rule and stays the only one consulted there.
+     */
+    @Test
+    fun canWriteContentUri_rejectsThirdPartyMediaStoreOwnerEvenWithWriteGrant() {
+        val fixture = permissionChecker(
+            resolvedType = "image/jpeg",
+            owner = "com.example.victim",
+            grantResult = PackageManager.PERMISSION_GRANTED,
+        )
+
+        assertFalse(
+            fixture.checker.canWriteContentUri(
+                uri = OUTPUT_URI,
+                caller = fixture.caller,
+            ),
+        )
+    }
+
+    /**
+     * Writing the output is not reading it: a caller holding only a read grant must not be able to
+     * aim our writes.
+     */
+    @Test
+    fun canWriteContentUri_checksTheWriteFlagNotTheReadFlag() {
+        val fixture = permissionChecker(grantResult = PackageManager.PERMISSION_GRANTED)
+
+        fixture.checker.canWriteContentUri(
+            uri = AVATAR_PICKER_OUTPUT_URI,
+            caller = fixture.caller,
+        )
+
+        verify(exactly = 1) {
+            fixture.caller.checkContentUriPermission(
+                AVATAR_PICKER_OUTPUT_URI,
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
+        }
     }
 
     @Test
@@ -150,12 +254,13 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
     }
 
     /**
-     * The output uri never belongs to the launch grant set, so routing it through
-     * [ComponentCaller.checkContentUriPermission] makes the platform throw and every external crop
-     * request carrying an output uri gets rejected. Pin that it is never used here.
+     * A legacy MediaStore output arrives in [MediaStore.EXTRA_OUTPUT] alone, so it is outside the
+     * launch grant set and [ComponentCaller.checkContentUriPermission] would throw — routing media
+     * uris through it would reject every legacy `ACTION_CROP` request. Ownership answers there
+     * instead; pin that the launch grant api is never consulted for media.
      */
     @Test
-    fun canWriteContentUri_neverUsesLaunchGrantApi() {
+    fun canWriteContentUri_neverUsesLaunchGrantApiForMediaStoreOutput() {
         val fixture = permissionChecker(resolvedType = "image/jpeg")
 
         fixture.checker.canWriteContentUri(
@@ -168,14 +273,21 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
 
     /**
      * `"w"` truncates the target on some providers, so probing writability by opening the output
-     * would destroy it before the user confirms the crop.
+     * would destroy it before the user confirms the crop. Neither branch may do it.
      */
     @Test
     fun canWriteContentUri_neverOpensTheOutput() {
-        val fixture = permissionChecker(resolvedType = "image/jpeg")
+        val fixture = permissionChecker(
+            resolvedType = "image/jpeg",
+            grantResult = PackageManager.PERMISSION_GRANTED,
+        )
 
         fixture.checker.canWriteContentUri(
             uri = OUTPUT_URI,
+            caller = fixture.caller,
+        )
+        fixture.checker.canWriteContentUri(
+            uri = AVATAR_PICKER_OUTPUT_URI,
             caller = fixture.caller,
         )
 
@@ -245,11 +357,20 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
         owner: String? = CALLER_PACKAGE,
         ownerRowPresent: Boolean = true,
         callerPackages: Array<String> = arrayOf(CALLER_PACKAGE),
+        grantResult: Int = PackageManager.PERMISSION_DENIED,
+        grantException: RuntimeException? = null,
     ): PermissionCheckerFixture {
         val callerUid = Process.myUid() + 1
         val caller = mockk<ComponentCaller>()
         every { caller.uid } returns callerUid
         every { caller.getPackage() } returns callerPackages.firstOrNull()
+
+        val grantCheck = every { caller.checkContentUriPermission(any(), any()) }
+        if (grantException == null) {
+            grantCheck returns grantResult
+        } else {
+            grantCheck throws grantException
+        }
 
         val contentResolver = mockk<ContentResolver>(relaxed = true)
         val typeCheck = every { contentResolver.getType(any()) }
@@ -300,5 +421,8 @@ class ComponentCallerExternalCropUriPermissionCheckerTest {
         const val CALLER_PACKAGE = "com.example.caller"
         const val OUR_PACKAGE = "com.dot.gallery"
         val OUTPUT_URI: Uri = Uri.parse("content://media/external/images/media/42")
+        val AVATAR_PICKER_OUTPUT_URI: Uri =
+            Uri.parse("content://com.android.avatarpicker.tempprovider/output.png")
+        val FOREIGN_OUTPUT_URI: Uri = Uri.parse("content://com.example.provider/output")
     }
 }
