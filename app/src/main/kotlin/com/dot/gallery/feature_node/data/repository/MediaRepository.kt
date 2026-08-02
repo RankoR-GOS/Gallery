@@ -12,11 +12,13 @@ import android.graphics.Bitmap
 import android.location.Geocoder
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
-import androidx.core.app.ActivityOptionsCompat
 import androidx.datastore.preferences.core.Preferences
 import androidx.work.WorkManager
+import com.dot.gallery.R
 import com.dot.gallery.core.Resource
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.dataStore
@@ -67,12 +69,14 @@ import com.dot.gallery.feature_node.data.util.OrderType
 import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.data.util.isVideo
 import com.dot.gallery.feature_node.data.util.resolveMediaStoreVolume
+import com.dot.gallery.feature_node.data.util.resolveMediaStoreMutationUri
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.BOTH
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.PHOTOS
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia.VIDEOS
 import com.dot.gallery.feature_node.presentation.util.printWarning
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -86,6 +90,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+
+private const val TAG = "MediaRepository"
 
 interface MediaRepository {
 
@@ -152,7 +158,7 @@ interface MediaRepository {
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
         trash: Boolean
-    )
+    ): Boolean
 
     suspend fun <T: Media> copyMedia(
         from: T,
@@ -164,7 +170,7 @@ interface MediaRepository {
     suspend fun <T: Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
-    )
+    ): Boolean
 
     suspend fun <T: Media> renameMedia(
         media: T,
@@ -555,58 +561,57 @@ internal class MediaRepositoryImpl(
         val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
             .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
             .build()
-        result.launch(senderRequest)
+        withContext(Dispatchers.Main.immediate) {
+            result.launch(senderRequest)
+        }
     }
 
     override suspend fun <T : Media> trashMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
-        trash: Boolean
-    ) {
-        if (!SdkCompat.supportsMediaStoreRequests) {
-            // Trash not supported on API 29; delete directly instead
-            if (trash) {
-                deleteMedia(result, mediaList)
-            }
-            return
-        }
-        val intentSender = MediaStore.createTrashRequest(
-            contentResolver,
-            mediaList.map { it.getUri() },
-            trash
-        ).intentSender
-        val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
-            .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
-            .build()
-        result.launch(senderRequest, ActivityOptionsCompat.makeTaskLaunchBehind())
+        trash: Boolean,
+    ): Boolean {
+        return launchMediaMutation(result = result, mediaList = mediaList, trash = trash)
     }
 
     override suspend fun <T : Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
-        mediaList: List<T>
-    ) {
-        if (!SdkCompat.supportsMediaStoreRequests) {
-            // On API 29, delete directly via ContentResolver
-            // requestLegacyExternalStorage grants full write access
-            withContext(Dispatchers.IO) {
-                mediaList.forEach { media ->
-                    runCatching {
-                        contentResolver.delete(media.getUri(), null, null)
-                    }.onFailure {
-                        printWarning("Failed to delete media ${media.id}: ${it.message}")
-                    }
+        mediaList: List<T>,
+    ): Boolean {
+        return launchMediaMutation(result = result, mediaList = mediaList, trash = null)
+    }
+
+    // A successful launch is not a completed mutation. Callers retain selection until RESULT_OK.
+    private suspend fun launchMediaMutation(
+        result: ActivityResultLauncher<IntentSenderRequest>,
+        mediaList: List<Media>,
+        trash: Boolean?,
+    ): Boolean {
+        if (mediaList.isEmpty()) return false
+        return try {
+            val request = withContext(Dispatchers.IO) {
+                val uris = mediaList.map { media ->
+                    contentResolver.resolveMediaStoreMutationUri(uri = media.getUri())
+                }.distinct()
+                val pendingIntent = when (trash) {
+                    null -> MediaStore.createDeleteRequest(contentResolver, uris)
+                    else -> MediaStore.createTrashRequest(contentResolver, uris, trash)
                 }
+                IntentSenderRequest.Builder(pendingIntent.intentSender).build()
             }
-            return
+            withContext(Dispatchers.Main.immediate) {
+                result.launch(request)
+            }
+            true
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            Log.w(TAG, "Could not launch media mutation", exception)
+            withContext(Dispatchers.Main.immediate) {
+                Toast.makeText(context, R.string.media_mutation_failed, Toast.LENGTH_LONG).show()
+            }
+            false
         }
-        val intentSender =
-            MediaStore.createDeleteRequest(
-                contentResolver,
-                mediaList.map { it.getUri() }).intentSender
-        val senderRequest: IntentSenderRequest = IntentSenderRequest.Builder(intentSender)
-            .setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION, 0)
-            .build()
-        result.launch(senderRequest)
     }
 
     override suspend fun <T : Media> copyMedia(

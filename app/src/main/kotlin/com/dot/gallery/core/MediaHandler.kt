@@ -25,7 +25,7 @@ interface MediaHandler {
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
         trash: Boolean = true
-    )
+    ): Boolean
 
     suspend fun <T: Media> copyMedia(from: T, path: String)
 
@@ -34,7 +34,7 @@ interface MediaHandler {
     suspend fun <T: Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
-    )
+    ): Boolean
 
     suspend fun <T: Media> renameMedia(media: T, newName: String): Boolean
 

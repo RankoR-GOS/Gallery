@@ -97,6 +97,7 @@ import com.dot.gallery.feature_node.presentation.mediaview.components.MediaInfoR
 import com.dot.gallery.feature_node.presentation.mediaview.rememberedDerivedState
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
+import com.dot.gallery.feature_node.presentation.trashed.components.resolveTrashDialogAction
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.feature_node.presentation.util.launchEditIntent
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
@@ -159,6 +160,10 @@ fun <T : Media> BoxScope.SelectionSheet(
     }
     val showFavoriteButton by rememberShowFavoriteButton()
     val trashEnabled = rememberTrashEnabled()
+    val effectiveTrashAction = resolveTrashDialogAction(
+        trashRequested = shouldMoveToTrash,
+        trashEnabled = trashEnabled.value,
+    )
 
     AnimatedVisibility(
         modifier = modifier,
@@ -478,12 +483,9 @@ fun <T : Media> BoxScope.SelectionSheet(
     TrashDialog(
         appBottomSheetState = trashSheetState,
         data = selectedMedia,
-        action = remember(shouldMoveToTrash) {
-            if (shouldMoveToTrash) TrashDialogAction.TRASH else TrashDialogAction.DELETE
-        },
+        action = effectiveTrashAction,
     ) {
-        selector.clearSelection()
-        if (shouldMoveToTrash && SdkCompat.supportsTrash) {
+        if (effectiveTrashAction == TrashDialogAction.TRASH) {
             handler.trashMedia(result, it, true)
         } else {
             handler.deleteMedia(result, it)

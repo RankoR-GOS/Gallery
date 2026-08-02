@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,10 +27,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -65,14 +61,11 @@ import com.dot.gallery.core.Settings.Misc.rememberTrashConfirmationEnabled
 import com.dot.gallery.core.presentation.components.DragHandle
 import com.dot.gallery.core.presentation.components.SetupButton
 import com.dot.gallery.feature_node.data.model.Media
-import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.DELETE
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.RESTORE
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction.TRASH
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.GlideInvalidation
-import com.dot.gallery.feature_node.presentation.util.canBeTrashed
-import com.dot.gallery.feature_node.presentation.util.mediaPair
 import com.dot.gallery.feature_node.presentation.util.rememberFeedbackManager
 import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import com.dot.gallery.ui.theme.Shapes
@@ -86,7 +79,7 @@ fun <T : Media> TrashDialog(
     action: TrashDialogAction,
     onConfirm: suspend (List<T>) -> Unit
 ) {
-    val dataCopy = remember(data) {
+    val dataCopy = remember(data.toList(), appBottomSheetState.isVisible) {
         data.toMutableStateList()
     }
     var confirmed by remember { mutableStateOf(false) }
@@ -206,43 +199,6 @@ fun <T : Media> TrashDialog(
                     )
                 }
 
-                val mediaPair = dataCopy.mediaPair()
-
-                AnimatedVisibility(visible = mediaPair.second.isNotEmpty() && !confirmed) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .background(
-                                    color = MaterialTheme.colorScheme.errorContainer,
-                                    shape = Shapes.large
-                                )
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                modifier = Modifier.size(18.dp),
-                                imageVector = Icons.Outlined.ErrorOutline,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                            Text(
-                                text = stringResource(R.string.trash_incompatible_title),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                        Text(
-                            text = stringResource(R.string.trash_incompatible_summary),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
                 val alpha by animateFloatAsState(
                     targetValue = if (!confirmed) 1f else 0.5f,
                     label = "alphaAnimation"
@@ -272,12 +228,9 @@ fun <T : Media> TrashDialog(
                     ) {
                         val context = LocalContext.current
                         val longPressText = stringResource(R.string.long_press_to_remove)
-                        val canBeTrashed = it.canBeTrashed()
-                        val borderWidth = if (canBeTrashed) 0.5.dp else 2.dp
-                        val borderColor =
-                            if (canBeTrashed) MaterialTheme.colorScheme.onSurfaceVariant
-                            else MaterialTheme.colorScheme.error
-                        val shape = if (canBeTrashed) Shapes.large else Shapes.extraLarge
+                        val borderWidth = 0.5.dp
+                        val borderColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        val shape = Shapes.large
                         val feedbackManager = rememberFeedbackManager()
                         Box(
                             modifier = Modifier
@@ -369,4 +322,11 @@ fun <T : Media> TrashDialog(
 
 enum class TrashDialogAction {
     TRASH, DELETE, RESTORE
+}
+
+internal fun resolveTrashDialogAction(trashRequested: Boolean, trashEnabled: Boolean): TrashDialogAction {
+    return when {
+        trashRequested && trashEnabled -> TRASH
+        else -> DELETE
+    }
 }

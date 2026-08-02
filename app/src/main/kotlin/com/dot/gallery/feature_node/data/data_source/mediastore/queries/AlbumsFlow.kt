@@ -1,7 +1,6 @@
 package com.dot.gallery.feature_node.data.data_source.mediastore.queries
 
 import android.content.ContentResolver
-import android.content.ContentUris
 import android.content.Context
 import android.database.Cursor
 import android.os.Build
@@ -19,6 +18,7 @@ import com.dot.gallery.core.util.ext.tryGetString
 import com.dot.gallery.core.util.join
 import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
 import com.dot.gallery.feature_node.data.model.Album
+import com.dot.gallery.feature_node.data.util.mediaStoreItemUri
 import com.dot.gallery.feature_node.data.model.MediaType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -128,6 +128,7 @@ class AlbumsFlow(
                     it.getColumnIndex(MediaStore.Files.FileColumns.DATE_MODIFIED)
                 val sizeIndex = it.getColumnIndex(MediaStore.Files.FileColumns.SIZE)
                 val mimeTypeIndex = it.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE)
+                val volumeNameIndex = it.getColumnIndex(MediaStore.Files.FileColumns.VOLUME_NAME)
 
                 if (!it.moveToFirst()) {
                     return@use
@@ -149,15 +150,12 @@ class AlbumsFlow(
                         val thumbnailDate = it.getLong(thumbnailDateIndex)
                         val size = it.getLong(sizeIndex)
                         val mimeType = it.tryGetString(mimeTypeIndex).orEmpty()
-                        val contentUri = if (mimeType.contains("image"))
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                        else
-                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                        val volumeName = it.tryGetString(volumeNameIndex).orEmpty()
 
                         this[bucketId] = Album(
                             id = albumId,
                             label = label ?: Build.MODEL,
-                            uri = ContentUris.withAppendedId(contentUri, id),
+                            uri = mediaStoreItemUri(id = id, mimeType = mimeType, volumeName = volumeName),
                             pathToThumbnail = thumbnailPath,
                             relativePath = thumbnailRelativePath,
                             timestamp = thumbnailDateTaken?.div(1000) ?: thumbnailDate

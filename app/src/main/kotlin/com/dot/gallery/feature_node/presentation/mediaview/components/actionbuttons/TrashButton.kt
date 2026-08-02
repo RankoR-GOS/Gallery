@@ -17,6 +17,7 @@ import com.dot.gallery.core.util.SdkCompat
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialog
 import com.dot.gallery.feature_node.presentation.trashed.components.TrashDialogAction
+import com.dot.gallery.feature_node.presentation.trashed.components.resolveTrashDialogAction
 import com.dot.gallery.feature_node.presentation.util.rememberActivityResult
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
 import kotlinx.coroutines.launch
@@ -32,6 +33,10 @@ fun <T : Media> TrashButton(
     val state = rememberAppBottomSheetState()
     val scope = rememberCoroutineScope()
     val trashEnabled = rememberTrashEnabled()
+    val effectiveTrashAction = resolveTrashDialogAction(
+        trashRequested = shouldMoveToTrash,
+        trashEnabled = trashEnabled.value,
+    )
     val trashEnabledRes = remember(trashEnabled, media) {
         if (trashEnabled.value && SdkCompat.supportsTrash) R.string.trash else R.string.trash_delete
     }
@@ -64,13 +69,9 @@ fun <T : Media> TrashButton(
     TrashDialog(
         appBottomSheetState = state,
         data = listOf(media),
-        action = if (shouldMoveToTrash) {
-            TrashDialogAction.TRASH
-        } else {
-            TrashDialogAction.DELETE
-        }
+        action = effectiveTrashAction,
     ) {
-        if (shouldMoveToTrash && SdkCompat.supportsTrash) {
+        if (effectiveTrashAction == TrashDialogAction.TRASH) {
             handler.trashMedia(result, it, true)
         } else {
             handler.deleteMedia(result, it)

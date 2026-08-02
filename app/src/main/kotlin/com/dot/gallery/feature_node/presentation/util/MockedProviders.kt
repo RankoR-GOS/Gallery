@@ -86,7 +86,9 @@ class MockedMediaHandler: MediaHandler {
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
         trash: Boolean
-    ) = Unit
+    ): Boolean {
+        return false
+    }
 
     override suspend fun <T : Media> copyMedia(
         from: T,
@@ -98,7 +100,9 @@ class MockedMediaHandler: MediaHandler {
     override suspend fun <T : Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>
-    ) = Unit
+    ): Boolean {
+        return false
+    }
 
     override suspend fun <T : Media> renameMedia(
         media: T,

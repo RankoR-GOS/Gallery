@@ -43,7 +43,6 @@ import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.domain.model.InfoRow
 import com.dot.gallery.feature_node.presentation.mediaview.components.retrieveMetadata
 
-val sdcardRegex = "^/storage/[A-Z0-9]+-[A-Z0-9]+/.*$".toRegex()
 
 
 @Composable
@@ -125,31 +124,6 @@ fun Bitmap.flipVertically(): Bitmap {
 fun Bitmap.rotate(degrees: Float): Bitmap {
     val matrix = Matrix().apply { postRotate(degrees) }
     return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
-}
-
-fun List<Media>.canBeTrashed(): Boolean {
-    return find { it.path.matches(sdcardRegex) } == null
-}
-
-/**
- * first pair = trashable
- * second pair = non-trashable
- */
-fun List<Media>.mediaPair(): Pair<List<Media>, List<Media>> {
-    val trashableMedia = ArrayList<Media>()
-    val nonTrashableMedia = ArrayList<Media>()
-    forEach {
-        if (it.path.matches(sdcardRegex)) {
-            nonTrashableMedia.add(it)
-        } else {
-            trashableMedia.add(it)
-        }
-    }
-    return trashableMedia to nonTrashableMedia
-}
-
-fun Media.canBeTrashed(): Boolean {
-    return !path.matches(sdcardRegex)
 }
 
 @Composable

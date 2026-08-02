@@ -21,6 +21,7 @@ object MediaQuery {
         MediaStore.Files.FileColumns.DURATION,
         MediaStore.Files.FileColumns.SIZE,
         MediaStore.Files.FileColumns.MIME_TYPE,
+        MediaStore.Files.FileColumns.VOLUME_NAME,
     )
 
     val MediaProjection: Array<String>
@@ -55,6 +56,7 @@ object MediaQuery {
                 MediaStore.Files.FileColumns.DURATION,
                 MediaStore.Files.FileColumns.SIZE,
                 MediaStore.Files.FileColumns.MIME_TYPE,
+        MediaStore.Files.FileColumns.VOLUME_NAME,
             )
             return if (SdkCompat.supportsTrash) {
                 base + arrayOf(MediaStore.Files.FileColumns.DATE_EXPIRES)
@@ -74,6 +76,7 @@ object MediaQuery {
         MediaStore.Files.FileColumns.DATE_MODIFIED,
         MediaStore.Files.FileColumns.SIZE,
         MediaStore.Files.FileColumns.MIME_TYPE,
+        MediaStore.Files.FileColumns.VOLUME_NAME,
     )
 
     object Selection {

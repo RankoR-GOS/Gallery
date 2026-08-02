@@ -7,16 +7,11 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.runtime.compositionLocalOf
 import androidx.work.WorkManager
-import com.dot.gallery.core.Settings.Misc.getTrashEnabled
 import com.dot.gallery.core.workers.rotateImage
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.repository.MediaRepository
-import com.dot.gallery.feature_node.presentation.util.mediaPair
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.withContext
 
 val LocalMediaHandler = compositionLocalOf<MediaHandler> {
     error("No MediaHandler provided!!! This is likely due to a missing Hilt injection in the Composable hierarchy.")
@@ -50,24 +45,9 @@ class MediaHandlerImpl @Inject constructor(
     override suspend fun <T : Media> trashMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
         mediaList: List<T>,
-        trash: Boolean
-    ) = withContext(Dispatchers.Default) {
-        val isTrashEnabled = getTrashEnabled(context).firstOrNull() ?: true
-        /**
-         * Trash media only if user enabled the Trash Can
-         * Or if user wants to remove existing items from the trash
-         * */
-        if ((isTrashEnabled || !trash)) {
-            val pair = mediaList.mediaPair()
-            if (pair.first.isNotEmpty()) {
-                repository.trashMedia(result, mediaList, trash)
-            }
-            if (pair.second.isNotEmpty()) {
-                repository.deleteMedia(result, mediaList)
-            }
-        } else {
-            repository.deleteMedia(result, mediaList)
-        }
+        trash: Boolean,
+    ): Boolean {
+        return repository.trashMedia(result = result, mediaList = mediaList, trash = trash)
     }
 
     override fun <T : Media> rotateImage(
@@ -85,8 +65,10 @@ class MediaHandlerImpl @Inject constructor(
 
     override suspend fun <T : Media> deleteMedia(
         result: ActivityResultLauncher<IntentSenderRequest>,
-        mediaList: List<T>
-    ) = repository.deleteMedia(result, mediaList)
+        mediaList: List<T>,
+    ): Boolean {
+        return repository.deleteMedia(result = result, mediaList = mediaList)
+    }
 
     override suspend fun <T : Media> renameMedia(
         media: T,

@@ -26,6 +26,7 @@ import com.dot.gallery.core.util.ext.tryGetString
 import com.dot.gallery.core.util.join
 import com.dot.gallery.feature_node.data.data_source.mediastore.MediaQuery
 import com.dot.gallery.feature_node.data.model.Media
+import com.dot.gallery.feature_node.data.util.mediaStoreItemUri
 import com.dot.gallery.feature_node.data.model.MediaType
 import com.dot.gallery.feature_node.data.util.isTrashed
 import com.dot.gallery.feature_node.presentation.util.getDate
@@ -182,15 +183,11 @@ class MediaUriFlow(
             val duration = it.tryGetString(indexCache[i++])
             val size = it.getLong(indexCache[i++])
             val mimeType = it.tryGetString(indexCache[i++]).orEmpty()
+            val volumeName = it.tryGetString(indexCache[i++]).orEmpty()
             // IS_FAVORITE and IS_TRASHED are only available on API 30+
             val isFavorite = if (SdkCompat.supportsFavorites) it.getInt(indexCache[i++]) else 0
             val isTrashed = if (SdkCompat.supportsTrash) it.getInt(indexCache[i]) else 0
-            val contentUri = if (mimeType.contains("image")) {
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-            } else {
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-            }
-            val uri = ContentUris.withAppendedId(contentUri, id)
+            val uri = mediaStoreItemUri(id = id, mimeType = mimeType, volumeName = volumeName)
             val formattedDate = (takenTimestamp?.div(1000) ?: modifiedTimestamp).getDate(
                 Constants.FULL_DATE_FORMAT,
             )
