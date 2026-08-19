@@ -3,12 +3,14 @@ package com.dot.gallery.core.workers
 import android.content.Context
 import androidx.compose.ui.util.fastMap
 import androidx.hilt.work.HiltWorker
+import androidx.room.withTransaction
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.dot.gallery.core.Resource
 import com.dot.gallery.core.util.hasFullMediaAccess
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.model.MediaVersion
@@ -23,7 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
@@ -70,19 +71,19 @@ class DatabaseUpdaterWorker @AssistedInject constructor(
             }
             withContext(Dispatchers.IO) {
                 val mediaVersion = appContext.mediaStoreVersion
-                val media = repository.getCompleteMedia()
-                    .map { resource -> resource.data.orEmpty() }
-                    .firstOrNull()
+                val response = repository.getCompleteMedia().firstOrNull()
+                check(response is Resource.Success) { "Could not read a complete media inventory" }
+                val media = requireNotNull(response.data)
                 if (!appContext.hasFullMediaAccess()) {
                     return@withContext
                 }
-                media?.let { mediaItems ->
+                database.withTransaction {
                     printDebug("Database is not up to date. Updating to version $mediaVersion")
-                    database.getMediaDao().setMediaVersion(MediaVersion(mediaVersion))
-                    database.getMediaDao().updateMedia(mediaItems)
+                    database.getMediaDao().updateMedia(mediaList = media)
                     database.getClassifierDao().deleteDeclassifiedImages(
-                        mediaItems.fastMap { mediaItem -> mediaItem.id },
+                        media.fastMap { mediaItem -> mediaItem.id },
                     )
+                    database.getMediaDao().setMediaVersion(version = MediaVersion(version = mediaVersion))
                 }
             }
             Result.success()

@@ -18,10 +18,19 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MetadataDao {
 
-    @Upsert(entity = MediaVersion::class)
-    suspend fun setMediaVersion(version: MediaVersion)
+    @Transaction
+    suspend fun setMediaVersion(version: MediaVersion) {
+        clearMediaVersion()
+        insertMediaVersion(version = MediaVersion(version = "metadata:${version.version}"))
+    }
 
-    @Query("SELECT EXISTS(SELECT * FROM media_version WHERE version = :version) LIMIT 1")
+    @Query("DELETE FROM media_version WHERE version LIKE 'metadata:%'")
+    suspend fun clearMediaVersion()
+
+    @Upsert(entity = MediaVersion::class)
+    suspend fun insertMediaVersion(version: MediaVersion)
+
+    @Query("SELECT EXISTS(SELECT * FROM media_version WHERE version = 'metadata:' || :version) LIMIT 1")
     suspend fun isMediaVersionUpToDate(version: String): Boolean
 
     @Transaction

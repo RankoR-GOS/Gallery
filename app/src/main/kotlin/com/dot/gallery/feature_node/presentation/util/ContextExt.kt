@@ -211,7 +211,13 @@ fun ProvideWindowContext(content: @Composable () -> Unit) {
 }
 
 val Context.mediaStoreVersion: String
-    get() = "${MediaStore.getGeneration(this, MediaStore.VOLUME_EXTERNAL_PRIMARY)}/${MediaStore.getVersion(this)}"
+    get() {
+        val generations = MediaStore.getExternalVolumeNames(this).sorted()
+            .joinToString(separator = ",") { volume ->
+                "$volume:${MediaStore.getGeneration(this, volume)}"
+            }
+        return "$generations/${MediaStore.getVersion(this)}"
+    }
 
 suspend fun InternalDatabase.isMediaUpToDate(context: Context): Boolean {
     return getMediaDao().isMediaVersionUpToDate(context.mediaStoreVersion)

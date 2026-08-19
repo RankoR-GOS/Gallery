@@ -51,10 +51,19 @@ interface MediaDao {
     suspend fun deleteMediaNotInList(mediaIds: List<Long>)
 
     /** MediaVersion */
-    @Upsert(entity = MediaVersion::class)
-    suspend fun setMediaVersion(version: MediaVersion)
+    @Transaction
+    suspend fun setMediaVersion(version: MediaVersion) {
+        clearMediaVersion()
+        insertMediaVersion(version = MediaVersion(version = "media:${version.version}"))
+    }
 
-    @Query("SELECT EXISTS(SELECT * FROM media_version WHERE version = :version) LIMIT 1")
+    @Query("DELETE FROM media_version WHERE version LIKE 'media:%'")
+    suspend fun clearMediaVersion()
+
+    @Upsert(entity = MediaVersion::class)
+    suspend fun insertMediaVersion(version: MediaVersion)
+
+    @Query("SELECT EXISTS(SELECT * FROM media_version WHERE version = 'media:' || :version) LIMIT 1")
     suspend fun isMediaVersionUpToDate(version: String): Boolean
 
     /** Timeline Settings */
