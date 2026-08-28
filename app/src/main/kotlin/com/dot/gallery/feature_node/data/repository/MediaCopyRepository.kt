@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.util.Log
+import com.dot.gallery.feature_node.data.util.preserveMediaTimestamp
 import com.dot.gallery.feature_node.data.util.resolveMediaStoreVolume
 import com.dot.gallery.injection.qualifier.IoDispatcher
 import java.io.InputStream
@@ -74,6 +75,12 @@ internal class MediaCopyRepositoryImpl @Inject constructor(
                             destinationUri = insertedUri,
                             onBytesCopied = onBytesCopied,
                         )
+                        if (mediaCopied) {
+                            contentResolver.preserveMediaTimestamp(
+                                sourceUri = sourceUri,
+                                destinationUri = insertedUri,
+                            )
+                        }
                         destinationPublished = mediaCopied && publishMedia(uri = insertedUri)
                         insertedUri.takeIf { destinationPublished }
                     }
@@ -205,10 +212,6 @@ internal class MediaCopyRepositoryImpl @Inject constructor(
             uri,
             ContentValues().apply {
                 put(MediaStore.MediaColumns.IS_PENDING, 0)
-                put(
-                    MediaStore.MediaColumns.DATE_MODIFIED,
-                    System.currentTimeMillis() / 1000,
-                )
             },
             null,
             null,

@@ -67,6 +67,7 @@ import com.dot.gallery.feature_node.data.util.MediaOrder
 import com.dot.gallery.feature_node.data.util.OrderType
 import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.data.util.isVideo
+import com.dot.gallery.feature_node.data.util.preserveMediaTimestamp
 import com.dot.gallery.feature_node.data.util.resolveMediaStoreVolume
 import com.dot.gallery.feature_node.data.util.resolveMediaStoreMutationUri
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
@@ -717,14 +718,11 @@ internal class MediaRepositoryImpl(
                     return@withContext false
                 }
 
+                cr.preserveMediaTimestamp(sourceUri = srcUri, destinationUri = destinationUri)
                 val publishedRows = cr.update(
                     destinationUri,
                     ContentValues().apply {
                         put(MediaStore.MediaColumns.IS_PENDING, 0)
-                        put(
-                            MediaStore.MediaColumns.DATE_MODIFIED,
-                            System.currentTimeMillis() / 1000,
-                        )
                     },
                     null, null
                 )

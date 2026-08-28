@@ -1,12 +1,15 @@
 package com.dot.gallery.feature_node.data.repository
 
 import android.content.ContentResolver
+import android.graphics.Bitmap
 import android.content.ContentValues
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -24,7 +27,15 @@ class MediaCopyRepositoryDeviceTest {
             .targetContext
             .contentResolver
         val sourceName = "media-copy-café 日本語-${System.nanoTime()}.jpg"
-        val sourceBytes = byteArrayOf(1, 3, 5, 7, 9)
+        val sourceBytes = ByteArrayOutputStream().use { output ->
+            val bitmap = Bitmap.createBitmap(32, 24, Bitmap.Config.ARGB_8888)
+            try {
+                check(bitmap.compress(Bitmap.CompressFormat.JPEG, 90, output))
+                output.toByteArray()
+            } finally {
+                bitmap.recycle()
+            }
+        }
         var sourceUri: Uri? = null
         var destinationUri: Uri? = null
 
@@ -68,6 +79,9 @@ class MediaCopyRepositoryDeviceTest {
                 check(cursor.moveToFirst())
                 assertEquals(sourceName, cursor.getString(0))
             } ?: error("Copied row is missing")
+            assertEquals(SOURCE_TIMESTAMP_SECONDS, readModifiedTime(contentResolver = contentResolver, uri = insertedSourceUri))
+            assertEquals(SOURCE_TIMESTAMP_SECONDS, readModifiedTime(contentResolver = contentResolver, uri = publishedDestinationUri))
+            assertEquals(SOURCE_TIMESTAMP_SECONDS * 1000, mediaFile(contentResolver = contentResolver, uri = publishedDestinationUri).lastModified())
             assertArrayEquals(
                 sourceBytes,
                 readBytes(
@@ -106,6 +120,7 @@ class MediaCopyRepositoryDeviceTest {
             contentResolver.openOutputStream(uri)?.use { output ->
                 output.write(bytes)
             } ?: throw IOException("Failed to open source test media")
+            check(mediaFile(contentResolver = contentResolver, uri = uri).setLastModified(SOURCE_TIMESTAMP_SECONDS * 1000))
             val publishedRows = contentResolver.update(
                 uri,
                 ContentValues().apply {
@@ -119,6 +134,20 @@ class MediaCopyRepositoryDeviceTest {
         } catch (exception: Exception) {
             contentResolver.delete(uri, null, null)
             throw exception
+        }
+    }
+
+    private fun mediaFile(contentResolver: ContentResolver, uri: Uri): File {
+        return requireNotNull(contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)).use { cursor ->
+            check(cursor.moveToFirst())
+            File(cursor.getString(0))
+        }
+    }
+
+    private fun readModifiedTime(contentResolver: ContentResolver, uri: Uri): Long {
+        return requireNotNull(contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DATE_MODIFIED), null, null, null)).use { cursor ->
+            check(cursor.moveToFirst())
+            cursor.getLong(0)
         }
     }
 
@@ -142,6 +171,7 @@ class MediaCopyRepositoryDeviceTest {
     }
 
     companion object {
+        private const val SOURCE_TIMESTAMP_SECONDS = 946684800L
         private val testRelativePath = Environment.DIRECTORY_PICTURES + "/GalleryMediaCopyTest"
     }
 }
