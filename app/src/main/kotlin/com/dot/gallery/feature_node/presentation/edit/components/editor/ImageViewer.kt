@@ -83,7 +83,7 @@ fun ImageViewer(
     setPreviousPosition: (Offset) -> Unit,
     setCurrentPath: (Path) -> Unit,
     setCurrentPathProperty: (PathProperties) -> Unit,
-    applyDrawing: (Bitmap, () -> Unit) -> Unit,
+    applyDrawing: (Bitmap, (Boolean) -> Unit) -> Unit,
     onNavigateBack: () -> Unit = {},
     requestApply: Boolean = false,
     onApplyHandled: () -> Unit = {},

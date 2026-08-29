@@ -156,8 +156,17 @@ fun TextMarkupOverlay(
                 }
                 TextButton(
                     onClick = {
-                        if (text.isNotBlank()) {
-                            onDone(text, selectedColor)
+                        // Strip leading/trailing blank lines so the annotation's
+                        // bounding box matches the visible text. Otherwise empty
+                        // lines inflate the box with invisible space, pushing the
+                        // text (and its handles) out of bounds and making it hard
+                        // to position. Interior blank lines are preserved.
+                        val normalized = text.lines()
+                            .dropWhile { it.isBlank() }
+                            .dropLastWhile { it.isBlank() }
+                            .joinToString("\n")
+                        if (normalized.isNotBlank()) {
+                            onDone(normalized, selectedColor)
                         } else {
                             onRemove()
                         }

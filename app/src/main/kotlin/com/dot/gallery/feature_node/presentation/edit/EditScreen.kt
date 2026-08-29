@@ -137,7 +137,7 @@ fun EditScreen2(
     setDrawType: (DrawType) -> Unit,
     setCurrentPath: (Path) -> Unit,
     setCurrentPathProperty: (PathProperties) -> Unit,
-    applyDrawing: (Bitmap, () -> Unit) -> Unit,
+    applyDrawing: (Bitmap, (Boolean) -> Unit) -> Unit,
     undoLastPath: () -> Unit,
     redoLastPath: () -> Unit,
     clearDrawing: () -> Unit = {},
@@ -176,15 +176,6 @@ fun EditScreen2(
     }
 
     var requestMarkupApply by remember { mutableStateOf(false) }
-
-    // Auto-apply markup when leaving drawing mode
-    var wasDrawing by remember { mutableStateOf(false) }
-    LaunchedEffect(isMarkupDrawing) {
-        if (wasDrawing && !isMarkupDrawing && paths.isNotEmpty()) {
-            requestMarkupApply = true
-        }
-        wasDrawing = isMarkupDrawing
-    }
 
     // Track which tab is currently selected for the tab bar highlight
     var selectedTab by remember { mutableStateOf<EditorItems?>(EditorItems.Lighting) }
@@ -230,6 +221,21 @@ fun EditScreen2(
     var selectedTextIndex by remember { mutableIntStateOf(-1) }
 
     val onRequestTextInput: () -> Unit = { showTextOverlay = true }
+
+    BackHandler(enabled = isMarkupDrawing) {
+        if (!requestMarkupApply) {
+            if (paths.isNotEmpty() || textAnnotations.isNotEmpty()) {
+                requestMarkupApply = true
+            } else {
+                clearDrawing()
+                navController.popBackStack()
+            }
+        }
+    }
+    LaunchedEffect(requestMarkupApply, isMarkupDrawing) {
+        if (requestMarkupApply && !isMarkupDrawing) requestMarkupApply = false
+    }
+
 
     Box {
         Column(

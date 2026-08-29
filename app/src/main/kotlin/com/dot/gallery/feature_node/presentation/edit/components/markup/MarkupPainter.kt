@@ -68,7 +68,7 @@ fun MarkupPainter(
     currentPathProperty: PathProperties,
     setCurrentPathProperty: (PathProperties) -> Unit,
     currentImage: Bitmap?,
-    applyDrawing: (Bitmap, () -> Unit) -> Unit,
+    applyDrawing: (Bitmap, (Boolean) -> Unit) -> Unit,
     onNavigateBack: () -> Unit = {},
     requestApply: Boolean = false,
     onApplyHandled: () -> Unit = {},
@@ -95,6 +95,11 @@ fun MarkupPainter(
     // Text annotation drag state
     var isDraggingText by remember { mutableStateOf(false) }
     var isResizingText by remember { mutableStateOf(false) }
+    var isRotatingText by remember { mutableStateOf(false) }
+    // Rotation gesture tracking (single-finger rotate handle)
+    var rotateCenter by remember { mutableStateOf(Offset.Zero) }
+    var rotateStartAngle by remember { mutableFloatStateOf(0f) }
+    var rotateStartRotation by remember { mutableFloatStateOf(0f) }
     var canvasLayoutSize by remember { mutableStateOf(IntSize.Zero) }
 
     // Keep fresh references for pointer-input lambdas (captured once per key change)
@@ -114,11 +119,15 @@ fun MarkupPainter(
             delay(100)
             mutex.withLock {
                 val image = graphicsLayer.toImageBitmap().asAndroidBitmap()
-                applyDrawing(image) {
-                    onNavigateBack()
+                applyDrawing(image) { applied ->
+                    onApplyHandled()
+                    if (applied) {
+                        onTextAnnotationsChange(emptyList())
+                        onSelectedTextIndexChange(-1)
+                        onNavigateBack()
+                    }
                 }
             }
-            onApplyHandled()
         } else if (requestApply) {
             onApplyHandled()
         }
@@ -155,8 +164,14 @@ fun MarkupPainter(
                                     )
                                     val ann = latestTextAnnotations[latestSelectedTextIndex]
                                     val bounds = measureTextBounds(ann, sz)
+                                    // This handler runs outside the graphicsLayer, so the
+                                    // centroid is in screen space. Map it back into content
+                                    // space (graphicsLayer scales around the center).
+                                    val layerCenter = Offset(sz.width / 2f, sz.height / 2f)
+                                    val contentCentroid = layerCenter +
+                                            (centroid - canvasOffset - layerCenter) / canvasScale
                                     val localCentroid =
-                                        inverseRotatePoint(centroid, bounds.center, ann.rotation)
+                                        inverseRotatePoint(contentCentroid, bounds.center, ann.rotation)
                                     val hitPad = 40f
                                     val hitRect = Rect(
                                         bounds.left - hitPad, bounds.top - hitPad,
@@ -180,9 +195,16 @@ fun MarkupPainter(
                                 val zoom = event.calculateZoom()
                                 val ann = latestTextAnnotations[latestSelectedTextIndex]
                                 val updated = latestTextAnnotations.toMutableList()
-                                updated[latestSelectedTextIndex] = ann.copy(
-                                    rotation = ann.rotation + rotation,
-                                    fontSize = (ann.fontSize * zoom).coerceIn(0.02f, 0.2f)
+                                val sz = Size(
+                                    canvasLayoutSize.width.toFloat(),
+                                    canvasLayoutSize.height.toFloat()
+                                )
+                                updated[latestSelectedTextIndex] = clampAnnotationCenter(
+                                    ann.copy(
+                                        rotation = ann.rotation + rotation,
+                                        fontSize = (ann.fontSize * zoom).coerceIn(0.02f, 0.2f)
+                                    ),
+                                    sz
                                 )
                                 latestOnTextAnnotationsChange(updated)
                             } else {
@@ -227,17 +249,33 @@ fun MarkupPainter(
                                 latestOnSelectedTextIndexChange(-1)
                                 isDraggingText = false
                                 isResizingText = false
+                                isRotatingText = false
                                 pointerInputChange.consume()
                                 return@dragMotionEvent
-                            } else if (corner > 0) {
-                                // Corner handles = resize
+                            } else if (corner == 2) {
+                                // Top-right = rotate
+                                val ann = latestTextAnnotations[latestSelectedTextIndex]
+                                val bounds = measureTextBounds(ann, sz)
+                                rotateCenter = bounds.center
+                                rotateStartAngle = kotlin.math.atan2(
+                                    pos.y - bounds.center.y,
+                                    pos.x - bounds.center.x
+                                )
+                                rotateStartRotation = ann.rotation
+                                isRotatingText = true
+                                isResizingText = false
+                                isDraggingText = false
+                                pointerInputChange.consume()
+                            } else if (corner == 1 || corner == 3) {
+                                // Bottom corners = resize
                                 isResizingText = true
                                 isDraggingText = false
+                                isRotatingText = false
                                 pointerInputChange.consume()
                             }
                         }
                         // Only do body hit-test when no corner handle was engaged
-                        if (!isResizingText) {
+                        if (!isResizingText && !isRotatingText) {
                             val hitIdx = hitTestTextAnnotation(pos, latestTextAnnotations, canvasLayoutSize)
                             if (hitIdx >= 0) {
                                 latestOnSelectedTextIndexChange(hitIdx)
@@ -262,33 +300,66 @@ fun MarkupPainter(
                 onDrag = { pointerInputChange ->
                     if (isZooming) {
                         pointerInputChange.consume()
+                    } else if (drawMode == DrawMode.Text && isRotatingText && latestSelectedTextIndex >= 0) {
+                        // Rotate the selected text annotation via the top-right handle
+                        val pos = pointerInputChange.position
+                        val currentAngle = kotlin.math.atan2(
+                            pos.y - rotateCenter.y,
+                            pos.x - rotateCenter.x
+                        )
+                        val deltaDeg =
+                            Math.toDegrees((currentAngle - rotateStartAngle).toDouble()).toFloat()
+                        val updated = latestTextAnnotations.toMutableList()
+                        val ann = updated[latestSelectedTextIndex]
+                        updated[latestSelectedTextIndex] = ann.copy(
+                            rotation = rotateStartRotation + deltaDeg
+                        )
+                        latestOnTextAnnotationsChange(updated)
+                        pointerInputChange.consume()
                     } else if (drawMode == DrawMode.Text && isResizingText && latestSelectedTextIndex >= 0) {
                         // Resize the selected text annotation via corner drag
                         val change = pointerInputChange.positionChange()
                         val dy = change.y / canvasLayoutSize.height.coerceAtLeast(1)
                         val updated = latestTextAnnotations.toMutableList()
                         val ann = updated[latestSelectedTextIndex]
-                        updated[latestSelectedTextIndex] = ann.copy(
-                            fontSize = (ann.fontSize + dy).coerceIn(0.02f, 0.2f)
+                        val sz = Size(
+                            canvasLayoutSize.width.toFloat(),
+                            canvasLayoutSize.height.toFloat()
+                        )
+                        updated[latestSelectedTextIndex] = clampAnnotationCenter(
+                            ann.copy(
+                                fontSize = (ann.fontSize + dy).coerceIn(0.02f, 0.2f)
+                            ),
+                            sz
                         )
                         latestOnTextAnnotationsChange(updated)
                         pointerInputChange.consume()
                     } else if (drawMode == DrawMode.Text && isDraggingText && latestSelectedTextIndex >= 0) {
-                        // Drag the selected text annotation
+                        // Drag the selected text annotation, keeping its box within the canvas
                         val change = pointerInputChange.positionChange()
                         val dx = change.x / canvasLayoutSize.width.coerceAtLeast(1)
                         val dy = change.y / canvasLayoutSize.height.coerceAtLeast(1)
                         val updated = latestTextAnnotations.toMutableList()
                         val ann = updated[latestSelectedTextIndex]
-                        updated[latestSelectedTextIndex] = ann.copy(
-                            position = Offset(
-                                (ann.position.x + dx).coerceIn(0f, 1f),
-                                (ann.position.y + dy).coerceIn(0f, 1f)
-                            )
+                        val sz = Size(
+                            canvasLayoutSize.width.toFloat(),
+                            canvasLayoutSize.height.toFloat()
+                        )
+                        val bounds = measureTextBounds(ann, sz)
+                        val normW = if (sz.width > 0f) bounds.width / sz.width else 0f
+                        val normH = if (sz.height > 0f) bounds.height / sz.height else 0f
+                        // position.x is the box left; box top (normalized) = position.y - fontSize
+                        val (minX, maxX) = if (normW <= 1f) 0f to (1f - normW) else (1f - normW) to 0f
+                        val (minTop, maxTop) = if (normH <= 1f) 0f to (1f - normH) else (1f - normH) to 0f
+                        val newX = (ann.position.x + dx).coerceIn(minX, maxX)
+                        val newTop = (ann.position.y - ann.fontSize + dy).coerceIn(minTop, maxTop)
+                        updated[latestSelectedTextIndex] = clampAnnotationCenter(
+                            ann.copy(position = Offset(newX, newTop + ann.fontSize)),
+                            sz
                         )
                         latestOnTextAnnotationsChange(updated)
                         pointerInputChange.consume()
-                    } else if (drawMode == DrawMode.Touch || (drawMode == DrawMode.Text && !isResizingText && !isDraggingText)) {
+                    } else if (drawMode == DrawMode.Touch || (drawMode == DrawMode.Text && !isResizingText && !isDraggingText && !isRotatingText)) {
                         val change = pointerInputChange.positionChange()
                         canvasOffset += change * canvasScale
                         pointerInputChange.consume()
@@ -308,6 +379,7 @@ fun MarkupPainter(
                     } else if (drawMode == DrawMode.Text) {
                         isDraggingText = false
                         isResizingText = false
+                        isRotatingText = false
                     } else if (drawMode != DrawMode.Touch) {
                         painterMotionEvent = PainterMotionEvent.Up
                     }
@@ -737,6 +809,39 @@ private fun measureTextBounds(annotation: TextAnnotation, canvasSize: Size): Rec
         top = y - textSize, // baseline offset
         right = x + maxWidth,
         bottom = y - textSize + totalHeight
+    )
+}
+
+/**
+ * Keep a text annotation fully within the canvas by clamping its bounding-box edges.
+ *
+ * When the box fits, it is kept entirely on-screen (left/top edges in [0, canvas - box]),
+ * so text can never drift out of bounds. When the box is larger than the canvas (e.g. very
+ * large font or many interior blank lines), it is clamped to cover the canvas instead of
+ * escaping it, keeping it grabbable. This is stricter than center-only clamping, which let
+ * up to half the box — and its handles — slide off-screen.
+ */
+private fun clampAnnotationCenter(annotation: TextAnnotation, canvasSize: Size): TextAnnotation {
+    if (canvasSize.width <= 0f || canvasSize.height <= 0f) return annotation
+    val bounds = measureTextBounds(annotation, canvasSize)
+    val newLeft = if (bounds.width <= canvasSize.width) {
+        bounds.left.coerceIn(0f, canvasSize.width - bounds.width)
+    } else {
+        bounds.left.coerceIn(canvasSize.width - bounds.width, 0f)
+    }
+    val newTop = if (bounds.height <= canvasSize.height) {
+        bounds.top.coerceIn(0f, canvasSize.height - bounds.height)
+    } else {
+        bounds.top.coerceIn(canvasSize.height - bounds.height, 0f)
+    }
+    val dxNorm = (newLeft - bounds.left) / canvasSize.width
+    val dyNorm = (newTop - bounds.top) / canvasSize.height
+    if (dxNorm == 0f && dyNorm == 0f) return annotation
+    return annotation.copy(
+        position = Offset(
+            annotation.position.x + dxNorm,
+            annotation.position.y + dyNorm
+        )
     )
 }
 

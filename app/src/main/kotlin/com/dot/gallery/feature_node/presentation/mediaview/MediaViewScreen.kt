@@ -361,9 +361,9 @@ fun <T : Media> MediaViewScreen(
     var isBottomDark by remember { mutableStateOf(false) }
     val autoContrast by rememberAutoContrast()
     val motionPhotoState = motionPhotoStateFactory(currentMedia)
-    // Key rotation helpers by media id, not whole media object (prevents Serializable fallback of Media inside internal Pair)
-    val newRotationValue = rememberSaveable(currentMedia?.id ?: -1L) { mutableIntStateOf(0) }
-    val showRotationHelper = rememberSaveable(currentMedia?.id ?: -1L) { mutableStateOf(false) }
+    // Tagged with the media id rather than scoped to the pager page: grouped media share a page,
+    // so page-scoped state outlives a member switch and applies one photo's angle to another.
+    var pendingRotation by rememberSaveable { mutableStateOf<PendingRotation?>(null) }
 
     val activity = LocalActivity.current
     val window = LocalWindowInfo.current
@@ -581,7 +581,12 @@ fun <T : Media> MediaViewScreen(
     LaunchedEffect(Unit) {
         uiEvents.collect { event ->
             when (event) {
-                MediaViewEvent.ScrollToFirstPage -> pagerState.animateScrollToPage(0)
+                MediaViewEvent.ScrollToFirstPage -> {
+                    // Only emitted once the rotation is written to disk; the preview angle would
+                    // otherwise stack on top of the already-rotated file.
+                    pendingRotation = null
+                    pagerState.animateScrollToPage(0)
+                }
                 is MediaViewEvent.ShowMessage -> {
                     Toast.makeText(
                         context,
@@ -702,12 +707,11 @@ fun <T : Media> MediaViewScreen(
                                 isPhotosphere = mediaMetadata?.isPhotosphere == true,
                                 isMotionPhoto = mediaMetadata?.isMotionPhoto == true,
                                 motionPhotoState = motionPhotoState,
-                                rotationDisabled = isLocked || isSecureReview,
+                                rotationDisabled = isLocked || isSecureReview || !displayMedia.isImage,
+                                rotation = pendingRotation?.degreesFor(displayMedia.id) ?: 0,
                                 onImageRotated = { newRotation ->
-                                    showRotationHelper.value =
-                                        media?.isImage == true && newRotation != 0 && newRotation != 360
-                                    newRotationValue.intValue =
-                                        (if (showRotationHelper.value) newRotation else 0)
+                                    pendingRotation =
+                                        PendingRotation.of(displayMedia.id, newRotation)
                                 },
                                 onItemClick = {
                                     if (sheetState.currentDetent == imageOnlyDetent) {
@@ -857,14 +861,26 @@ fun <T : Media> MediaViewScreen(
                     currentDate = currentDate,
                     paddingValues = paddingValues,
                     currentMedia = currentMedia,
-                    showRotationHelper = showRotationHelper,
+                    showRotationHelper = rememberedDerivedState(pendingRotation, currentMedia, sheetState, imageOnlyDetent) {
+                        val pending = pendingRotation
+                        pending != null &&
+                                pending.mediaId == currentMedia?.id &&
+                                sheetState.currentDetent == imageOnlyDetent
+                    },
+                    topExtrasAlpha = {
+                        1f - sheetState.progress(imageOnlyDetent, expandedDetent).coerceIn(0f, 1f)
+                    },
                     isImageDark = isTopDark,
                     autoContrast = autoContrast,
                     isMotionPhoto = motionPhotoState.isDetected,
                     isMotionPlaying = motionPhotoState.isPlaying,
                     onToggleMotionPhoto = { motionPhotoState.togglePlayback() },
                     rotateImage = {
-                        rotateImage(currentMedia!!, newRotationValue.intValue)
+                        val target = currentMedia
+                        val pending = pendingRotation
+                        if (target != null && pending != null && pending.mediaId == target.id) {
+                            rotateImage(target, pending.degrees)
+                        }
                     },
                     onShowInfo = {
                         scope.launch {

@@ -123,7 +123,10 @@ class DynamicCropState internal constructor(
             return
         }
 
-        gestureInvoked = changes.size > 1 && (touchRegion == TouchRegion.Inside)
+        // Allow a two-finger pinch to resize the crop box whether the gesture starts inside the
+        // overlay or on a handle/edge. Previously only an inside start counted, so putting two
+        // fingers on the resize handles/edges did nothing (couldn't grab two resizers at once).
+        gestureInvoked = changes.size > 1 && touchRegion != TouchRegion.None
 
         // If overlay is touched and pointer size is one update
         // or pointer size is bigger than one but touched any handles update
@@ -164,17 +167,30 @@ class DynamicCropState internal constructor(
     override suspend fun onUp(change: PointerInputChange) = coroutineScope {
         if (touchRegion != TouchRegion.None) {
 
-            val isInContainerBounds = isRectInContainerBounds(overlayRect)
-            if (!isInContainerBounds) {
+            // Resizing/moving the crop box with a handle no longer zooms the image to fit the
+            // selection (the old one-way zoom-in felt klunky and could not be zoomed back out).
+            // Constrain the crop box to the *visible image* (intersection of the container and
+            // the image draw area), not just the container. Previously a box dragged past the
+            // image edge - common when the image is letterboxed and the draw area is smaller than
+            // the container - made animateTransformationToOverlayBounds() zoom the image in to
+            // cover the oversized box. Clamping the overlay to the image first means no zoom-in is
+            // ever required, so the crop box behaves like a plain selection rectangle (#956).
+            val imageBounds = Rect(
+                left = maxOf(rectBounds.left, drawAreaRect.left),
+                top = maxOf(rectBounds.top, drawAreaRect.top),
+                right = minOf(rectBounds.right, drawAreaRect.right),
+                bottom = minOf(rectBounds.bottom, drawAreaRect.bottom)
+            )
+            val clampedOverlay = calculateOverlayRectInBounds(imageBounds, overlayRect)
+            if (clampedOverlay != overlayRect) {
 
-                // Calculate new overlay since it's out of Container bounds
-                rectTemp = calculateOverlayRectInBounds(rectBounds, overlayRect)
-
-                // Animate overlay to new bounds inside container
+                // Animate overlay to new bounds inside the visible image
+                rectTemp = clampedOverlay
                 animateOverlayRectTo(rectTemp)
             }
 
-            // Update and animate pan, zoom and image draw area after overlay position is updated
+            // Pan the image so it keeps covering the (now in-bounds) overlay. Because the overlay
+            // already fits within the image draw area, this no longer zooms in.
             animateTransformationToOverlayBounds(overlayRect, true)
 
             // Update image draw area after animating pan, zoom or rotation is completed
@@ -195,15 +211,18 @@ class DynamicCropState internal constructor(
         changes: List<PointerInputChange>
     ) {
 
-        if (touchRegion == TouchRegion.None || gestureInvoked) {
+        if (gestureInvoked) {
+            // Two-finger pinch started inside the overlay: resize (and move) the crop box
+            // itself instead of zooming the underlying image.
             doubleTapped = false
-
-            val newPan = if (gestureInvoked) Offset.Zero else panChange
+            snapOverlayRectTo(resizeOverlayBy(zoomChange, panChange))
+        } else if (touchRegion == TouchRegion.None) {
+            doubleTapped = false
 
             updateTransformState(
                 centroid = centroid,
                 zoomChange = zoomChange,
-                panChange = newPan,
+                panChange = panChange,
                 rotationChange = rotationChange
             )
 
@@ -217,6 +236,50 @@ class DynamicCropState internal constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Resize the overlay rectangle by a pinch [zoomChange] around its center and move it by
+     * [panChange], keeping the new rectangle inside container bounds and above the minimum
+     * dimension. When [fixedAspectRatio] is set the overlay aspect ratio is preserved.
+     */
+    private fun resizeOverlayBy(zoomChange: Float, panChange: Offset): Rect {
+        val current = overlayRect
+
+        val doubleHandleSize = handleSize * 2
+        val maxWidth = containerSize.width.toFloat()
+        val maxHeight = containerSize.height.toFloat()
+        if (maxWidth <= 0f || maxHeight <= 0f) return current
+        val minWidth = (minDimension?.width ?: doubleHandleSize.roundToInt()).toFloat()
+            .coerceIn(0f, maxWidth)
+        val minHeight = (minDimension?.height ?: doubleHandleSize.roundToInt()).toFloat()
+            .coerceIn(0f, maxHeight)
+
+        var newWidth = (current.width * zoomChange)
+        var newHeight = (current.height * zoomChange)
+
+        if (fixedAspectRatio) {
+            // Preserve aspect ratio by deriving height from the width scale
+            val aspect = if (current.height != 0f) current.width / current.height else 1f
+            val maximumWidth = minOf(maxWidth, maxHeight * aspect)
+            val minimumWidth = maxOf(minWidth, minHeight * aspect).coerceAtMost(maximumWidth)
+            newWidth = newWidth.coerceIn(minimumWidth, maximumWidth)
+            newHeight = newWidth / aspect
+        } else {
+            newWidth = newWidth.coerceIn(minWidth, maxWidth)
+            newHeight = newHeight.coerceIn(minHeight, maxHeight)
+        }
+
+        val centerX = current.center.x + panChange.x
+        val centerY = current.center.y + panChange.y
+
+        var left = centerX - newWidth / 2f
+        var top = centerY - newHeight / 2f
+
+        left = left.coerceIn(0f, (maxWidth - newWidth).coerceAtLeast(0f))
+        top = top.coerceIn(0f, (maxHeight - newHeight).coerceAtLeast(0f))
+
+        return Rect(left, top, left + newWidth, top + newHeight)
     }
 
     override suspend fun onGestureStart() = Unit
@@ -525,6 +588,22 @@ class DynamicCropState internal constructor(
      * get [TouchRegion] based on touch position on screen relative to [overlayRect].
      */
     private fun getTouchRegion(
+        position: Offset,
+        rect: Rect,
+        threshold: Float
+    ): TouchRegion {
+        // For small overlays the fixed handle threshold can cover the whole rectangle,
+        // leaving no inner region to grab for moving. Shrink the effective threshold so
+        // there is always a central "Inside" band (at least ~1/3 of each dimension).
+        val effectiveThreshold = minOf(
+            threshold,
+            rect.width / 3f,
+            rect.height / 3f
+        ).coerceAtLeast(0f)
+        return getTouchRegionInternal(position, rect, effectiveThreshold)
+    }
+
+    private fun getTouchRegionInternal(
         position: Offset,
         rect: Rect,
         threshold: Float

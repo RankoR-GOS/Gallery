@@ -18,12 +18,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -56,7 +56,6 @@ import com.github.panpf.zoomimage.GlideZoomAsyncImage
 import com.github.panpf.zoomimage.compose.glide.ExperimentalGlideComposeApi
 import com.github.panpf.zoomimage.rememberGlideZoomState
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalGlideImageComposeApi::class)
 @Composable
@@ -95,6 +94,11 @@ fun <T: Media> BlurredMediaBackground(
     ExperimentalGlideComposeApi::class,
     ExperimentalGlideImageComposeApi::class,
 )
+/**
+ * @param rotation the angle to display, in degrees.
+ * @param onImageRotated called with the next angle on long press. The caller must feed it back
+ *   through [rotation]; dropping it leaves the spin animation running.
+ */
 @Stable
 @Composable
 fun <T: Media> BoxScope.ZoomablePagerImage(
@@ -102,13 +106,14 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
     media: T,
     uiEnabled: Boolean,
     rotationDisabled: Boolean,
+    rotation: Int,
     onImageRotated: (newRotation: Int) -> Unit,
     onItemClick: () -> Unit,
     onSwipeDown: () -> Unit
 ) {
     val feedbackManager = rememberFeedbackManager()
-    var isRotating by rememberSaveable(media) { mutableStateOf(false) }
-    var currentRotation by rememberSaveable(media) { mutableIntStateOf(0) }
+    // Deliberately not saveable: a restored `true` would never be cleared and freeze the spin.
+    var isRotating by remember(media) { mutableStateOf(false) }
     var loadFailed by rememberSaveable(media) { mutableStateOf(false) }
     var retryAttempt by rememberSaveable(media) { mutableIntStateOf(0) }
     val rotationAnimation by animateFloatAsState(
@@ -119,7 +124,13 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
         galleryMediaSubsamplingImageGenerators()
     }
     val zoomState = rememberGlideZoomState(subsamplingImageGenerators = subsamplingImageGenerators)
-    val scope = rememberCoroutineScope()
+    // The zoom state is not keyed by media, so grouped members share it. Drive it from [rotation]
+    // on every change instead, otherwise one member keeps the angle of the one shown before it.
+    LaunchedEffect(media, rotation) {
+        if (isRotating) delay(350)
+        zoomState.zoomable.rotate(rotation)
+        isRotating = false
+    }
     val requestListener = remember(media) {
         object : RequestListener<Drawable> {
             override fun onLoadFailed(
@@ -160,15 +171,9 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
         onTap = { onItemClick() },
         onLongPress = {
             if (!rotationDisabled) {
-                scope.launch {
-                    isRotating = true
-                    feedbackManager.vibrate()
-                    currentRotation += 90
-                    onImageRotated(currentRotation)
-                    delay(350)
-                    zoomState.zoomable.rotate(currentRotation)
-                    isRotating = false
-                }
+                isRotating = true
+                feedbackManager.vibrate()
+                onImageRotated(rotation + 90)
             }
         },
         alignment = Alignment.Center,

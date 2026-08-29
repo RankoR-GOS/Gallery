@@ -38,6 +38,7 @@ fun <T : Media> MediaPreviewComponent(
     onItemClick: () -> Unit,
     onSwipeDown: () -> Unit,
     rotationDisabled: Boolean,
+    rotation: Int = 0,
     onImageRotated: (newRotation: Int) -> Unit,
     offset: IntOffset,
     isPanorama: Boolean = false,
@@ -95,6 +96,7 @@ fun <T : Media> MediaPreviewComponent(
                         media = media,
                         uiEnabled = uiEnabled,
                         rotationDisabled = rotationDisabled,
+                        rotation = rotation,
                         onImageRotated = onImageRotated,
                         onItemClick = onItemClick,
                         onSwipeDown = onSwipeDown

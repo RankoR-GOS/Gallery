@@ -122,7 +122,6 @@ fun HorizontalScrubber(
                     (defaultValue * steps.toFloat() / maxValue).roundToInt()
                 }
             }
-            val snapThreshold = 3
             LaunchedEffect(state) {
                 snapshotFlow { state.firstVisibleItemIndex to state.isScrollInProgress }.collect { (index, isScrollInProgress) ->
                     fun value(raw: Int): Float = raw.toFloat() / (if (allowNegative) middleIndex.toFloat() else steps.toFloat())
@@ -132,10 +131,7 @@ fun HorizontalScrubber(
                     else minValue
                     onValueChanged(isScrollInProgress, currentValueInternal)
 
-                    if (!isScrollInProgress && index != defaultIndex
-                        && index in (defaultIndex - snapThreshold)..(defaultIndex + snapThreshold)
-                    ) {
-                        state.animateScrollToItem(defaultIndex)
+                    if (!isScrollInProgress && index == defaultIndex) {
                         view.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
                     }
                 }

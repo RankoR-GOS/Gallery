@@ -41,7 +41,9 @@ import com.dot.gallery.feature_node.presentation.util.printDebug
 import com.dot.gallery.feature_node.presentation.util.printError
 import com.dot.gallery.feature_node.presentation.util.toGlideModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlin.math.abs
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -480,65 +482,69 @@ class EditViewModel @Inject constructor(
 
     fun applyAdjustment(adjustment: Adjustment) {
         viewModelScope.launch(Dispatchers.IO) {
-            _isProcessing.value = true
-            printDebug("Applying adjustment: $adjustment")
-            val filters = _appliedAdjustments.value
-            clearRedoStack()
-
-            // Update applied-adjustments list (dedup same-kind for VariableFilter / ImageFilter)
-            if (adjustment is VariableFilter) {
-                val adjList = filters.toMutableList()
-                adjList.removeAll { it.name.equals(adjustment.name, ignoreCase = true) }
-                _appliedAdjustments.value = adjList + adjustment
-            } else if (adjustment is ImageFilter) {
-                val adjList = filters.toMutableList()
-                adjList.removeAll { it is ImageFilter }
-                _appliedAdjustments.value = adjList + adjustment
-            } else {
-                _appliedAdjustments.value = filters + adjustment
+            mutex.withLock {
+                try {
+                    applyAdjustmentAndWait(adjustment = adjustment)
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    printError("Failed to apply adjustment: ${exception.message}")
+                }
             }
+        }
+    }
 
-            // Always create a new bitmap (original behaviour)
-            _currentBitmap.value?.let {
-                if (adjustment is ImageFilter) {
-                    bitmaps.removeAll { entry -> entry.second is ImageFilter }
-                    _targetBitmap.value = bitmaps.lastOrNull()?.first
+    // Caller owns mutex so markup can commit before clearing its drawing state.
+    private suspend fun applyAdjustmentAndWait(adjustment: Adjustment) {
+        val currentBitmap = checkNotNull(_currentBitmap.value) { "Current bitmap is null" }
+        _isProcessing.value = true
+        try {
+            val adjustmentsWithout = _appliedAdjustments.value.filterNot { previous ->
+                when (adjustment) {
+                    is VariableFilter -> previous.name.equals(adjustment.name, ignoreCase = true)
+                    is ImageFilter -> previous is ImageFilter
+                    else -> false
                 }
-                if (adjustment is VariableFilter) {
-                    bitmaps.removeAll { entry -> entry.second?.name.equals(adjustment.name, ignoreCase = true) }
-                    _targetBitmap.value = bitmaps.lastOrNull()?.first
+            }
+            val bitmapsWithout = bitmaps.filterNot { (_, previous) ->
+                when (adjustment) {
+                    is VariableFilter -> previous?.name.equals(adjustment.name, ignoreCase = true)
+                    is ImageFilter -> previous is ImageFilter
+                    else -> false
                 }
-
-                val baseBitmap =
-                    if (adjustment is VariableFilter || adjustment is ImageFilter)
-                        _targetBitmap.value ?: it
-                    else
-                        bitmaps.lastOrNull()?.first ?: it
-
-                val newBitmap = adjustment.apply(baseBitmap)
-                _currentBitmap.value = newBitmap
-                if (adjustment !is ImageFilter) {
-                    _targetBitmap.value = newBitmap
+            }
+            val baseBitmap = bitmapsWithout.lastOrNull { it.first != null }?.first
+                ?: _originalBitmap.value ?: currentBitmap
+            val isDefault = adjustment is VariableFilter &&
+                abs(adjustment.value - adjustment.defaultValue) < 1e-4f
+            val newBitmap = when {
+                isDefault -> baseBitmap
+                else -> adjustment.apply(baseBitmap)
+            }
+            val hasChange = !isDefault && !newBitmap.sameAs(baseBitmap)
+            // Publish history only after the adjustment succeeds.
+            clearRedoStack()
+            bitmaps.clear()
+            bitmaps.addAll(bitmapsWithout)
+            if (hasChange) bitmaps.add(newBitmap to adjustment)
+            _appliedAdjustments.value = when {
+                hasChange -> adjustmentsWithout + adjustment
+                else -> adjustmentsWithout
+            }
+            withContext(Dispatchers.Main) {
+                _currentBitmap.value = when {
+                    hasChange -> newBitmap
+                    else -> baseBitmap
                 }
-                bitmaps.add(newBitmap to adjustment)
-                // Clear previews on Main after bitmap is set, so the UI
-                // renders the new bitmap before the preview overlay disappears
-                withContext(Dispatchers.Main) {
-                    _previewMatrix.value = null
-                    if (adjustment is Rotate) {
-                        _previewRotation.value = 0f
-                    }
-                    if (adjustment is Rotate90CW) {
-                        _previewRotation90.value = 0f
-                    }
-                    if (adjustment is Flip) {
-                        _previewFlipH.value = false
-                    }
-                    clearGpuPreviewEffects()
-                }
-            } ?: printError("Current bitmap is null")
-
+                _targetBitmap.value = _currentBitmap.value
+                _previewMatrix.value = null
+                if (adjustment is Rotate) _previewRotation.value = 0f
+                if (adjustment is Rotate90CW) _previewRotation90.value = 0f
+                if (adjustment is Flip) _previewFlipH.value = false
+                clearGpuPreviewEffects()
+            }
             updateUndoRedoState()
+        } finally {
             _isProcessing.value = false
         }
     }
@@ -555,39 +561,28 @@ class EditViewModel @Inject constructor(
         applyAdjustment(Flip(horizontal = true))
     }
 
-    private var applyDrawingJob: Job? = null
-
-    fun applyDrawing(graphicsImage: Bitmap, onFinish: () -> Unit) {
-        applyDrawingJob?.cancel()
-        applyDrawingJob = viewModelScope.launch(Dispatchers.IO) {
-            mutex.withLock {
-                // Flatten any pending matrix adjustments before markup
-                flattenComposedMatrix()
-                val currentImage = lastRealBitmap()
-                if (currentImage != null) {
-                    try {
-                        val newWidth = currentImage.width
-                        val newHeight = currentImage.height
-                        if (newWidth > 0 && newHeight > 0) {
-                            val finalBitmap = overlayBitmaps(
-                                currentImage,
-                                graphicsImage.scale(newWidth, newHeight)
-                            )
-                            if (!currentImage.sameAs(finalBitmap)) {
-                                applyAdjustment(Markup(finalBitmap))
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-                clearDrawingBoard()
-                withContext(Dispatchers.Main) {
-                    onFinish()
+    fun applyDrawing(graphicsImage: Bitmap, onFinish: (Boolean) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val applied = mutex.withLock {
+                try {
+                    flattenComposedMatrix()
+                    val currentImage = checkNotNull(lastRealBitmap()) { "Current bitmap is null" }
+                    val finalBitmap = overlayBitmaps(
+                        currentImage,
+                        graphicsImage.scale(currentImage.width, currentImage.height),
+                    )
+                    applyAdjustmentAndWait(adjustment = Markup(newBitmap = finalBitmap))
+                    clearDrawingBoard()
+                    true
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    printError("Failed to apply markup: ${exception.message}")
+                    false
                 }
             }
+            withContext(Dispatchers.Main) { onFinish(applied) }
         }
-
     }
 
     fun toggleFilter(filter: ImageFilter) {
