@@ -5,6 +5,11 @@
 
 package com.dot.gallery.core.sandbox
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.OperationCanceledException
+import android.provider.MediaStore
+import kotlinx.coroutines.CancellationException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -43,8 +48,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Client for [IsolatedMetadataService].
  *
  * Binds to the isolated-process service on first use, keeps the connection alive
- * for reuse, and falls back to in-process parsing if the service is unavailable
- * or times out.
+ * for reuse. Per-file binding can fall back to the shared isolated service;
+ * parsing never falls back to the app process.
  *
  */
 class IsolatedMetadataParser(private val context: Context) {
@@ -193,9 +198,7 @@ class IsolatedMetadataParser(private val context: Context) {
                 return@withContext parseImageMetadata(uri, label)
             }
             try {
-                val pfd = runCatching {
-                    context.contentResolver.openFileDescriptor(uri, "r")
-                }.getOrNull() ?: return@withContext null
+                val pfd = context.openMetadataFileDescriptor(uri = uri) ?: return@withContext null
 
                 val result = sendAndReceive(
                     messenger = connection.messenger,
@@ -230,9 +233,7 @@ class IsolatedMetadataParser(private val context: Context) {
                 return@withContext parseVideoMetadata(uri)
             }
             try {
-                val pfd = runCatching {
-                    context.contentResolver.openFileDescriptor(uri, "r")
-                }.getOrNull() ?: return@withContext null
+                val pfd = context.openMetadataFileDescriptor(uri = uri) ?: return@withContext null
 
                 val result = sendAndReceive(
                     messenger = connection.messenger,
@@ -270,9 +271,7 @@ class IsolatedMetadataParser(private val context: Context) {
                 return@withContext parseRawMetadata(uri, isVideo)
             }
             try {
-                val pfd = runCatching {
-                    context.contentResolver.openFileDescriptor(uri, "r")
-                }.getOrNull() ?: return@withContext emptyList()
+                val pfd = context.openMetadataFileDescriptor(uri = uri) ?: return@withContext emptyList()
 
                 val bundle = sendAndReceive(
                     messenger = connection.messenger,
@@ -308,9 +307,7 @@ class IsolatedMetadataParser(private val context: Context) {
     ): Bundle? = withContext(Dispatchers.IO) {
         val startNs = System.nanoTime()
         ensureBound()
-        val pfd = runCatching {
-            context.contentResolver.openFileDescriptor(uri, "r")
-        }.getOrNull() ?: return@withContext null
+        val pfd = context.openMetadataFileDescriptor(uri = uri) ?: return@withContext null
 
         val result = sendAndReceive(MSG_PARSE_IMAGE, Bundle().apply {
             putParcelable(KEY_PFD, pfd)
@@ -329,9 +326,7 @@ class IsolatedMetadataParser(private val context: Context) {
     suspend fun parseVideoMetadata(uri: Uri): Bundle? = withContext(Dispatchers.IO) {
         val startNs = System.nanoTime()
         ensureBound()
-        val pfd = runCatching {
-            context.contentResolver.openFileDescriptor(uri, "r")
-        }.getOrNull() ?: return@withContext null
+        val pfd = context.openMetadataFileDescriptor(uri = uri) ?: return@withContext null
 
         val result = sendAndReceive(MSG_PARSE_VIDEO, Bundle().apply {
             putParcelable(KEY_PFD, pfd)
@@ -350,9 +345,7 @@ class IsolatedMetadataParser(private val context: Context) {
         withContext(Dispatchers.IO) {
             val startNs = System.nanoTime()
             ensureBound()
-            val pfd = runCatching {
-                context.contentResolver.openFileDescriptor(uri, "r")
-            }.getOrNull() ?: return@withContext emptyList()
+            val pfd = context.openMetadataFileDescriptor(uri = uri) ?: return@withContext emptyList()
 
             val bundle = sendAndReceive(MSG_PARSE_RAW_METADATA, Bundle().apply {
                 putParcelable(KEY_PFD, pfd)
@@ -440,4 +433,24 @@ class IsolatedMetadataParser(private val context: Context) {
     companion object {
         private val serviceTimeout = 30_000.milliseconds
     }
+}
+
+internal fun Context.openMetadataFileDescriptor(uri: Uri): ParcelFileDescriptor? {
+    fun open(descriptorUri: Uri): ParcelFileDescriptor? {
+        return try {
+            contentResolver.openFileDescriptor(descriptorUri, "r")
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: OperationCanceledException) {
+            throw exception
+        } catch (_: Exception) {
+            null
+        }
+    }
+    val requestOriginal = uri.scheme == "content" && uri.authority == MediaStore.AUTHORITY &&
+        checkSelfPermission(Manifest.permission.ACCESS_MEDIA_LOCATION) == PackageManager.PERMISSION_GRANTED
+    if (requestOriginal) {
+        open(descriptorUri = MediaStore.setRequireOriginal(uri))?.let { return it }
+    }
+    return open(descriptorUri = uri)
 }
