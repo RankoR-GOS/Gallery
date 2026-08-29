@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -77,7 +78,7 @@ fun MarkupPainter(
     selectedTextIndex: Int = -1,
     onSelectedTextIndexChange: (Int) -> Unit = {},
 ) {
-    var graphicsLayer = rememberGraphicsLayer()
+    val graphicsLayer = rememberGraphicsLayer()
 
     /**
      * Canvas touch state. [PainterMotionEvent.Idle] by default, [PainterMotionEvent.Down] at first contact,
@@ -108,15 +109,16 @@ fun MarkupPainter(
     val latestSelectedTextIndex by rememberUpdatedState(selectedTextIndex)
     val latestOnSelectedTextIndexChange by rememberUpdatedState(onSelectedTextIndexChange)
 
-    val shouldSaveDrawing by remember(paths, textAnnotations, currentImage) {
-        derivedStateOf { (paths.isNotEmpty() || textAnnotations.isNotEmpty()) && currentImage != null }
-    }
-
+    val shouldSaveDrawing by rememberUpdatedState(
+        (paths.isNotEmpty() || textAnnotations.isNotEmpty()) && currentImage != null,
+    )
     val mutex = remember { Mutex() }
 
     LaunchedEffect(requestApply) {
-        if (requestApply && shouldSaveDrawing) {
-            delay(100)
+        if (!requestApply) return@LaunchedEffect
+        // Let the final pointer-up state reach composition before capturing it.
+        delay(100)
+        if (shouldSaveDrawing) {
             mutex.withLock {
                 val image = graphicsLayer.toImageBitmap().asAndroidBitmap()
                 applyDrawing(image) { applied ->
@@ -128,8 +130,9 @@ fun MarkupPainter(
                     }
                 }
             }
-        } else if (requestApply) {
+        } else {
             onApplyHandled()
+            onNavigateBack()
         }
     }
 
@@ -445,7 +448,7 @@ fun MarkupPainter(
 
                     else -> Unit
                 }
-                graphicsLayer = obtainGraphicsLayer().apply {
+                graphicsLayer.apply {
                     record {
                         with(drawContext.canvas.nativeCanvas) {
                             val checkPoint = saveLayer(null, null)
@@ -512,67 +515,7 @@ fun MarkupPainter(
                 }
                 onDrawWithContent {
                     drawContent()
-                    with(drawContext.canvas.nativeCanvas) {
-                        val checkPoint = saveLayer(null, null)
-                        paths.forEach {
-                            val path = it.first
-                            val property = it.second
-                            if (!property.eraseMode) {
-                                drawPath(
-                                    color = property.color,
-                                    path = path,
-                                    style = Stroke(
-                                        width = property.strokeWidth,
-                                        cap = property.strokeCap,
-                                        join = property.strokeJoin
-                                    )
-                                )
-                            } else {
-
-                                // Source
-                                drawPath(
-                                    color = Color.Transparent,
-                                    path = path,
-                                    style = Stroke(
-                                        width = currentPathProperty.strokeWidth,
-                                        cap = currentPathProperty.strokeCap,
-                                        join = currentPathProperty.strokeJoin
-                                    ),
-                                    blendMode = BlendMode.Clear
-                                )
-                            }
-                        }
-
-                        if (painterMotionEvent != PainterMotionEvent.Idle) {
-
-                            if (!currentPathProperty.eraseMode) {
-                                drawPath(
-                                    color = currentPathProperty.color,
-                                    path = currentPath,
-                                    style = Stroke(
-                                        width = currentPathProperty.strokeWidth,
-                                        cap = currentPathProperty.strokeCap,
-                                        join = currentPathProperty.strokeJoin
-                                    )
-                                )
-                            } else {
-                                drawPath(
-                                    color = Color.Transparent,
-                                    path = currentPath,
-                                    style = Stroke(
-                                        width = currentPathProperty.strokeWidth,
-                                        cap = currentPathProperty.strokeCap,
-                                        join = currentPathProperty.strokeJoin
-                                    ),
-                                    blendMode = BlendMode.Clear
-                                )
-                            }
-                        }
-                        restoreToCount(checkPoint)
-
-                        // Draw text annotations (for display)
-                        drawTextAnnotations(textAnnotations, size)
-                    }
+                    drawLayer(graphicsLayer)
 
                     // Draw selection bounding box + handles for selected text
                     if (selectedTextIndex in textAnnotations.indices && drawMode == DrawMode.Text) {

@@ -222,16 +222,6 @@ fun EditScreen2(
 
     val onRequestTextInput: () -> Unit = { showTextOverlay = true }
 
-    BackHandler(enabled = isMarkupDrawing) {
-        if (!requestMarkupApply) {
-            if (paths.isNotEmpty() || textAnnotations.isNotEmpty()) {
-                requestMarkupApply = true
-            } else {
-                clearDrawing()
-                navController.popBackStack()
-            }
-        }
-    }
     LaunchedEffect(requestMarkupApply, isMarkupDrawing) {
         if (requestMarkupApply && !isMarkupDrawing) requestMarkupApply = false
     }
@@ -837,6 +827,11 @@ fun EditScreen2(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+        }
+
+        // Register after the editor NavHost so it cannot pop the drawing first.
+        BackHandler(enabled = isMarkupDrawing && !showTextOverlay) {
+            if (!requestMarkupApply) requestMarkupApply = true
         }
 
         // Text markup overlay
