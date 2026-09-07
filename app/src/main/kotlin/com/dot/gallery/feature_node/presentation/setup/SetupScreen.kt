@@ -2,233 +2,194 @@ package com.dot.gallery.feature_node.presentation.setup
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
+import android.content.Intent
+import android.net.Uri
 import android.provider.MediaStore
-import android.widget.Toast
+import android.provider.Settings
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Image
-import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.PermMedia
-import androidx.compose.material.icons.rounded.VideoFile
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
-import com.dot.gallery.core.util.hasMediaAccess
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Misc.rememberIsMediaManager
 import com.dot.gallery.core.presentation.components.SetupButton
 import com.dot.gallery.core.presentation.components.SetupWizard
+import com.dot.gallery.core.util.hasMediaAccess
 import com.dot.gallery.feature_node.presentation.common.components.OptionItem
 import com.dot.gallery.feature_node.presentation.common.components.OptionLayout
-import com.dot.gallery.feature_node.presentation.util.RepeatOnResume
 import com.dot.gallery.feature_node.presentation.util.launchManageMedia
+import com.dot.gallery.feature_node.presentation.util.tryStartActivity
+import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.permissions.rememberPermissionState
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun SetupScreen(
-    onPermissionGranted: () -> Unit = {},
-) {
-    val scope = rememberCoroutineScope()
+fun SetupScreen(modifier: Modifier = Modifier, onPermissionGranted: () -> Unit = {}) {
     val context = LocalContext.current
     val resources = LocalResources.current
-    var firstLaunch by remember { mutableStateOf(true) }
-    var permissionGranted by remember { mutableStateOf(false) }
-    val mediaPermissions = rememberMultiplePermissionsState(Constants.PERMISSIONS) {
-        firstLaunch = false
-        permissionGranted = hasMediaAccess(grantedPermissions = it.filterValues { granted -> granted }.keys)
-    }
-    val appName = "${stringResource(id = R.string.app_name)} v${BuildConfig.VERSION_NAME}"
-    LaunchedEffect(permissionGranted) {
-        if (permissionGranted) {
-            onPermissionGranted()
-        } else if (!firstLaunch) Toast.makeText(
-            context,
-            resources.getString(R.string.some_permissions_are_not_granted), Toast.LENGTH_LONG
+    var accessDenied by rememberSaveable { mutableStateOf(false) }
+    val mediaPermissions = rememberMultiplePermissionsState(Constants.PERMISSIONS) { result ->
+        accessDenied = !hasMediaAccess(
+            grantedPermissions = result.filterValues { it }.keys,
         )
-            .show()
+    }
+    LaunchedEffect(mediaPermissions.hasMediaAccess) {
+        if (mediaPermissions.hasMediaAccess) {
+            onPermissionGranted()
+        }
+    }
+    var useMediaManager by rememberIsMediaManager()
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        useMediaManager = MediaStore.canManageMedia(context)
+    }
+    val notificationPermission = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+    val notificationsGranted = notificationPermission.status.isGranted
+    val secondaryContainer = MaterialTheme.colorScheme.secondaryContainer
+    val onSecondaryContainer = MaterialTheme.colorScheme.onSecondaryContainer
+    val optionalPermissions = remember(
+        resources, useMediaManager, notificationsGranted, secondaryContainer, onSecondaryContainer,
+    ) {
+        mutableStateListOf(
+            OptionItem(
+                icon = Icons.Rounded.Notifications,
+                text = resources.getString(R.string.post_notifications),
+                summary = when {
+                    notificationsGranted -> resources.getString(R.string.granted)
+                    else -> resources.getString(R.string.post_notifications_summary)
+                },
+                enabled = !notificationsGranted,
+                onClick = { notificationPermission.launchPermissionRequest() },
+                containerColor = secondaryContainer,
+                contentColor = onSecondaryContainer,
+            ),
+            OptionItem(
+                icon = Icons.Rounded.PermMedia,
+                text = resources.getString(R.string.setup_media_management_title),
+                summary = when {
+                    useMediaManager -> resources.getString(R.string.granted)
+                    else -> resources.getString(R.string.setup_media_management_summary)
+                },
+                enabled = !useMediaManager,
+                onClick = { context.launchManageMedia() },
+                containerColor = secondaryContainer,
+                contentColor = onSecondaryContainer,
+            ),
+        )
     }
 
     SetupWizard(
-        title = stringResource(id = R.string.welcome),
-        subtitle = appName,
+        modifier = modifier,
+        title = stringResource(R.string.welcome),
+        subtitle = "${stringResource(R.string.app_name)} v${BuildConfig.VERSION_NAME}",
         contentPadding = 0.dp,
         bottomBar = {
             SetupButton(
-                onClick = { (context as Activity).finish() },
+                onClick = { (context as? Activity)?.finish() },
                 modifier = Modifier.weight(1f),
                 applyHorizontalPadding = false,
                 applyBottomPadding = false,
                 applyInsets = false,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                text = stringResource(id = R.string.action_cancel)
+                text = stringResource(R.string.action_cancel),
             )
-
             SetupButton(
-                onClick = {
-                    scope.launch {
-                        mediaPermissions.launchMultiplePermissionRequest()
-                    }
-                },
+                onClick = { mediaPermissions.launchMultiplePermissionRequest() },
                 modifier = Modifier.weight(1f),
                 applyHorizontalPadding = false,
                 applyBottomPadding = false,
                 applyInsets = false,
-                text = stringResource(R.string.get_started)
+                text = stringResource(R.string.action_continue),
             )
         },
         content = {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .padding(horizontal = 16.dp),
-                text = stringResource(R.string.required)
-            )
-            val options = remember(context) {
-                context.requiredPermissionsList.map { (icon, title, summary) ->
-                    OptionItem(
-                        icon = icon,
-                        text = title,
-                        summary = summary,
-                        enabled = true,
-                        onClick = { }
-                    )
-                }.toMutableStateList()
-            }
-            OptionLayout(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .alpha(0.8f),
-                optionList = options
-            )
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                var useMediaManager by rememberIsMediaManager()
-                RepeatOnResume {
-                    useMediaManager = MediaStore.canManageMedia(context)
-                }
-
+            PhotoAccessExplanation()
+            if (accessDenied) {
                 Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    text = stringResource(R.string.optional)
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    text = stringResource(R.string.setup_photo_access_denied),
+                    color = MaterialTheme.colorScheme.error,
                 )
-                val grantedString = stringResource(R.string.granted)
-                val secondaryContainer = MaterialTheme.colorScheme.secondaryContainer
-                val onSecondaryContainer = MaterialTheme.colorScheme.onSecondaryContainer
-                val optionsList = remember(useMediaManager) {
-                    mutableStateListOf(
-                        OptionItem(
-                            icon = Icons.Rounded.PermMedia,
-                            text = resources.getString(R.string.permission_manage_media_title),
-                            summary = if (!useMediaManager) resources.getString(R.string.permission_manage_media_summary) else grantedString,
-                            enabled = !useMediaManager,
-                            onClick = {
-                                scope.launch {
-                                    context.launchManageMedia()
-                                }
-                            },
-                            containerColor = secondaryContainer,
-                            contentColor = onSecondaryContainer
-                        )
-                    )
-                }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    var isGranted by rememberSaveable(context) {
-                        mutableStateOf(
-                            ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.POST_NOTIFICATIONS
-                            ) == PackageManager.PERMISSION_GRANTED
-                        )
-                    }
-                    val notificationPermission = rememberPermissionState(
-                        permission = Manifest.permission.POST_NOTIFICATIONS,
-                        onPermissionResult = { isGranted = it }
-                    )
-                    LaunchedEffect(
-                        useMediaManager, isGranted
-                    ) {
-                        optionsList.removeIf { item -> item.icon == Icons.Rounded.Notifications }
-                        optionsList.add(
-                            0,
-                            OptionItem(
-                                icon = Icons.Rounded.Notifications,
-                                text = resources.getString(R.string.post_notifications),
-                                summary = if (!isGranted) resources.getString(R.string.post_notifications_summary) else grantedString,
-                                enabled = !isGranted,
-                                onClick = {
-                                    scope.launch {
-                                        notificationPermission.launchPermissionRequest()
-                                    }
-                                },
-                                containerColor = secondaryContainer,
-                                contentColor = onSecondaryContainer
+                TextButton(
+                    onClick = {
+                        context.tryStartActivity(
+                            intent = Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.fromParts("package", context.packageName, null),
                             ),
+                            errorMessage = resources.getString(R.string.error_toast),
                         )
-                    }
+                    },
+                ) {
+                    Text(text = stringResource(R.string.setup_open_settings))
                 }
-
-                OptionLayout(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .alpha(0.8f),
-                    optionList = optionsList
-                )
             }
-        }
+            Text(
+                modifier = Modifier.padding(16.dp),
+                text = stringResource(R.string.optional),
+            )
+            OptionLayout(
+                modifier = Modifier.fillMaxWidth(),
+                optionList = optionalPermissions,
+            )
+        },
     )
 }
 
-private val Context.requiredPermissionsList: Array<Triple<ImageVector, String, String>>
-    get() {
-        val list = mutableListOf(
-            Triple(
-                Icons.Rounded.Image,
-                getString(R.string.read_media_images),
-                getString(R.string.read_media_images_summary)
-            ),
-            Triple(
-                Icons.Rounded.VideoFile,
-                getString(R.string.read_media_videos),
-                getString(R.string.read_media_videos_summary)
-            ),
-            Triple(
-                Icons.Rounded.LocationOn,
-                getString(R.string.access_media_location),
-                getString(R.string.access_media_location_summary)
-            ),
+@Composable
+private fun PhotoAccessExplanation(modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            text = stringResource(R.string.setup_photo_access_intro),
         )
-        return list.toTypedArray()
+        Text(
+            modifier = Modifier.padding(16.dp),
+            text = stringResource(R.string.setup_photo_access_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Text(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            text = stringResource(R.string.setup_photo_access_summary),
+        )
+        Text(
+            modifier = Modifier.padding(16.dp),
+            text = stringResource(R.string.setup_photo_location_summary),
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PhotoAccessExplanationPreview() {
+    GalleryTheme {
+        PhotoAccessExplanation()
+    }
+}

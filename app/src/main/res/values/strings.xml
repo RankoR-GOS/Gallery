@@ -163,6 +163,14 @@
     <string name="some_permissions_are_not_granted">Some permissions are not granted!</string>
     <string name="get_started">Get Started</string>
     <string name="welcome">Welcome</string>
+    <string name="setup_photo_access_intro">Choose which photos and videos Gallery can access on the next screen.</string>
+    <string name="setup_photo_access_title">Photos and videos</string>
+    <string name="setup_photo_access_summary">Allow access to your whole library or only the photos and videos you select. You can change your selection later in Settings.</string>
+    <string name="setup_photo_location_summary">Gallery also reads location information saved in photos to show where they were taken. This does not give Gallery access to your device’s current location.</string>
+    <string name="setup_photo_access_denied">No photo or video access was granted. Try again, or open Settings and choose Permissions, then Photos and videos.</string>
+    <string name="setup_open_settings">Open settings</string>
+    <string name="setup_media_management_title">Media management apps</string>
+    <string name="setup_media_management_summary">Allow Gallery to change or delete photos and videos without asking you to confirm each change.</string>
     <string name="setup_summary">In order to access your media, it is required to grant the following permissions:</string>
     <string name="required">Required</string>
     <string name="optional">Optional</string>
