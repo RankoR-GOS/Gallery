@@ -62,7 +62,6 @@ internal class MetadataCollectionWorkerTest {
                             return MetadataCollectionWorker(
                                 database = database,
                                 repository = repository,
-                                geocoder = null,
                                 isolatedParser = mockk(),
                                 appContext = appContext,
                                 workerParams = workerParameters,
@@ -130,7 +129,6 @@ internal class MetadataCollectionWorkerTest {
                                 return MetadataCollectionWorker(
                                     database = database,
                                     repository = repository,
-                                    geocoder = null,
                                     isolatedParser = parser,
                                     appContext = appContext,
                                     workerParams = workerParameters,

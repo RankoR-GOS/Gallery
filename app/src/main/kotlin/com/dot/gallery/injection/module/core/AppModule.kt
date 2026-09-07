@@ -9,7 +9,6 @@ import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Geocoder
 import androidx.room.Room
 import androidx.work.WorkManager
 import com.dot.gallery.core.DefaultEventHandler
@@ -110,7 +109,6 @@ object AppModule {
         workManager: WorkManager,
         mediaCopyScheduler: MediaCopyScheduler,
         database: InternalDatabase,
-        geocoder: Geocoder?,
         isolatedParser: IsolatedMetadataParser,
     ): MediaRepository {
         return MediaRepositoryImpl(
@@ -118,7 +116,6 @@ object AppModule {
             workManager = workManager,
             mediaCopyScheduler = mediaCopyScheduler,
             database = database,
-            geocoder = geocoder,
             isolatedParser = isolatedParser,
         )
     }
@@ -130,12 +127,6 @@ object AppModule {
     @Provides
     @Singleton
     fun provideSearchHelper(modelManager: ModelManager): SearchHelper = SearchHelperImpl(modelManager)
-
-    @Provides
-    @Singleton
-    fun provideGeocoder(@ApplicationContext context: Context): Geocoder? {
-        return if (Geocoder.isPresent()) Geocoder(context) else null
-    }
 
     @Provides
     @Singleton

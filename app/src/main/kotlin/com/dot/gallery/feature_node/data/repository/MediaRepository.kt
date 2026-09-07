@@ -9,7 +9,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.location.Geocoder
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
@@ -370,7 +369,6 @@ internal class MediaRepositoryImpl(
     private val workManager: WorkManager,
     private val mediaCopyScheduler: MediaCopyScheduler,
     private val database: InternalDatabase,
-    private val geocoder: Geocoder?,
     private val isolatedParser: IsolatedMetadataParser
 ) : MediaRepository {
 
@@ -756,7 +754,6 @@ internal class MediaRepositoryImpl(
             postAction = {
                 context.retrieveExtraMediaMetadata(
                     isolatedParser = isolatedParser,
-                    geocoder = geocoder,
                     media = it,
                     usePerFileIsolation = shouldUsePerFileIsolation(),
                 )?.let { metadata ->
@@ -772,7 +769,6 @@ internal class MediaRepositoryImpl(
             postAction = {
                 context.retrieveExtraMediaMetadata(
                     isolatedParser = isolatedParser,
-                    geocoder = geocoder,
                     media = it,
                     usePerFileIsolation = shouldUsePerFileIsolation(),
                 )?.let { metadata ->
@@ -810,7 +806,6 @@ internal class MediaRepositoryImpl(
                 postAction = {
                     context.retrieveExtraMediaMetadata(
                         isolatedParser = isolatedParser,
-                        geocoder = geocoder,
                         media = it,
                         usePerFileIsolation = shouldUsePerFileIsolation(),
                     )?.let { metadata ->
@@ -992,7 +987,6 @@ internal class MediaRepositoryImpl(
     override suspend fun collectMetadataFor(media: Media) {
         context.retrieveExtraMediaMetadata(
             isolatedParser = isolatedParser,
-            geocoder = geocoder,
             media = media,
             usePerFileIsolation = shouldUsePerFileIsolation(),
         )?.let { metadata ->

@@ -1,7 +1,6 @@
 package com.dot.gallery.core.workers
 
 import android.content.Context
-import android.location.Geocoder
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastMap
 import androidx.hilt.work.HiltWorker
@@ -45,7 +44,6 @@ fun WorkManager.forceMetadataCollect() {
 class MetadataCollectionWorker @AssistedInject constructor(
     private val database: InternalDatabase,
     private val repository: MediaRepository,
-    private val geocoder: Geocoder?,
     private val isolatedParser: IsolatedMetadataParser,
     @Assisted private val appContext: Context,
     @Assisted workerParams: WorkerParameters
@@ -93,7 +91,7 @@ class MetadataCollectionWorker @AssistedInject constructor(
                 val pct =
                     if (total <= 1) 100 else (((index + 1).toFloat() / total.toFloat()) * 100f).roundToInt()
                 throttler.emit(pct) { setProgress(workDataOf("progress" to it)) }
-                appContext.retrieveExtraMediaMetadata(isolatedParser, geocoder, it, usePerFile)?.let { metadata ->
+                appContext.retrieveExtraMediaMetadata(isolatedParser = isolatedParser, media = it, usePerFileIsolation = usePerFile)?.let { metadata ->
                     database.getMetadataDao().addMetadata(mediaMetadata = metadata, isVideo = it.isVideo)
                 }
             }

@@ -51,6 +51,17 @@ internal class SandboxDecoderArchitectureTest {
         }
     }
 
+    @Test
+    fun galleryDoesNotSendCoordinatesToGeocodingProviders() {
+        val sourceRoot = findAppDirectory().resolve("src/main/kotlin/com/dot/gallery")
+        sourceRoot.walkTopDown().filter { it.isFile && it.extension == "kt" }.forEach { sourceFile ->
+            assertFalse(
+                "${sourceFile.name} must keep photo coordinates local",
+                "android.location.Geocoder" in sourceFile.readText(),
+            )
+        }
+    }
+
     private fun findAppDirectory(): File {
         val workingDirectory = requireNotNull(System.getProperty("user.dir")) {
             "Working directory is unavailable"

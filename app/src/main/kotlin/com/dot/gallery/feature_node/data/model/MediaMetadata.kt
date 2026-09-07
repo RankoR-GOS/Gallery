@@ -3,7 +3,6 @@ package com.dot.gallery.feature_node.data.model
 import android.content.ContentUris
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.location.Geocoder
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.compose.material.icons.Icons
@@ -22,14 +21,10 @@ import com.dot.gallery.core.sandbox.IsolatedMetadataService.Companion as Keys
 import com.dot.gallery.feature_node.data.util.getUri
 import com.dot.gallery.feature_node.data.util.isImage
 import com.dot.gallery.feature_node.data.util.isVideo
-import com.dot.gallery.feature_node.presentation.util.formattedAddress
 import com.dot.gallery.feature_node.presentation.util.printDebug
-import com.dot.gallery.feature_node.presentation.util.printWarning
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.util.Locale
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -200,11 +195,10 @@ fun MediaMetadata.getIcon(): ImageVector? {
 @Suppress("DEPRECATION")
 suspend fun Context.retrieveExtraMediaMetadata(
     isolatedParser: IsolatedMetadataParser,
-    geocoder: Geocoder?,
     media: Media,
     usePerFileIsolation: Boolean = false,
-): MediaMetadata? =
-    withContext(Dispatchers.IO) {
+): MediaMetadata? {
+    return withContext(Dispatchers.IO) {
         runCatching {
             val uri = media.getUri()
             val label = media.label
@@ -217,7 +211,11 @@ suspend fun Context.retrieveExtraMediaMetadata(
                     isolatedParser.parseImageMetadata(uri, label)
                 }
                     ?: return@runCatching null
-                mediaMetadataFromImageBundle(media.id, bundle, geocoder, this@retrieveExtraMediaMetadata)
+                mediaMetadataFromImageBundle(
+                    mediaId = media.id,
+                    bundle = bundle,
+                    context = this@retrieveExtraMediaMetadata,
+                )
             } else if (media.isVideo) {
                 val bundle = if (usePerFileIsolation) {
                     isolatedParser.parseVideoMetadataPerFile(uri, media.id)
@@ -236,39 +234,19 @@ suspend fun Context.retrieveExtraMediaMetadata(
             null
         }
     }
+}
 
 /**
- * Converts the [Bundle] returned by the isolated image parser into a [MediaMetadata],
- * performing Geocoder lookup in the main process (Geocoder needs network + Play Services).
+ * Converts isolated-parser metadata locally. Photo coordinates must not be sent to a provider.
  */
 @Suppress("DEPRECATION")
-private suspend fun mediaMetadataFromImageBundle(
+private fun mediaMetadataFromImageBundle(
     mediaId: Long,
     bundle: Bundle,
-    geocoder: Geocoder?,
-    context: Context
+    context: Context,
 ): MediaMetadata {
     val gpsLatitude = if (bundle.containsKey(Keys.KEY_GPS_LAT)) bundle.getDouble(Keys.KEY_GPS_LAT) else null
     val gpsLongitude = if (bundle.containsKey(Keys.KEY_GPS_LON)) bundle.getDouble(Keys.KEY_GPS_LON) else null
-
-    // Geocoding runs in the main app process (needs network + GMS)
-    var gpsLocationName: String? = null
-    var gpsLocationCountry: String? = null
-    var gpsLocationCity: String? = null
-    if (gpsLatitude != null && gpsLongitude != null) {
-        if (geocoder != null) {
-            suspendCoroutine {
-                val address = geocoder.getFromLocation(gpsLatitude, gpsLongitude, 1)
-                    .orEmpty().firstOrNull()
-                gpsLocationName = address?.formattedAddress
-                gpsLocationCountry = address?.countryName
-                gpsLocationCity = address?.locality
-                it.resume(Unit)
-            }
-        } else {
-            printWarning("MetadataReader: Geocoder not available")
-        }
-    }
 
     var imgW = bundle.getInt(Keys.KEY_IMAGE_WIDTH, 0)
     var imgH = bundle.getInt(Keys.KEY_IMAGE_HEIGHT, 0)
@@ -306,9 +284,9 @@ private suspend fun mediaMetadataFromImageBundle(
         iso = bundle.getString(Keys.KEY_ISO),
         gpsLatitude = gpsLatitude,
         gpsLongitude = gpsLongitude,
-        gpsLocationName = gpsLocationName,
-        gpsLocationNameCountry = gpsLocationCountry,
-        gpsLocationNameCity = gpsLocationCity,
+        gpsLocationName = null,
+        gpsLocationNameCountry = null,
+        gpsLocationNameCity = null,
         imageWidth = imgW,
         imageHeight = imgH,
         imageResolutionX = if (bundle.containsKey(Keys.KEY_RES_X)) bundle.getDouble(Keys.KEY_RES_X) else null,
