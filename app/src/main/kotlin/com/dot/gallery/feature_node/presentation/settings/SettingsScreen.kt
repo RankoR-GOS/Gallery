@@ -5,6 +5,10 @@
 
 package com.dot.gallery.feature_node.presentation.settings
 
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Dashboard
@@ -12,6 +16,7 @@ import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Fullscreen
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.SettingsSuggest
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,8 +25,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import com.dot.gallery.R
+import com.dot.gallery.core.Constants
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.Position
 import com.dot.gallery.core.SettingsEntity
@@ -32,13 +40,43 @@ import com.dot.gallery.feature_node.presentation.settings.components.SettingsApp
 import com.dot.gallery.feature_node.presentation.settings.components.SettingsItem
 import com.dot.gallery.feature_node.presentation.settings.components.rememberPreference
 import com.dot.gallery.feature_node.presentation.util.Screen
+import com.dot.gallery.feature_node.presentation.util.tryStartActivity
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsScreen() {
     @Composable
     fun rememberDashboardSettings(): SnapshotStateList<SettingsEntity> {
         val eventHandler = LocalEventHandler.current
+        val context = LocalContext.current
+        val resources = LocalResources.current
+        val mediaPermissions = rememberMultiplePermissionsState(Constants.PERMISSIONS)
+        val photoAccessPref = rememberPreference(
+            icon = Icons.Outlined.PhotoLibrary,
+            title = stringResource(R.string.setup_photo_access_title),
+            summary = stringResource(R.string.settings_photo_access_summary),
+            onClick = {
+                val fullAccess = mediaPermissions.permissions.filter {
+                    it.permission == Manifest.permission.READ_MEDIA_IMAGES ||
+                        it.permission == Manifest.permission.READ_MEDIA_VIDEO
+                }.all { it.status.isGranted }
+                if (fullAccess) {
+                    context.tryStartActivity(
+                        intent = Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.fromParts("package", context.packageName, null),
+                        ),
+                        errorMessage = resources.getString(R.string.error_toast),
+                    )
+                } else {
+                    mediaPermissions.launchMultiplePermissionRequest()
+                }
+            },
+            screenPosition = Position.Middle,
+        )
         val appearancePref = rememberPreference(
             icon = Icons.Outlined.Palette,
             title = stringResource(R.string.settings_appearance),
@@ -113,11 +151,11 @@ fun SettingsScreen() {
         )
         return remember(
             appearancePref, timelineAlbumsPref, mediaViewerPref,
-            navigationPref, generalPref, smartPref, securityPref, helpPref
+            navigationPref, generalPref, photoAccessPref, smartPref, securityPref, helpPref
         ) {
             mutableStateListOf(
                 appearancePref, timelineAlbumsPref, mediaViewerPref,
-                navigationPref, generalPref, smartPref, securityPref, helpPref
+                navigationPref, generalPref, photoAccessPref, smartPref, securityPref, helpPref
             )
         }
     }

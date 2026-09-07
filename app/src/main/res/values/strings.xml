@@ -171,6 +171,7 @@
     <string name="setup_open_settings">Open settings</string>
     <string name="setup_media_management_title">Media management apps</string>
     <string name="setup_media_management_summary">Allow Gallery to change or delete photos and videos without asking you to confirm each change.</string>
+    <string name="settings_photo_access_summary">Manage which photos and videos Gallery can access.</string>
     <string name="setup_summary">In order to access your media, it is required to grant the following permissions:</string>
     <string name="required">Required</string>
     <string name="optional">Optional</string>
