@@ -3,9 +3,14 @@ package com.dot.gallery.core.util
 import android.graphics.drawable.ColorDrawable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
@@ -22,6 +27,7 @@ import com.dot.gallery.core.MediaSelector
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.presentation.components.LocalMediaImageRenderer
 import com.dot.gallery.core.presentation.components.MediaImageRenderer
+import com.dot.gallery.core.util.hasMediaAccess
 import com.dot.gallery.feature_node.domain.util.EventHandler
 
 /**
@@ -75,11 +81,25 @@ fun SetupMediaProviders(
     mediaSelector: MediaSelector,
     mediaImageRenderer: MediaImageRenderer = GlideMediaImageRenderer,
     content: @Composable () -> Unit
-) = CompositionLocalProvider(
-    LocalEventHandler provides eventHandler,
-    LocalMediaDistributor provides mediaDistributor,
-    LocalMediaHandler provides mediaHandler,
-    LocalMediaSelector provides mediaSelector,
-    LocalMediaImageRenderer provides mediaImageRenderer,
-    content = content
-)
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner, mediaDistributor) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            val hasAccess = context.hasMediaAccess()
+            mediaDistributor.hasPermission.value = hasAccess
+            if (hasAccess) {
+                // The selected set can change without any permission boolean changing.
+                mediaDistributor.invalidate()
+            }
+        }
+    }
+    CompositionLocalProvider(
+        LocalEventHandler provides eventHandler,
+        LocalMediaDistributor provides mediaDistributor,
+        LocalMediaHandler provides mediaHandler,
+        LocalMediaSelector provides mediaSelector,
+        LocalMediaImageRenderer provides mediaImageRenderer,
+        content = content,
+    )
+}

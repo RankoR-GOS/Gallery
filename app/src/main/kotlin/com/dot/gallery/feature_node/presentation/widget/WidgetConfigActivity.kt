@@ -24,12 +24,14 @@ import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
 import com.dot.gallery.core.MediaSelectorImpl
 import com.dot.gallery.core.util.SetupMediaProviders
+import com.dot.gallery.core.util.hasMediaAccess
 import com.dot.gallery.feature_node.data.model.WidgetType
 import com.dot.gallery.feature_node.data.repository.WidgetRepository
 import com.dot.gallery.feature_node.domain.model.UIEvent
 import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.presentation.picker.AllowedMedia
 import com.dot.gallery.feature_node.presentation.picker.components.PickerScreen
+import com.dot.gallery.feature_node.presentation.setup.SetupScreen
 import com.dot.gallery.feature_node.presentation.widget.data.WidgetBitmapLoader
 import com.dot.gallery.ui.theme.GalleryTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -145,10 +147,12 @@ class WidgetConfigActivity : FragmentActivity() {
         allowMultiple: Boolean
     ) {
         val mediaPermissions = rememberMultiplePermissionsState(Constants.PERMISSIONS)
-        if (!mediaPermissions.allPermissionsGranted) {
-            LaunchedEffect(Unit) {
-                mediaPermissions.launchMultiplePermissionRequest()
-            }
+        if (!mediaPermissions.hasMediaAccess) {
+            SetupScreen()
+            return
+        }
+        LaunchedEffect(mediaPermissions.hasMediaAccess) {
+            mediaDistributor.hasPermission.value = true
         }
         PickerScreen(
             title = title,

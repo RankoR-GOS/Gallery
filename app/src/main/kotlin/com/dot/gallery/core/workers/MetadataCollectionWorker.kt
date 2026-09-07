@@ -14,10 +14,12 @@ import androidx.work.workDataOf
 import com.dot.gallery.core.Settings
 import com.dot.gallery.core.sandbox.IsolatedMetadataParser
 import com.dot.gallery.core.util.ProgressThrottler
+import com.dot.gallery.core.util.hasFullMediaAccess
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.model.MediaVersion
 import com.dot.gallery.feature_node.data.model.retrieveExtraMediaMetadata
 import com.dot.gallery.feature_node.data.repository.MediaRepository
+import com.dot.gallery.feature_node.data.util.isVideo
 import com.dot.gallery.feature_node.presentation.util.isMetadataUpToDate
 import com.dot.gallery.feature_node.presentation.util.mediaStoreVersion
 import com.dot.gallery.feature_node.presentation.util.printDebug
@@ -25,6 +27,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlin.math.roundToInt
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
@@ -49,8 +52,9 @@ class MetadataCollectionWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result = runCatching {
+        val canPrune = appContext.hasFullMediaAccess()
         val forceReload = inputData.getBoolean("forceReload", false)
-        if (database.isMetadataUpToDate(appContext) && !forceReload) {
+        if (canPrune && database.isMetadataUpToDate(appContext) && !forceReload) {
             printDebug("Metadata is up to date")
             return Result.success()
         }
@@ -59,17 +63,18 @@ class MetadataCollectionWorker @AssistedInject constructor(
         if (forceReload) {
             printDebug("Force reloading metadata...")
         }
-        val oldMedia = database.getMediaDao().getMedia()
         val media = repository.getCompleteMedia().map { it.data ?: emptyList() }.firstOrNull()
         printDebug("Retrieved ${media?.size ?: 0} media items from repository.")
         val differentMedia = if (!forceReload) {
-            val oldMediaIds = oldMedia.mapTo(HashSet(oldMedia.size)) { it.id }
-            media.orEmpty().filter { it.id !in oldMediaIds }
+            val processedMediaIds = database.getMetadataDao().getProcessedMediaIds().first().toHashSet()
+            media.orEmpty().filter { it.id !in processedMediaIds }
         } else media
         printDebug("Found ${differentMedia?.size ?: 0} new or updated media items.")
         media?.let {
-            printDebug("Deleting forgotten metadata...")
-            database.getMetadataDao().deleteForgottenMetadata(it.fastMap { m -> m.id })
+            if (canPrune && appContext.hasFullMediaAccess()) {
+                printDebug("Deleting forgotten metadata...")
+                database.getMetadataDao().deleteForgottenMetadata(it.fastMap { m -> m.id })
+            }
         }
         differentMedia?.let { diffMedia ->
             if (diffMedia.isEmpty()) {
@@ -89,12 +94,14 @@ class MetadataCollectionWorker @AssistedInject constructor(
                     if (total <= 1) 100 else (((index + 1).toFloat() / total.toFloat()) * 100f).roundToInt()
                 throttler.emit(pct) { setProgress(workDataOf("progress" to it)) }
                 appContext.retrieveExtraMediaMetadata(isolatedParser, geocoder, it, usePerFile)?.let { metadata ->
-                    database.getMetadataDao().addMetadata(metadata)
+                    database.getMetadataDao().addMetadata(mediaMetadata = metadata, isVideo = it.isVideo)
                 }
             }
         }
         printDebug("Metadata update complete")
-        database.getMetadataDao().setMediaVersion(MediaVersion(appContext.mediaStoreVersion))
+        if (canPrune && appContext.hasFullMediaAccess()) {
+            database.getMetadataDao().setMediaVersion(MediaVersion(appContext.mediaStoreVersion))
+        }
         setProgress(workDataOf("progress" to 100))
         return Result.success()
     }.getOrElse { exception ->

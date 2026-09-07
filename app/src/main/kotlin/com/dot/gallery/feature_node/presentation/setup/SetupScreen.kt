@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.dot.gallery.BuildConfig
 import com.dot.gallery.R
+import com.dot.gallery.core.util.hasMediaAccess
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Settings.Misc.rememberIsMediaManager
 import com.dot.gallery.core.presentation.components.SetupButton
@@ -62,7 +63,7 @@ fun SetupScreen(
     var permissionGranted by remember { mutableStateOf(false) }
     val mediaPermissions = rememberMultiplePermissionsState(Constants.PERMISSIONS) {
         firstLaunch = false
-        permissionGranted = it.all { item -> item.value }
+        permissionGranted = hasMediaAccess(grantedPermissions = it.filterValues { granted -> granted }.keys)
     }
     val appName = "${stringResource(id = R.string.app_name)} v${BuildConfig.VERSION_NAME}"
     LaunchedEffect(permissionGranted) {

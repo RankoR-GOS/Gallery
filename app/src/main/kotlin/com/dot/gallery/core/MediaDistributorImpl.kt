@@ -105,13 +105,16 @@ class MediaDistributorImpl @Inject constructor(
 
     override suspend fun invalidate() {
         isRefreshing.value = true
-        withContext(Dispatchers.IO) {
-            context.contentResolver.notifyChange(
-                MediaStore.Files.getContentUri("external"), null
-            )
+        try {
+            withContext(Dispatchers.IO) {
+                context.contentResolver.notifyChange(
+                    MediaStore.Files.getContentUri("external"), null,
+                )
+            }
+            delay(1500)
+        } finally {
+            isRefreshing.value = false
         }
-        delay(1500)
-        isRefreshing.value = false
     }
 
     /**

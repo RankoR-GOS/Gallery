@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -49,7 +50,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.dot.gallery.R
-import com.dot.gallery.core.Constants
 import com.dot.gallery.core.Constants.Animation.navigateInAnimation
 import com.dot.gallery.core.Constants.Animation.navigateUpAnimation
 import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
@@ -62,9 +62,9 @@ import com.dot.gallery.core.Settings.Misc.rememberLastScreen
 import com.dot.gallery.core.Settings.Misc.rememberTimelineGroupByMonth
 import com.dot.gallery.core.navigate
 import com.dot.gallery.core.presentation.components.util.OnLifecycleEvent
-import com.dot.gallery.core.presentation.components.util.permissionGranted
 import com.dot.gallery.core.presentation.vm.NavigationViewModel
 import com.dot.gallery.core.toggleNavigationBar
+import com.dot.gallery.core.util.hasMediaAccess
 import com.dot.gallery.feature_node.domain.model.MediaState
 import com.dot.gallery.feature_node.presentation.albums.AlbumGroupViewScreen
 import com.dot.gallery.feature_node.presentation.albums.AlbumsScreen
@@ -110,11 +110,9 @@ import com.dot.gallery.feature_node.presentation.trashed.TrashedGridScreen
 import com.dot.gallery.feature_node.presentation.util.AppBottomSheetState
 import com.dot.gallery.feature_node.presentation.util.Screen
 import com.dot.gallery.feature_node.presentation.util.rememberAppBottomSheetState
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Stable
 @NonRestartableComposable
 @Composable
@@ -134,18 +132,27 @@ fun NavigationComp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val groupTimelineByMonth by rememberTimelineGroupByMonth()
     val context = LocalContext.current
-    var permissionState by rememberSaveable { mutableStateOf(context.permissionGranted(Constants.PERMISSIONS)) }
-    rememberMultiplePermissionsState(Constants.PERMISSIONS) {
-        permissionState = it.all { item -> item.value }
+    var permissionState by remember { mutableStateOf(context.hasMediaAccess()) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        permissionState = context.hasMediaAccess()
     }
     var lastStartScreen by rememberLastScreen()
     val forcedLastScreen by rememberForcedLastScreen()
-    val startDest by rememberSaveable(permissionState, lastStartScreen) {
-        mutableStateOf(
-            if (permissionState) {
-                lastStartScreen
-            } else Screen.SetupScreen()
-        )
+    val startDest = remember {
+        when {
+            permissionState -> lastStartScreen
+            else -> Screen.SetupScreen()
+        }
+    }
+    LaunchedEffect(permissionState, navBackStackEntry) {
+        if (!permissionState && navBackStackEntry != null &&
+            navBackStackEntry?.destination?.route != Screen.SetupScreen()
+        ) {
+            navController.navigate(Screen.SetupScreen()) {
+                popUpTo(navController.graph.id) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
     }
     val currentDest = remember(navController.currentDestination) {
         navController.currentDestination?.route ?: lastStartScreen
@@ -209,8 +216,11 @@ fun NavigationComp(
                     eventHandler.toggleNavigationBar(false)
                 }
                 SetupScreen {
-                    permissionState = true
-                    eventHandler.navigate(Screen.TimelineScreen())
+                    permissionState = context.hasMediaAccess()
+                    navController.navigate(Screen.TimelineScreen()) {
+                        popUpTo(Screen.SetupScreen()) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
             }
             composable(

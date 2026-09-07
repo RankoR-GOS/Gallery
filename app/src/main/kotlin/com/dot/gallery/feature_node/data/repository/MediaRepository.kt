@@ -755,7 +755,7 @@ internal class MediaRepositoryImpl(
                     media = it,
                     usePerFileIsolation = shouldUsePerFileIsolation(),
                 )?.let { metadata ->
-                    database.getMetadataDao().addMetadata(metadata)
+                    database.getMetadataDao().addMetadata(mediaMetadata = metadata, isVideo = media.isVideo)
                 }
             }
         )
@@ -771,7 +771,7 @@ internal class MediaRepositoryImpl(
                     media = it,
                     usePerFileIsolation = shouldUsePerFileIsolation(),
                 )?.let { metadata ->
-                    database.getMetadataDao().addMetadata(metadata)
+                    database.getMetadataDao().addMetadata(mediaMetadata = metadata, isVideo = media.isVideo)
                 }
             }
         )
@@ -809,7 +809,7 @@ internal class MediaRepositoryImpl(
                         media = it,
                         usePerFileIsolation = shouldUsePerFileIsolation(),
                     )?.let { metadata ->
-                        database.getMetadataDao().addMetadata(metadata)
+                        database.getMetadataDao().addMetadata(mediaMetadata = metadata, isVideo = media.isVideo)
                     }
                 }
             )
@@ -991,7 +991,7 @@ internal class MediaRepositoryImpl(
             media = media,
             usePerFileIsolation = shouldUsePerFileIsolation(),
         )?.let { metadata ->
-            database.getMetadataDao().addMetadata(metadata)
+            database.getMetadataDao().addMetadata(mediaMetadata = metadata, isVideo = media.isVideo)
         }
     }
 

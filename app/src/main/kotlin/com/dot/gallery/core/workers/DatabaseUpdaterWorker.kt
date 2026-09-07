@@ -9,6 +9,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.dot.gallery.core.util.hasFullMediaAccess
 import com.dot.gallery.feature_node.data.data_source.InternalDatabase
 import com.dot.gallery.feature_node.data.model.MediaVersion
 import com.dot.gallery.feature_node.data.repository.MediaRepository
@@ -59,6 +60,10 @@ class DatabaseUpdaterWorker @AssistedInject constructor(
             if (!currentCoroutineContext().isActive || isStopped) {
                 return Result.success()
             }
+            // A limited selection is not a complete inventory of files to retain.
+            if (!appContext.hasFullMediaAccess()) {
+                return Result.success()
+            }
             if (database.isMediaUpToDate(appContext)) {
                 printDebug("Database is up to date")
                 return Result.success()
@@ -68,6 +73,9 @@ class DatabaseUpdaterWorker @AssistedInject constructor(
                 val media = repository.getCompleteMedia()
                     .map { resource -> resource.data.orEmpty() }
                     .firstOrNull()
+                if (!appContext.hasFullMediaAccess()) {
+                    return@withContext
+                }
                 media?.let { mediaItems ->
                     printDebug("Database is not up to date. Updating to version $mediaVersion")
                     database.getMediaDao().setMediaVersion(MediaVersion(mediaVersion))

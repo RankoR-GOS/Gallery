@@ -25,8 +25,14 @@ interface MetadataDao {
     suspend fun isMediaVersionUpToDate(version: String): Boolean
 
     @Transaction
-    fun addMetadata(mediaMetadata: MediaMetadata) {
-        upsertCore(mediaMetadata.toCore())
+    suspend fun addMetadata(mediaMetadata: MediaMetadata, isVideo: Boolean) {
+        val core = mediaMetadata.toCore()
+        // Video descriptions are local user data, not extracted file metadata.
+        val description = when {
+            isVideo -> getCoreMetadata(id = mediaMetadata.mediaId)?.imageDescription ?: core.imageDescription
+            else -> core.imageDescription
+        }
+        upsertCore(core = core.copy(imageDescription = description))
         upsertVideo(mediaMetadata.toVideo())
         upsertFlags(mediaMetadata.toFlags())
     }
@@ -50,6 +56,10 @@ interface MetadataDao {
 
     @Query("DELETE FROM media_metadata_flags WHERE mediaId NOT IN (:ids)")
     suspend fun deleteOrphansFlags(ids: List<Long>)
+
+    // Flags are written after successful extraction; description-only entries have no flags.
+    @Query("SELECT mediaId FROM media_metadata_flags")
+    fun getProcessedMediaIds(): Flow<List<Long>>
 
     @Transaction
     @Query("SELECT * FROM media_metadata_core")

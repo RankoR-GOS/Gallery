@@ -27,7 +27,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
-import com.dot.gallery.core.Constants
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
@@ -37,7 +36,7 @@ import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.dot.gallery.core.presentation.components.AppBarContainer
 import com.dot.gallery.core.presentation.components.NavigationComp
-import com.dot.gallery.core.presentation.components.util.permissionGranted
+import com.dot.gallery.core.util.hasMediaAccess
 import com.dot.gallery.core.util.SetupMediaProviders
 import com.dot.gallery.feature_node.domain.model.UIEvent
 import com.dot.gallery.feature_node.domain.use_case.UpdateMediaDatabase
@@ -78,7 +77,7 @@ class MainActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enforceSecureFlag()
         enableEdgeToEdge()
-        if (permissionGranted(Constants.PERMISSIONS)) {
+        if (hasMediaAccess()) {
             mediaDistributor.hasPermission.value = true
         }
         setContent {

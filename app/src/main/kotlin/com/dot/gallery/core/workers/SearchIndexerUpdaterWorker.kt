@@ -8,6 +8,7 @@ import androidx.work.workDataOf
 import com.dot.gallery.core.ml.ImageEmbeddingGenerator
 import com.dot.gallery.core.ml.ImageEmbeddingSession
 import com.dot.gallery.core.ml.ModelStatus
+import com.dot.gallery.core.util.hasFullMediaAccess
 import com.dot.gallery.core.sandbox.MediaPreviewDecoder
 import com.dot.gallery.feature_node.data.model.ImageEmbedding
 import com.dot.gallery.feature_node.data.model.Media
@@ -70,6 +71,7 @@ class SearchIndexerUpdaterWorker @AssistedInject internal constructor(
     }
 
     private suspend fun removeMissingCategoryMappings(): CategoryMappingReconciliation {
+        val canPrune = applicationContext.hasFullMediaAccess()
         val mediaReader = mediaPageReader()
         val classifiedIdReader = PagedItemReader(
             pageSize = DATABASE_PAGE_SIZE,
@@ -95,18 +97,23 @@ class SearchIndexerUpdaterWorker @AssistedInject internal constructor(
                 }
 
                 else -> {
-                    missingMediaIds += classifiedMediaId
-                    removedCount++
+                    if (canPrune) {
+                        missingMediaIds += classifiedMediaId
+                    }
                     classifiedMediaId = classifiedIdReader.next()
                     if (missingMediaIds.size == DATABASE_PAGE_SIZE) {
-                        analysisRepository.removeMediaData(mediaIds = missingMediaIds.toSet())
+                        if (applicationContext.hasFullMediaAccess()) {
+                            analysisRepository.removeMediaData(mediaIds = missingMediaIds.toSet())
+                            removedCount += missingMediaIds.size
+                        }
                         missingMediaIds.clear()
                     }
                 }
             }
         }
-        if (missingMediaIds.isNotEmpty()) {
+        if (missingMediaIds.isNotEmpty() && applicationContext.hasFullMediaAccess()) {
             analysisRepository.removeMediaData(mediaIds = missingMediaIds.toSet())
+            removedCount += missingMediaIds.size
         }
         while (mediaItem != null) {
             mediaItem = mediaReader.next()
@@ -119,6 +126,7 @@ class SearchIndexerUpdaterWorker @AssistedInject internal constructor(
     }
 
     private suspend fun reconcileAndIndexMedia(totalMediaCount: Int): Int {
+        val canPrune = applicationContext.hasFullMediaAccess()
         val mediaReader = mediaPageReader()
         val stampReader = PagedItemReader(
             pageSize = DATABASE_PAGE_SIZE,
@@ -135,7 +143,10 @@ class SearchIndexerUpdaterWorker @AssistedInject internal constructor(
 
         suspend fun flushRemovedIds() {
             if (removedIds.isNotEmpty()) {
-                analysisRepository.removeMediaData(mediaIds = removedIds.toSet())
+                if (applicationContext.hasFullMediaAccess()) {
+                    analysisRepository.removeMediaData(mediaIds = removedIds.toSet())
+                    changedCount += removedIds.size
+                }
                 removedIds.clear()
             }
         }
@@ -179,8 +190,9 @@ class SearchIndexerUpdaterWorker @AssistedInject internal constructor(
                 currentCoroutineContext().ensureActive()
                 when {
                     mediaItem == null -> {
-                        removedIds += requireNotNull(stamp).id
-                        changedCount++
+                        if (canPrune) {
+                            removedIds += requireNotNull(stamp).id
+                        }
                         stamp = stampReader.next()
                     }
 
@@ -195,8 +207,9 @@ class SearchIndexerUpdaterWorker @AssistedInject internal constructor(
                     }
 
                     stamp.id < mediaItem.id -> {
-                        removedIds += stamp.id
-                        changedCount++
+                        if (canPrune) {
+                            removedIds += stamp.id
+                        }
                         stamp = stampReader.next()
                     }
 

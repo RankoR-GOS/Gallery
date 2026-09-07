@@ -1,5 +1,6 @@
 package com.dot.gallery.core.workers
 
+import android.Manifest
 import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
@@ -33,15 +34,67 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @Config(application = Application::class)
 @RunWith(RobolectricTestRunner::class)
 internal class SearchIndexerUpdaterWorkerTest {
+
+    @Before
+    fun grantFullAccess() {
+        shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(
+            Manifest.permission.READ_MEDIA_IMAGES,
+            Manifest.permission.READ_MEDIA_VIDEO,
+        )
+    }
+
+    @Test
+    fun selectedAccess_preservesUnselectedDataAndIndexesSelectedMedia() {
+        runTest {
+            shadowOf(RuntimeEnvironment.getApplication()).denyPermissions(
+                Manifest.permission.READ_MEDIA_IMAGES,
+                Manifest.permission.READ_MEDIA_VIDEO,
+            )
+            shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(
+                Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
+            )
+            val dependencies = dependencies()
+            val selectedMedia = media(id = 2L, timestamp = 20L)
+            stubMediaPages(dependencies = dependencies, media = listOf(selectedMedia))
+            stubStampPages(
+                dependencies = dependencies,
+                stamps = listOf(stamp(id = 1L, date = 10L), stamp(id = 3L, date = 30L)),
+            )
+            coEvery {
+                dependencies.analysisRepository.getClassifiedMediaIdPage(
+                    afterId = Long.MIN_VALUE,
+                    limit = EMBEDDING_STAMP_PAGE_SIZE,
+                )
+            } returns listOf(1L, 3L)
+            coEvery {
+                dependencies.previewDecoder.decode(uri = any(), mimeType = any(), isVideo = any())
+            } returns createBitmap(width = 8, height = 8)
+            every { dependencies.embeddingSession.generate(bitmap = any()) } returns floatArrayOf(1f)
+
+            val result = buildWorker(dependencies = dependencies).doWork()
+
+            assertEquals(indexingSuccess(changedCount = 1), result)
+            coVerify(exactly = 0) {
+                dependencies.analysisRepository.removeMediaData(mediaIds = any())
+            }
+            coVerify(exactly = 1) {
+                dependencies.mediaRepository.addImageEmbedding(
+                    imageEmbedding = match { it.id == selectedMedia.id },
+                )
+            }
+        }
+    }
 
     @Test
     fun disabledAnalysis_skipsMediaAndModelAccess() {
