@@ -34,6 +34,7 @@ import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.util.SetupMediaProviders
+import com.dot.gallery.core.util.enforceSecureMode
 import com.dot.gallery.feature_node.domain.model.UIEvent
 import com.dot.gallery.feature_node.domain.util.EventHandler
 import com.dot.gallery.feature_node.presentation.mediaview.MediaViewScreenRoute
@@ -69,6 +70,7 @@ class StandaloneActivity : AppCompatActivity() {
     @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalHazeMaterialsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enforceSecureMode()
         if (intent.action == MediaStore.ACTION_REVIEW_SECURE) {
             finish()
             return

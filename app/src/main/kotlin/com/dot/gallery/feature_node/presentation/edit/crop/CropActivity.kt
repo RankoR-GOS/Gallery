@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.dot.gallery.R
+import com.dot.gallery.core.util.enforceSecureMode
 import com.dot.gallery.feature_node.data.externalcrop.ExternalCropIntentParser
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -20,6 +21,7 @@ class CropActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enforceSecureMode()
 
         val request = externalCropIntentParser.parse(
             intent = intent,

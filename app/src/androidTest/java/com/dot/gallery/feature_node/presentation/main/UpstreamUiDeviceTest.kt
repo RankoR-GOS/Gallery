@@ -1,5 +1,6 @@
 package com.dot.gallery.feature_node.presentation.main
 
+import android.app.Activity
 import android.content.ContentValues
 import android.content.Intent
 import android.content.res.Configuration
@@ -12,6 +13,7 @@ import android.provider.MediaStore
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -25,6 +27,8 @@ import com.dot.gallery.core.Constants.mosaicColumnsList
 import com.dot.gallery.core.dataStore
 import com.dot.gallery.feature_node.presentation.edit.EditActivity
 import com.dot.gallery.feature_node.presentation.edit.EditViewModel
+import com.dot.gallery.feature_node.presentation.picker.PickerActivity
+import com.dot.gallery.feature_node.presentation.standalone.StandaloneActivity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -179,6 +183,47 @@ internal class UpstreamUiDeviceTest {
             }
             assertTrue(!viewModel.isProcessing.value)
             waitUntil { findLabel(context.getString(R.string.type_stylus)) != null }
+        }
+    }
+
+    @Test
+    fun secureModeProtectsMediaActivitiesAndCanBeDisabled() {
+        val secureKey = booleanPreferencesKey("secure_mode")
+        val previous = runBlocking { context.dataStore.data.first()[secureKey] }
+        try {
+            runBlocking { context.dataStore.edit { preferences -> preferences[secureKey] = true } }
+            for (activityClass in listOf(MainActivity::class.java, StandaloneActivity::class.java,
+                EditActivity::class.java, PickerActivity::class.java)) {
+                val intent = Intent(context, activityClass).apply {
+                    setDataAndType(fixtureUris.first(), "image/png")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                ActivityScenario.launch<Activity>(intent).use { scenario ->
+                    instrumentation.waitForIdleSync()
+                    scenario.onActivity { activity ->
+                        assertTrue("${activityClass.simpleName} is not secure",
+                            activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE != 0)
+                    }
+                    runBlocking { context.dataStore.edit { preferences -> preferences[secureKey] = false } }
+                    waitUntil {
+                        var cleared = false
+                        scenario.onActivity { activity ->
+                            cleared = activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE == 0
+                        }
+                        cleared
+                    }
+                }
+                runBlocking { context.dataStore.edit { preferences -> preferences[secureKey] = true } }
+            }
+        } finally {
+            runBlocking {
+                context.dataStore.edit { preferences ->
+                    when (previous) {
+                        null -> preferences.remove(secureKey)
+                        else -> preferences[secureKey] = previous
+                    }
+                }
+            }
         }
     }
 

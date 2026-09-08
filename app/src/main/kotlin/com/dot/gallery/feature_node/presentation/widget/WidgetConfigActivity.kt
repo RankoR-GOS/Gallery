@@ -17,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
+import com.dot.gallery.core.util.enforceSecureMode
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.DefaultEventHandler
@@ -77,6 +78,7 @@ class WidgetConfigActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enforceSecureMode()
 
         // Get the widget ID from the intent
         appWidgetId = intent?.extras?.getInt(

@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
+import com.dot.gallery.core.util.enforceSecureMode
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.DefaultEventHandler
@@ -89,6 +90,7 @@ class PickerActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enforceSecureMode()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
         val type = intent.type

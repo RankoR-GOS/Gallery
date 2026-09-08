@@ -7,7 +7,6 @@ package com.dot.gallery.feature_node.presentation.main
 
 import android.graphics.Color
 import android.os.Bundle
-import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,17 +24,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.dot.gallery.core.MediaDistributor
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
-import com.dot.gallery.core.Settings.Misc.getSecureMode
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberForceTheme
 import com.dot.gallery.core.Settings.Misc.rememberIsDarkMode
 import com.dot.gallery.core.presentation.components.AppBarContainer
 import com.dot.gallery.core.presentation.components.NavigationComp
+import com.dot.gallery.core.util.enforceSecureMode
 import com.dot.gallery.core.util.hasMediaAccess
 import com.dot.gallery.core.util.SetupMediaProviders
 import com.dot.gallery.feature_node.domain.model.UIEvent
@@ -74,8 +72,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        enforceSecureMode()
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        enforceSecureFlag()
         enableEdgeToEdge()
         if (hasMediaAccess()) {
             mediaDistributor.hasPermission.value = true
@@ -178,18 +176,6 @@ class MainActivity : AppCompatActivity() {
                             }
                         )
                     }
-                }
-            }
-        }
-    }
-
-    private fun enforceSecureFlag() {
-        lifecycleScope.launch {
-            getSecureMode(this@MainActivity).collectLatest { enabled ->
-                if (enabled) {
-                    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                } else {
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
                 }
             }
         }

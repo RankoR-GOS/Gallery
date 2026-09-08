@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dot.gallery.core.util.enforceSecureMode
 import com.dot.gallery.feature_node.presentation.edit.adjustments.Crop
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.ui.theme.GalleryTheme
@@ -31,6 +32,7 @@ class EditActivity : ComponentActivity() {
     @OptIn(ExperimentalHazeMaterialsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enforceSecureMode()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             GalleryTheme(
