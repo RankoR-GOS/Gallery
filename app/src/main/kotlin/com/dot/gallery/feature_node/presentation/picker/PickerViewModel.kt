@@ -42,6 +42,7 @@ open class PickerViewModel @Inject constructor(
     private val weeklyDateFormat = repository.getSetting(Settings.Misc.WEEKLY_DATE_FORMAT, Constants.WEEKLY_DATE_FORMAT)
         .stateIn(viewModelScope, SharingStarted.Eagerly, Constants.WEEKLY_DATE_FORMAT)
 
+    var mimeTypes: List<String> = listOf("*/*")
     var allowedMedia: AllowedMedia = AllowedMedia.BOTH
     var albumId: Long = -1L
         set(value) {
@@ -54,7 +55,10 @@ open class PickerViewModel @Inject constructor(
                 ) { blacklisted, lockedAlbums, mediaResult ->
                     val lockedIds = lockedAlbums.mapTo(HashSet()) { it.id }
                     val data = (mediaResult.data ?: emptyList()).toMutableList().apply {
-                        removeAll { media -> blacklisted.any { it.shouldIgnore(media) } }
+                        removeAll { media ->
+                            !matchesPickerMimeType(mimeType = media.mimeType, requestedTypes = mimeTypes) ||
+                                blacklisted.any { it.shouldIgnore(media) }
+                        }
                         if (value == -1L) {
                             removeAll { media -> media.albumID in lockedIds }
                         }
@@ -85,7 +89,10 @@ open class PickerViewModel @Inject constructor(
         ) { blacklisted, lockedAlbums, mediaResult ->
             val lockedIds = lockedAlbums.mapTo(HashSet()) { it.id }
             val data = (mediaResult.data ?: emptyList()).toMutableList().apply {
-                removeAll { media -> blacklisted.any { it.shouldIgnore(media) } }
+                removeAll { media ->
+                    !matchesPickerMimeType(mimeType = media.mimeType, requestedTypes = mimeTypes) ||
+                        blacklisted.any { it.shouldIgnore(media) }
+                }
                 if (albumId == -1L) {
                     removeAll { media -> media.albumID in lockedIds }
                 }

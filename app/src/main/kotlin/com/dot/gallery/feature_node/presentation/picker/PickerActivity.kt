@@ -6,10 +6,12 @@ package com.dot.gallery.feature_node.presentation.picker
 
 import android.app.Activity
 import android.content.ClipData
+import android.content.ClipDescription
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContract
@@ -17,7 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
-import com.dot.gallery.core.util.enforceSecureMode
+import androidx.lifecycle.lifecycleScope
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.DefaultEventHandler
@@ -26,6 +28,7 @@ import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
 import com.dot.gallery.core.MediaSelectorImpl
 import com.dot.gallery.core.util.SetupMediaProviders
+import com.dot.gallery.core.util.enforceSecureMode
 import com.dot.gallery.core.util.hasMediaAccess
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.domain.model.UIEvent
@@ -37,8 +40,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
@@ -84,8 +89,17 @@ class PickerActivity : FragmentActivity() {
 
     val mediaSelector: MediaSelector = MediaSelectorImpl()
 
-    private val exportAsMedia by lazy {
-        callingPackage == packageName && intent.getBooleanExtra(EXPORT_AS_MEDIA, false)
+    private val exportAsMedia: Boolean
+        get() {
+            return callingPackage == packageName && intent.getBooleanExtra(EXPORT_AS_MEDIA, false)
+        }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        mediaSelector.clearSelection()
+        viewModelStore.clear()
+        recreate()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -157,6 +171,7 @@ class PickerActivity : FragmentActivity() {
         PickerScreen(
             title = title,
             allowedMedia = allowedMedia,
+            mimeTypes = requestedMimeTypes(intent = intent),
             allowSelection = allowMultiple,
             onClose = ::finish,
             sendMediaAsResult = ::sendMediaAsResult,
@@ -176,22 +191,41 @@ class PickerActivity : FragmentActivity() {
     }
 
     private fun sendMediaAsResult(selectedMedia: List<Uri>) {
-        if (!exportAsMedia) {
-            val newIntent = Intent().apply {
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                data = selectedMedia[0]
-            }
-            if (selectedMedia.size == 1)
-                setResult(RESULT_OK, newIntent)
-            else {
-                val newClipData = ClipData.newUri(contentResolver, null, selectedMedia[0])
-                for (nextUri in selectedMedia.stream().skip(1)) {
-                    newClipData.addItem(contentResolver, ClipData.Item(nextUri))
+        if (exportAsMedia || selectedMedia.isEmpty()) return
+        val requestIntent = intent
+        val mimeTypes = requestedMimeTypes(intent = requestIntent)
+        lifecycleScope.launch(Dispatchers.IO) {
+            val resultIntent = try {
+                check(selectedMedia.all { uri ->
+                    matchesPickerMimeType(
+                        mimeType = contentResolver.getType(uri),
+                        requestedTypes = mimeTypes,
+                    )
+                })
+                Intent().apply {
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    data = selectedMedia.first()
+                    if (selectedMedia.size > 1) {
+                        clipData = ClipData.newUri(contentResolver, null, selectedMedia.first()).apply {
+                            selectedMedia.drop(1).forEach { uri -> addItem(ClipData.Item(uri)) }
+                        }
+                    }
                 }
-                newIntent.clipData = newClipData
-                setResult(RESULT_OK, newIntent)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                null
             }
-            finish()
+            withContext(Dispatchers.Main) {
+                if (intent !== requestIntent) return@withContext
+                when (resultIntent) {
+                    null -> Toast.makeText(this@PickerActivity, R.string.error_toast, Toast.LENGTH_SHORT).show()
+                    else -> {
+                        setResult(RESULT_OK, resultIntent)
+                        finish()
+                    }
+                }
+            }
         }
     }
 
@@ -206,5 +240,26 @@ class PickerActivity : FragmentActivity() {
     companion object {
         const val EXPORT_AS_MEDIA = "EXPORT_AS_MEDIA"
         const val MEDIA_LIST = "MEDIA_LIST"
+    }
+}
+
+internal fun requestedMimeTypes(intent: Intent): List<String> {
+    val primaryType = Intent.normalizeMimeType(intent.type) ?: "*/*"
+    val extraTypes = intent.getStringArrayExtra(Intent.EXTRA_MIME_TYPES)?.toList().orEmpty()
+    if (extraTypes.isEmpty()) return listOf(primaryType)
+    return extraTypes.mapNotNull { type ->
+        val extraType = Intent.normalizeMimeType(type) ?: return@mapNotNull null
+        when {
+            ClipDescription.compareMimeTypes(extraType, primaryType) -> extraType
+            ClipDescription.compareMimeTypes(primaryType, extraType) -> primaryType
+            else -> null
+        }
+    }.distinct()
+}
+
+internal fun matchesPickerMimeType(mimeType: String?, requestedTypes: List<String>): Boolean {
+    val normalizedType = Intent.normalizeMimeType(mimeType) ?: return false
+    return requestedTypes.any { requestedType ->
+        ClipDescription.compareMimeTypes(normalizedType, requestedType)
     }
 }

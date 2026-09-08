@@ -17,7 +17,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
-import com.dot.gallery.core.util.enforceSecureMode
 import com.dot.gallery.R
 import com.dot.gallery.core.Constants
 import com.dot.gallery.core.DefaultEventHandler
@@ -26,6 +25,7 @@ import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.core.MediaSelector
 import com.dot.gallery.core.MediaSelectorImpl
 import com.dot.gallery.core.util.SetupMediaProviders
+import com.dot.gallery.core.util.enforceSecureMode
 import com.dot.gallery.core.util.hasMediaAccess
 import com.dot.gallery.feature_node.data.model.WidgetType
 import com.dot.gallery.feature_node.data.repository.WidgetRepository
@@ -160,6 +160,7 @@ class WidgetConfigActivity : FragmentActivity() {
         PickerScreen(
             title = title,
             allowedMedia = AllowedMedia.PHOTOS,
+            mimeTypes = listOf("image/*"),
             allowSelection = allowMultiple,
             onClose = ::finish,
             sendMediaAsResult = ::onMediaSelected,

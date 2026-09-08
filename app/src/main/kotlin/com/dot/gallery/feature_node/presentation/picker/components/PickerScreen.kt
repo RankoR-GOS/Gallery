@@ -114,6 +114,7 @@ private sealed class PickerNavState {
 fun PickerScreen(
     title: String,
     allowedMedia: AllowedMedia,
+    mimeTypes: List<String>,
     allowSelection: Boolean,
     onClose: () -> Unit,
     sendMediaAsResult: (List<Uri>) -> Unit,
@@ -122,6 +123,7 @@ fun PickerScreen(
     val scope = rememberCoroutineScope()
     val mediaVM = hiltViewModel<PickerViewModel>().apply {
         this.allowedMedia = allowedMedia
+        this.mimeTypes = mimeTypes
     }
     val albumsState by mediaVM.albumsState.collectAsStateWithLifecycle()
     val metadataState = mediaVM.metadataState.collectAsStateWithLifecycle()
