@@ -5,12 +5,13 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview.components.media
 
+import android.graphics.drawable.AnimatedImageDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -38,6 +39,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi as Exp
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.load.resource.UnitTransformation
 import com.bumptech.glide.load.resource.gif.GifDrawable
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
@@ -81,9 +83,9 @@ fun <T: Media> BlurredMediaBackground(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 requestBuilderTransform = {
-                    it.override(600)
+                    it.dontTransform().override(600)
                         .signature(GlideInvalidation.signature(media))
-                        .thumbnail(it.clone().sizeMultiplier(0.1f))
+                        .thumbnail(it.clone().dontTransform().sizeMultiplier(0.1f))
                 }
             )
         }
@@ -101,7 +103,7 @@ fun <T: Media> BlurredMediaBackground(
  */
 @Stable
 @Composable
-fun <T: Media> BoxScope.ZoomablePagerImage(
+fun <T: Media> ZoomablePagerImage(
     modifier: Modifier = Modifier,
     media: T,
     uiEnabled: Boolean,
@@ -156,56 +158,61 @@ fun <T: Media> BoxScope.ZoomablePagerImage(
         }
     }
 
-    GlideZoomAsyncImage(
-        zoomState = zoomState,
-        model = media.toGlideModel(),
-        modifier = Modifier
-            .fillMaxSize()
-            .swipe(
-                onSwipeDown = onSwipeDown
-            )
-            .graphicsLayer {
-                rotationZ = if (isRotating) rotationAnimation else 0f
-            }
-            .then(modifier),
-        onTap = { onItemClick() },
-        onLongPress = {
-            if (!rotationDisabled) {
-                isRotating = true
-                feedbackManager.vibrate()
-                onImageRotated(rotation + 90)
-            }
-        },
-        alignment = Alignment.Center,
-        contentDescription = media.label,
-        requestBuilderTransform = {
-            var builder = it
-                .signature(GlideInvalidation.signature(obj = media, variant = retryAttempt))
-                .thumbnail(it.clone().sizeMultiplier(0.1f))
-                .addListener(requestListener)
-
-            if (media.label.contains(".gif", ignoreCase = true)) {
-                builder = builder.decode(GifDrawable::class.java)
-            }
-
-            builder
-        },
-        scrollBar = null
-    )
-
-    if (loadFailed) {
-        ImageLoadFailure(
-            modifier = Modifier.align(Alignment.Center),
-            onRetry = {
-                loadFailed = false
-                retryAttempt += 1
+    Box(modifier = Modifier.fillMaxSize()) {
+        GlideZoomAsyncImage(
+            zoomState = zoomState,
+            model = media.toGlideModel(),
+            modifier = Modifier
+                .fillMaxSize()
+                .swipe(
+                    onSwipeDown = onSwipeDown
+                )
+                .graphicsLayer {
+                    rotationZ = if (isRotating) rotationAnimation else 0f
+                }
+                .then(modifier),
+            onTap = { onItemClick() },
+            onLongPress = {
+                if (!rotationDisabled) {
+                    isRotating = true
+                    feedbackManager.vibrate()
+                    onImageRotated(rotation + 90)
+                }
             },
+            alignment = Alignment.Center,
+            contentDescription = media.label,
+            requestBuilderTransform = {
+                // ZoomImage adds centerInside after this callback. Native animations need
+                // an exact-class transformation so that bitmap conversion is never attempted.
+                var builder = it
+                    .transform(AnimatedImageDrawable::class.java, UnitTransformation.get())
+                    .signature(GlideInvalidation.signature(obj = media, variant = retryAttempt))
+                    .thumbnail(it.clone().dontTransform().sizeMultiplier(0.1f))
+                    .addListener(requestListener)
+
+                if (media.label.contains(".gif", ignoreCase = true)) {
+                    builder = builder.decode(GifDrawable::class.java)
+                }
+
+                builder
+            },
+            scrollBar = null
         )
+
+        if (loadFailed) {
+            ImageLoadFailure(
+                modifier = Modifier.align(Alignment.Center),
+                onRetry = {
+                    loadFailed = false
+                    retryAttempt += 1
+                },
+            )
+        }
     }
 }
 
 @Composable
-private fun ImageLoadFailure(modifier: Modifier = Modifier, onRetry: () -> Unit) {
+internal fun ImageLoadFailure(modifier: Modifier = Modifier, onRetry: () -> Unit) {
     Column(
         modifier = modifier.padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

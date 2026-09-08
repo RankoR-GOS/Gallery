@@ -187,6 +187,21 @@ internal class UpstreamUiDeviceTest {
     }
 
     @Test
+    fun emptyImageShowsRetryInsteadOfCrashing() {
+        requireNotNull(context.contentResolver.openOutputStream(fixtureUris.first(), "wt")).close()
+        val intent = Intent(context, EditActivity::class.java).apply { data = fixtureUris.first() }
+        ActivityScenario.launch<EditActivity>(intent).use { scenario ->
+            lateinit var viewModel: EditViewModel
+            scenario.onActivity { activity -> viewModel = ViewModelProvider(activity)[EditViewModel::class.java] }
+            waitUntil { viewModel.loadFailed.value && !viewModel.isSaving.value }
+            waitUntil { findLabel(context.getString(R.string.retry)) != null }
+            assertTrue(viewModel.currentBitmap.value == null)
+            clickLabel(context.getString(R.string.retry))
+            waitUntil { viewModel.loadFailed.value && !viewModel.isSaving.value }
+        }
+    }
+
+    @Test
     fun secureModeProtectsMediaActivitiesAndCanBeDisabled() {
         val secureKey = booleanPreferencesKey("secure_mode")
         val previous = runBlocking { context.dataStore.data.first()[secureKey] }
@@ -223,6 +238,49 @@ internal class UpstreamUiDeviceTest {
                         else -> preferences[secureKey] = previous
                     }
                 }
+            }
+        }
+    }
+
+    @Test
+    fun animatedWebpViewerRendersBothFrames() {
+        val uri = requireNotNull(context.contentResolver.insert(
+            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+            ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, "GalleryPortCheck-${System.nanoTime()}.webp")
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/webp")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/GalleryPortCheck")
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            },
+        ))
+        fixtureUris.add(uri)
+        instrumentation.context.assets.open("GalleryDecoderTest.webp").use { input ->
+            requireNotNull(context.contentResolver.openOutputStream(uri)).use { output -> input.copyTo(output) }
+        }
+        context.contentResolver.update(uri, ContentValues().apply {
+            put(MediaStore.MediaColumns.IS_PENDING, 0)
+        }, null, null)
+        val intent = Intent(context, StandaloneActivity::class.java).apply {
+            action = Intent.ACTION_VIEW
+            setDataAndType(uri, "image/webp")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        ActivityScenario.launch<StandaloneActivity>(intent).use {
+            val observedFrames = mutableSetOf<Int>()
+            try {
+            waitUntil {
+                automation.takeScreenshot()?.let { screenshot ->
+                    val color = screenshot.getPixel(screenshot.width / 2, screenshot.height / 2)
+                    screenshot.recycle()
+                    when {
+                        Color.red(color) > 200 && Color.blue(color) < 50 -> observedFrames.add(0)
+                        Color.blue(color) > 200 && Color.red(color) < 50 -> observedFrames.add(1)
+                    }
+                }
+                observedFrames.size == 2
+            }
+            } catch (failure: AssertionError) {
+                throw AssertionError("WebP frames=$observedFrames retryVisible=${findLabel(context.getString(R.string.retry)) != null}", failure)
             }
         }
     }

@@ -110,7 +110,13 @@ class IsolatedDecoderService : Service() {
     private fun readImageSize(input: Bundle): Bundle {
         val mimeType = normalizedMimeType(input.getString(KEY_MIME_TYPE, ""))
             ?: return errorBundle(message = "Unsupported MIME type")
-        val encodedBytes = readInputBytes(input = input)
+        val encodedBytes = readInputBytes(
+            input = input,
+            maximumBytes = when (mimeType) {
+                SVG_MIME_TYPE -> MAX_SVG_BYTES
+                else -> MAX_ENCODED_MEDIA_BYTES
+            },
+        )
         val size = getImageSize(bytes = encodedBytes, mimeType = mimeType)
             ?: return errorBundle(message = "Failed to read image size")
         validateOriginalSize(size = size)
@@ -124,7 +130,13 @@ class IsolatedDecoderService : Service() {
     private fun decodeImage(input: Bundle): Bundle {
         val mimeType = normalizedMimeType(input.getString(KEY_MIME_TYPE, ""))
             ?: return errorBundle(message = "Unsupported MIME type")
-        val encodedBytes = readInputBytes(input = input)
+        val encodedBytes = readInputBytes(
+            input = input,
+            maximumBytes = when (mimeType) {
+                SVG_MIME_TYPE -> MAX_SVG_BYTES
+                else -> MAX_ENCODED_MEDIA_BYTES
+            },
+        )
         val originalSize = getImageSize(bytes = encodedBytes, mimeType = mimeType)
             ?: return errorBundle(message = "Failed to read image size")
         validateOriginalSize(size = originalSize)
@@ -136,6 +148,7 @@ class IsolatedDecoderService : Service() {
             requestedWidth = input.getInt(KEY_TARGET_WIDTH, 0),
             requestedHeight = input.getInt(KEY_TARGET_HEIGHT, 0),
             maximumDecodedBytes = decodedBudget,
+            allowUpscaling = mimeType == SVG_MIME_TYPE,
         )
         val bitmap = decodeBitmap(
             bytes = encodedBytes,
@@ -235,35 +248,9 @@ class IsolatedDecoderService : Service() {
             maximumBytes = MAX_SVG_BYTES,
         )
 
-        val svg = ByteArrayInputStream(encodedBytes).use { inputStream ->
-            SVG.getFromInputStream(inputStream)
-        }
-
-        val viewBox = svg.documentViewBox
-        val originalSize = Size(
-            resolveSvgDimension(
-                viewBoxDimension = viewBox?.width(),
-                documentDimension = svg.documentWidth,
-            ),
-            resolveSvgDimension(
-                viewBoxDimension = viewBox?.height(),
-                documentDimension = svg.documentHeight,
-            ),
-        )
-
+        val svg = parseSvg(bytes = encodedBytes)
+        val originalSize = svgSize(svg = svg)
         validateOriginalSize(size = originalSize)
-
-        if (viewBox == null) {
-            svg.setDocumentViewBox(
-                0f,
-                0f,
-                originalSize.width.toFloat(),
-                originalSize.height.toFloat(),
-            )
-        }
-
-        svg.setDocumentWidth("100%")
-        svg.setDocumentHeight("100%")
 
         val targetSize = resolvePreviewTargetSize(
             originalSize = originalSize,
@@ -273,13 +260,7 @@ class IsolatedDecoderService : Service() {
                     requestedHeight.toLong() * MAXIMUM_PREVIEW_BYTES_PER_PIXEL,
         )
 
-        val bitmap = createBitmap(
-            width = targetSize.width,
-            height = targetSize.height,
-            config = Bitmap.Config.ARGB_8888,
-        )
-
-        svg.renderToCanvas(Canvas(bitmap))
+        val bitmap = renderSvg(svg = svg, targetSize = targetSize)
 
         return PreviewBitmap(
             bitmap = centerCrop(
@@ -507,11 +488,11 @@ class IsolatedDecoderService : Service() {
         val originalSize: Size,
     )
 
-    private fun readInputBytes(input: Bundle): ByteArray {
+    private fun readInputBytes(input: Bundle, maximumBytes: Long = MAX_ENCODED_MEDIA_BYTES): ByteArray {
         val inputDescriptor = input
             .getParcelable(KEY_INPUT_PFD, ParcelFileDescriptor::class.java)
             ?: throw IOException("Missing input descriptor")
-        return readInputBytes(inputDescriptor = inputDescriptor)
+        return readInputBytes(inputDescriptor = inputDescriptor, maximumBytes = maximumBytes)
     }
 
     private fun readInputBytes(
@@ -535,8 +516,43 @@ class IsolatedDecoderService : Service() {
         return output.toByteArray()
     }
 
+    private fun parseSvg(bytes: ByteArray): SVG {
+        require(bytes.size <= MAX_SVG_BYTES) { "SVG exceeds size limit" }
+        return ByteArrayInputStream(bytes).use { inputStream -> SVG.getFromInputStream(inputStream) }
+    }
+
+    private fun svgSize(svg: SVG): Size {
+        val viewBox = svg.documentViewBox
+        return Size(
+            resolveSvgDimension(viewBoxDimension = viewBox?.width(), documentDimension = svg.documentWidth),
+            resolveSvgDimension(viewBoxDimension = viewBox?.height(), documentDimension = svg.documentHeight),
+        )
+    }
+
+    private fun renderSvg(svg: SVG, targetSize: Size): Bitmap {
+        if (svg.documentViewBox == null) {
+            val originalSize = svgSize(svg = svg)
+            svg.setDocumentViewBox(0f, 0f, originalSize.width.toFloat(), originalSize.height.toFloat())
+        }
+        svg.setDocumentWidth("100%")
+        svg.setDocumentHeight("100%")
+        val bitmap = createBitmap(
+            width = targetSize.width,
+            height = targetSize.height,
+            config = Bitmap.Config.ARGB_8888,
+        )
+        try {
+            svg.renderToCanvas(Canvas(bitmap))
+            return bitmap
+        } catch (exception: Exception) {
+            bitmap.recycle()
+            throw exception
+        }
+    }
+
     private fun getImageSize(bytes: ByteArray, mimeType: String): Size? {
         return when {
+            mimeType == SVG_MIME_TYPE -> svgSize(svg = parseSvg(bytes = bytes))
             mimeType in HEIF_MIME_TYPES -> heifCoder.getSize(bytes)
             mimeType == JXL_MIME_TYPE -> JxlCoder.getSize(bytes)
             else -> null
@@ -545,6 +561,8 @@ class IsolatedDecoderService : Service() {
 
     private fun decodeBitmap(bytes: ByteArray, mimeType: String, targetSize: Size): Bitmap? {
         return when {
+            mimeType == SVG_MIME_TYPE -> renderSvg(svg = parseSvg(bytes = bytes), targetSize = targetSize)
+
             mimeType in HEIF_MIME_TYPES -> {
                 heifCoder.decodeSampled(bytes, targetSize.width, targetSize.height)
             }
@@ -572,8 +590,9 @@ class IsolatedDecoderService : Service() {
         requestedWidth: Int,
         requestedHeight: Int,
         maximumDecodedBytes: Long,
+        allowUpscaling: Boolean,
     ): Size {
-        val requestedScale = when {
+        val sizeScale = when {
             requestedWidth > 0 && requestedHeight > 0 -> {
                 min(
                     requestedWidth.toDouble() / originalSize.width.toDouble(),
@@ -584,7 +603,11 @@ class IsolatedDecoderService : Service() {
             requestedWidth > 0 -> requestedWidth.toDouble() / originalSize.width.toDouble()
             requestedHeight > 0 -> requestedHeight.toDouble() / originalSize.height.toDouble()
             else -> 1.0
-        }.coerceAtMost(maximumValue = 1.0)
+        }
+        val requestedScale = when {
+            allowUpscaling -> sizeScale
+            else -> sizeScale.coerceAtMost(maximumValue = 1.0)
+        }
         val requestedPixels = originalSize.width.toDouble() * originalSize.height.toDouble() *
                 requestedScale * requestedScale
         val maximumPixels = maximumDecodedBytes.toDouble() / ARGB_BYTES_PER_PIXEL.toDouble()
@@ -602,7 +625,7 @@ class IsolatedDecoderService : Service() {
     private fun normalizedMimeType(mimeType: String): String? {
         val normalized = mimeType.substringBefore(';').trim().lowercase(Locale.ROOT)
         return normalized.takeIf { value ->
-            value == JXL_MIME_TYPE || value in HEIF_MIME_TYPES
+            value == SVG_MIME_TYPE || value == JXL_MIME_TYPE || value in HEIF_MIME_TYPES
         }
     }
 
@@ -669,6 +692,7 @@ class IsolatedDecoderService : Service() {
         private const val INPUT_BUFFER_BYTES = 64 * 1024
         private const val JXL_MIME_TYPE = "image/jxl"
         private const val MAX_IMAGE_PIXELS = 1_000_000_000L
+        private const val SVG_MIME_TYPE = "image/svg+xml"
         private const val MAX_SVG_BYTES = 16L * 1024L * 1024L
         private const val MIN_DECODED_BITMAP_BYTES = 4L * 1024L * 1024L
         private const val MAX_DECODED_BITMAP_BYTES = IsolatedImageDecoder.MAX_DECODED_BITMAP_BYTES

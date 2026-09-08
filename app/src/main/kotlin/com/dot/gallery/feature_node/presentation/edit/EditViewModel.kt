@@ -9,12 +9,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.scale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.FutureTarget
 import com.dot.gallery.core.MediaHandler
 import com.dot.gallery.feature_node.data.model.Media
 import com.dot.gallery.feature_node.data.model.Media.UriMedia
@@ -87,6 +87,9 @@ class EditViewModel @Inject constructor(
     val appliedAdjustments = _appliedAdjustments.asStateFlow()
 
     private val activeMedia = MutableStateFlow<UriMedia?>(null)
+
+    private val _loadFailed = MutableStateFlow(false)
+    val loadFailed = _loadFailed.asStateFlow()
 
     private val _isSaving = MutableStateFlow(true)
     val isSaving = _isSaving.asStateFlow()
@@ -345,37 +348,38 @@ class EditViewModel @Inject constructor(
     }
 
     fun setSourceData(context: Context, uri: Uri) {
+        if (_uri.value == uri && _currentBitmap.value != null) return
         viewModelScope.launch(Dispatchers.IO) {
             _uri.value = uri
-            val mediaList =
-                repository.getMediaListByUris(listOf(uri), reviewMode = false, onlyMatching = true).firstOrNull()?.data
-                    ?: emptyList()
-            if (mediaList.isNotEmpty()) {
-                activeMedia.value = mediaList.first()
-            } else {
-                activeMedia.value = Media.createFromUri(context, uri)
-            }
-
-            setOriginalBitmap(context)
-        }
-    }
-
-    private fun setOriginalBitmap(context: Context) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = Glide.with(context)
-                .load(activeMedia.value?.toGlideModel())
-                .skipMemoryCache(true)
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .submit()
-                .get()
-            val bitmap = result.toBitmap()
-            _originalBitmap.value = bitmap
-            _targetBitmap.value = bitmap
-            if (_currentBitmap.value == null) {
+            _loadFailed.value = false
+            _isSaving.value = true
+            val requestManager = Glide.with(context.applicationContext)
+            var request: FutureTarget<Bitmap>? = null
+            try {
+                val mediaList = repository.getMediaListByUris(
+                    listOfUris = listOf(uri),
+                    reviewMode = false,
+                    onlyMatching = true,
+                ).firstOrNull()?.data.orEmpty()
+                activeMedia.value = mediaList.firstOrNull() ?: Media.createFromUri(context = context, uri = uri)
+                request = requestManager.asBitmap()
+                    .load(activeMedia.value?.toGlideModel())
+                    .skipMemoryCache(true)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .submit()
+                val bitmap = requireNotNull(request.get().copy(Bitmap.Config.ARGB_8888, false))
+                _originalBitmap.value = bitmap
+                _targetBitmap.value = bitmap
                 _currentBitmap.value = bitmap
+                bitmaps.add(0, bitmap to null)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                _loadFailed.value = true
+            } finally {
+                request?.let { target -> requestManager.clear(target) }
+                _isSaving.value = false
             }
-            bitmaps.add(0, bitmap to null)
-            _isSaving.value = false
         }
     }
 

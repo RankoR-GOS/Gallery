@@ -11,7 +11,7 @@ internal enum class ImageFileFormat(
     JPEG,
     JXL(sandboxMimeType = "image/jxl"),
     PNG,
-    SVG,
+    SVG(sandboxMimeType = "image/svg+xml"),
     TIFF,
     WEBP;
 }

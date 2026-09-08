@@ -106,6 +106,33 @@ internal class GalleryMediaRoutingDeviceTest {
         }
     }
 
+    @Test
+    fun svgLoadsThroughTheVerifiedGlideRoute() {
+        val application = ApplicationProvider.getApplicationContext<GalleryApp>()
+        val svgFile = writeFixtureFile(application = application, name = "GalleryDecoderTest.svg")
+        val manager = Glide.with(application)
+        try {
+            for ((width, height) in listOf(32 to 16, 320 to 160)) {
+                val request = manager.asBitmap()
+                    .load(galleryMediaModel(uri = Uri.fromFile(svgFile), mimeType = "image/svg+xml"))
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
+                    .override(width, height)
+                    .submit()
+                try {
+                    val bitmap = request.get()
+                    assertEquals(width, bitmap.width)
+                    assertEquals(height, bitmap.height)
+                    assertTrue(bitmap.getPixel(0, 0) != bitmap.getPixel(width / 2, height / 2))
+                } finally {
+                    manager.clear(request)
+                }
+            }
+        } finally {
+            svgFile.delete()
+        }
+    }
+
     private suspend fun generateSubsamplingImage(
         application: GalleryApp,
         file: File,

@@ -9,15 +9,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dot.gallery.core.util.enforceSecureMode
 import com.dot.gallery.feature_node.presentation.edit.adjustments.Crop
+import com.dot.gallery.feature_node.presentation.mediaview.components.media.ImageLoadFailure
 import com.dot.gallery.feature_node.presentation.util.LocalHazeState
 import com.dot.gallery.ui.theme.GalleryTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -63,6 +68,17 @@ class EditActivity : ComponentActivity() {
                         intent.data?.let {
                             viewModel.setSourceData(this@EditActivity, it)
                         }
+                    }
+                    val loadFailed by viewModel.loadFailed.collectAsStateWithLifecycle()
+                    if (loadFailed) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            ImageLoadFailure(onRetry = {
+                                intent.data?.let { uri ->
+                                    viewModel.setSourceData(context = this@EditActivity, uri = uri)
+                                }
+                            })
+                        }
+                        return@CompositionLocalProvider
                     }
                     val currentImage by viewModel.currentBitmap.collectAsStateWithLifecycle()
                     val targetImage by viewModel.targetBitmap.collectAsStateWithLifecycle()
