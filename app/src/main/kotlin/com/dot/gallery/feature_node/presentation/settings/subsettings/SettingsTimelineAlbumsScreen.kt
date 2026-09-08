@@ -271,11 +271,8 @@ private fun TimelineAlbumsListScreen(
 ) {
     @Composable
     fun settings(): SnapshotStateList<SettingsEntity> {
-        val context = LocalContext.current
 
-        val timelineHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.timeline))
-        }
+        val timelineHeader = SettingsEntity.Header(title = stringResource(R.string.timeline))
 
         val groupByMonthPref = rememberSwitchPreference(
             groupByMonth,
@@ -287,11 +284,9 @@ private fun TimelineAlbumsListScreen(
             screenPosition = Position.Top
         )
 
-        val layoutLabel = remember(timelineLayoutType) {
-            when (timelineLayoutType) {
-                Settings.Misc.LAYOUT_MOSAIC -> context.getString(R.string.timeline_layout_mosaic)
-                else -> context.getString(R.string.timeline_layout_grid)
-            }
+        val layoutLabel = when (timelineLayoutType) {
+            Settings.Misc.LAYOUT_MOSAIC -> stringResource(R.string.timeline_layout_mosaic)
+            else -> stringResource(R.string.timeline_layout_grid)
         }
         val timelineLayoutPref = rememberPreference(
             timelineLayoutType,
@@ -328,9 +323,7 @@ private fun TimelineAlbumsListScreen(
             screenPosition = Position.Bottom
         )
 
-        val albumsHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.albums))
-        }
+        val albumsHeader = SettingsEntity.Header(title = stringResource(R.string.albums))
 
         val hideTimelineOnAlbumPref = rememberSwitchPreference(
             hideTimelineOnAlbum,
@@ -352,14 +345,12 @@ private fun TimelineAlbumsListScreen(
             screenPosition = if (SdkCompat.supportsFavorites) Position.Middle else Position.Bottom
         )
 
-        val favIconPositionLabel = remember(favIconPosition) {
-            when (favIconPosition) {
-                Settings.Misc.FAV_ICON_DISABLED -> context.getString(R.string.fav_position_disabled)
-                Settings.Misc.FAV_ICON_BOTTOM_START -> context.getString(R.string.fav_position_bottom_start)
-                Settings.Misc.FAV_ICON_TOP_END -> context.getString(R.string.fav_position_top_end)
-                Settings.Misc.FAV_ICON_TOP_START -> context.getString(R.string.fav_position_top_start)
-                else -> context.getString(R.string.fav_position_bottom_end)
-            }
+        val favIconPositionLabel = when (favIconPosition) {
+            Settings.Misc.FAV_ICON_DISABLED -> stringResource(R.string.fav_position_disabled)
+            Settings.Misc.FAV_ICON_BOTTOM_START -> stringResource(R.string.fav_position_bottom_start)
+            Settings.Misc.FAV_ICON_TOP_END -> stringResource(R.string.fav_position_top_end)
+            Settings.Misc.FAV_ICON_TOP_START -> stringResource(R.string.fav_position_top_start)
+            else -> stringResource(R.string.fav_position_bottom_end)
         }
         val favIconPositionPref = rememberPreference(
             favIconPosition,

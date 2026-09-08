@@ -5,7 +5,9 @@
 
 package com.dot.gallery.feature_node.presentation.mediaview
 
+import androidx.annotation.OptIn as AndroidOptIn
 import androidx.compose.ui.zIndex
+import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import android.content.pm.ActivityInfo
@@ -210,6 +212,7 @@ fun <T : Media> MediaViewScreenRoute(
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalHazeMaterialsApi::class)
+@AndroidOptIn(UnstableApi::class)
 @Composable
 fun <T : Media> MediaViewScreen(
     toggleRotate: () -> Unit,

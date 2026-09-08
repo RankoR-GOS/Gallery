@@ -167,8 +167,8 @@ fun SettingsMediaViewerScreen() {
         }
         DETAIL_EDITOR -> {
             BackHandler { detailKey = null }
-            val editorOptions = remember(defaultEditor, editApps) {
-                val builtinLabel = context.getString(R.string.default_image_editor_builtin)
+            val builtinLabel = stringResource(R.string.default_image_editor_builtin)
+            val editorOptions = remember(defaultEditor, editApps, builtinLabel) {
                 val options = mutableListOf(
                     PreferenceOption(Settings.Misc.EDITOR_BUILTIN, builtinLabel, defaultEditor == Settings.Misc.EDITOR_BUILTIN)
                 )
@@ -272,9 +272,7 @@ private fun MediaViewerListScreen(
     fun settings(): SnapshotStateList<SettingsEntity> {
         val context = LocalContext.current
 
-        val viewingHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.media_view))
-        }
+        val viewingHeader = SettingsEntity.Header(title = stringResource(R.string.media_view))
 
         val fullBrightnessViewPref = rememberSwitchPreference(
             fullBrightnessView,
@@ -306,13 +304,14 @@ private fun MediaViewerListScreen(
             screenPosition = Position.Middle
         )
 
-        val editorSummary = remember(defaultEditor, editApps) {
+        val builtinLabel = stringResource(R.string.default_image_editor_builtin)
+        val editorSummary = remember(defaultEditor, editApps, builtinLabel) {
             if (defaultEditor == Settings.Misc.EDITOR_BUILTIN) {
-                context.getString(R.string.default_image_editor_builtin)
+                builtinLabel
             } else {
                 editApps.find { it.activityInfo.packageName == defaultEditor }
                     ?.loadLabel(context.packageManager)?.toString()
-                    ?: context.getString(R.string.default_image_editor_builtin)
+                    ?: builtinLabel
             }
         }
         val defaultEditorPref = rememberPreference(
@@ -323,9 +322,7 @@ private fun MediaViewerListScreen(
             screenPosition = Position.Bottom
         )
 
-        val videoPlaybackHeader = remember(context) {
-            SettingsEntity.Header(title = context.getString(R.string.video_playback))
-        }
+        val videoPlaybackHeader = SettingsEntity.Header(title = stringResource(R.string.video_playback))
 
         val audioFocusPref = rememberSwitchPreference(
             audioFocus,

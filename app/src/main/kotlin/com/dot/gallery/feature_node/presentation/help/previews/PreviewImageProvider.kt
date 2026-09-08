@@ -51,8 +51,8 @@ fun PreviewScreenProvider(
     ) {
         SharedTransitionLayout {
             val sharedScope = this
-            AnimatedContent(targetState = Unit, label = "preview") { _ ->
-                content(sharedScope, this)
+            AnimatedContent(targetState = content, label = "preview") { previewContent ->
+                previewContent(sharedScope, this)
             }
         }
     }
