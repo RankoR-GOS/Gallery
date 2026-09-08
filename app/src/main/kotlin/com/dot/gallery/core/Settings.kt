@@ -297,6 +297,12 @@ object Settings {
         fun rememberLastScreen() =
             rememberPreference(key = LAST_SCREEN, defaultValue = Screen.TimelineScreen())
 
+        fun getLastScreen(context: Context): Flow<String> {
+            return context.dataStore.data.map { preferences ->
+                preferences[LAST_SCREEN] ?: Screen.TimelineScreen()
+            }
+        }
+
         private val FORCED_LAST_SCREEN = booleanPreferencesKey("forced_last_screen")
 
         @Composable

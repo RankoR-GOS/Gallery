@@ -56,6 +56,7 @@ import com.dot.gallery.core.Constants.Target.TARGET_FAVORITES
 import com.dot.gallery.core.Constants.Target.TARGET_TRASH
 import com.dot.gallery.core.LocalEventHandler
 import com.dot.gallery.core.LocalMediaSelector
+import com.dot.gallery.core.Settings
 import com.dot.gallery.core.Settings.Misc.rememberAllowBlur
 import com.dot.gallery.core.Settings.Misc.rememberForcedLastScreen
 import com.dot.gallery.core.Settings.Misc.rememberLastScreen
@@ -138,9 +139,13 @@ fun NavigationComp(
     }
     var lastStartScreen by rememberLastScreen()
     val forcedLastScreen by rememberForcedLastScreen()
+    val savedStartScreen by remember(context) {
+        Settings.Misc.getLastScreen(context = context)
+    }.collectAsStateWithLifecycle(initialValue = null)
+    if (savedStartScreen == null) return
     val startDest = remember {
         when {
-            permissionState -> lastStartScreen
+            permissionState -> requireNotNull(savedStartScreen)
             else -> Screen.SetupScreen()
         }
     }
