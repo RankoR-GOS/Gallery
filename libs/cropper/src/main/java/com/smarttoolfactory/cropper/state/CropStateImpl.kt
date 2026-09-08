@@ -357,18 +357,16 @@ abstract class CropState internal constructor(
      */
     private fun calculateValidImageDrawRect(rectOverlay: Rect, rectDrawArea: Rect): Rect {
 
-        var width = rectDrawArea.width
-        var height = rectDrawArea.height
-
-        if (width < rectOverlay.width) {
-            width = rectOverlay.width
-        }
-
-        if (height < rectOverlay.height) {
-            height = rectOverlay.height
-        }
-
-        var rectImageArea = Rect(offset = rectDrawArea.topLeft, size = Size(width, height))
+        if (rectDrawArea.isEmpty) return rectDrawArea
+        // Zoom scales both image axes. Expanding them independently makes a square preset
+        // report the full image until a gesture recomputes the actual transformed bounds.
+        val scale = maxOf(1f, rectOverlay.width / rectDrawArea.width, rectOverlay.height / rectDrawArea.height)
+        val width = rectDrawArea.width * scale
+        val height = rectDrawArea.height * scale
+        var rectImageArea = Rect(
+            offset = rectDrawArea.center - Offset(x = width / 2f, y = height / 2f),
+            size = Size(width = width, height = height),
+        )
 
         if (rectImageArea.left > rectOverlay.left) {
             rectImageArea = rectImageArea.translate(rectOverlay.left - rectImageArea.left, 0f)

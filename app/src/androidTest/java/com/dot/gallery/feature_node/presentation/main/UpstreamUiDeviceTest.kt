@@ -187,6 +187,24 @@ internal class UpstreamUiDeviceTest {
     }
 
     @Test
+    fun squarePresetCommitsWithoutDragging() {
+        val intent = Intent(context, EditActivity::class.java).apply { data = fixtureUris.first() }
+        ActivityScenario.launch<EditActivity>(intent).use { scenario ->
+            lateinit var viewModel: EditViewModel
+            scenario.onActivity { activity -> viewModel = ViewModelProvider(activity)[EditViewModel::class.java] }
+            waitUntil { !viewModel.isSaving.value && viewModel.currentBitmap.value != null }
+            clickLabel(context.getString(R.string.editor_aspect_ratio))
+            clickLabel(context.getString(R.string.aspect_square))
+            SystemClock.sleep(700)
+            clickLabel(context.getString(R.string.editor_apply_crop))
+            waitUntil { viewModel.appliedAdjustments.value.isNotEmpty() && !viewModel.isProcessing.value }
+            val bitmap = requireNotNull(viewModel.currentBitmap.value)
+            assertTrue("Expected 600x600, got ${bitmap.width}x${bitmap.height}",
+                bitmap.width == 600 && bitmap.height == 600)
+        }
+    }
+
+    @Test
     fun emptyImageShowsRetryInsteadOfCrashing() {
         requireNotNull(context.contentResolver.openOutputStream(fixtureUris.first(), "wt")).close()
         val intent = Intent(context, EditActivity::class.java).apply { data = fixtureUris.first() }
