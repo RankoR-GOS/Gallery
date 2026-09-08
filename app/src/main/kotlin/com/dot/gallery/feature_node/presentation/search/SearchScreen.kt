@@ -131,7 +131,7 @@ fun SearchScreen(
     // The field owns its text. Mirroring viewModel.query back into it makes fast typing reorder
     // characters and strand the ime composing span, because the collection lags the keystrokes and
     // a stale write lands mid-composition. Programmatic rewrites arrive as one-shot events instead.
-    val queryState = rememberTextFieldState()
+    val queryState = rememberTextFieldState(initialText = query)
     LaunchedEffect(queryState) {
         viewModel.queryOverrides.collect { override ->
             if (override != queryState.text.toString()) {

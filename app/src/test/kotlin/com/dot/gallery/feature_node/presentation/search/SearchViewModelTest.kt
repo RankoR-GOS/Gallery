@@ -2,6 +2,7 @@ package com.dot.gallery.feature_node.presentation.search
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.net.Uri
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.dot.gallery.core.MediaDistributor
@@ -36,7 +37,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SearchViewModelTest {
 
@@ -174,6 +178,46 @@ internal class SearchViewModelTest {
         }
     }
 
+    @Test
+    fun filenamePrefixesAndRefreshKeepGridItemsAndRemoveDeletedMedia() {
+        runTest(context = mainDispatcherRule.testDispatcher) {
+            val media = Media.UriMedia(
+                id = 1L,
+                label = "QA-01-café 日本語.jpg",
+                uri = Uri.parse("content://media/external/images/media/1"),
+                path = "Pictures/QA-01-café 日本語.jpg",
+                relativePath = "Pictures/",
+                albumID = 1L,
+                albumLabel = "Pictures",
+                timestamp = 0L,
+                fullDate = "",
+                mimeType = "image/jpeg",
+                favorite = 0,
+                trashed = 0,
+                size = 1L,
+            )
+            val timeline = MutableSharedFlow<MediaState<Media.UriMedia>>(replay = 1)
+            timeline.tryEmit(MediaState(media = listOf(media), isLoading = false))
+            val viewModel = createViewModel(analysis = analysisDisabled(), timelineMedia = timeline)
+            runCurrent()
+            viewModel.setQuery(query = "QA-01")
+            viewModel.searchResultsState.first { state -> state.hasSearched && !state.isSearching }
+            assertEquals(listOf(media), viewModel.searchResultsState.value.results.media)
+            assertTrue(viewModel.searchResultsState.value.results.mappedMedia.isNotEmpty())
+
+            val updatedMedia = media.copy(favorite = 1)
+            timeline.emit(MediaState(media = listOf(updatedMedia), isLoading = false))
+            viewModel.searchResultsState.first { state -> state.results.media.firstOrNull()?.favorite == 1 }
+            assertEquals(listOf(updatedMedia), viewModel.searchResultsState.value.results.media)
+            assertTrue(viewModel.searchResultsState.value.results.mappedMedia.isNotEmpty())
+
+            timeline.emit(MediaState(isLoading = false))
+            viewModel.searchResultsState.first { state -> state.results.media.isEmpty() }
+            assertTrue(viewModel.searchResultsState.value.results.media.isEmpty())
+            assertTrue(viewModel.searchResultsState.value.hasSearched)
+        }
+    }
+
     private fun SearchViewModel.recordOverrides(scope: CoroutineScope): List<String> {
         val recorded = mutableListOf<String>()
         scope.launch { queryOverrides.collect { recorded += it } }
@@ -195,10 +239,11 @@ internal class SearchViewModelTest {
             every { isAvailable } returns false
         },
         categories: Flow<List<CategoryWithMediaCount>> = flowOf(emptyList()),
+        timelineMedia: MutableSharedFlow<MediaState<Media.UriMedia>> =
+            MutableSharedFlow<MediaState<Media.UriMedia>>(replay = 1).apply {
+                tryEmit(MediaState(isLoading = false))
+            },
     ): SearchViewModel {
-        val timelineMedia = MutableSharedFlow<MediaState<Media.UriMedia>>(replay = 1).apply {
-            tryEmit(MediaState(isLoading = false))
-        }
         val mediaDistributor = mockk<MediaDistributor>(relaxed = true) {
             every { dateFormatsFlow } returns MutableStateFlow(Triple("", "", ""))
             every { metadataFlow } returns flowOf(MediaMetadataState())

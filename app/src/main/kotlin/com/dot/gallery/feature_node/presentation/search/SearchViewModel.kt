@@ -39,7 +39,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -51,11 +50,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -314,17 +313,19 @@ class SearchViewModel @Inject internal constructor(
             initialValue = persistentListOf()
         )
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private val allMedia = mediaDistributor.timelineMediaFlow
-        .mapLatest { state ->
-            updateQueriedMedia(state)
-            state
-        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
             initialValue = MediaState()
         )
+
+    init {
+        // Must stay below [allMedia]: init blocks run in textual order and this one reads it.
+        // collectLatest keeps a single refresh in flight, so an older timeline state cannot
+        // land after a newer one and leave the results stale.
+        viewModelScope.launch { allMedia.collectLatest { state -> updateQueriedMedia(state) } }
+    }
 
     private val metadata = mediaDistributor.metadataFlow
         .stateIn(
@@ -526,30 +527,26 @@ class SearchViewModel @Inject internal constructor(
         }
     }
 
-    private fun updateQueriedMedia(newMediaState: MediaState<Media.UriMedia>) {
-        viewModelScope.launch(ioDispatcher) {
-            val query = _query.value
-            if (query.isEmpty()) return@launch
-            val resultsState = _searchResultsState.value
-            if (resultsState.hasSearched && !resultsState.isSearching) {
-                // Check resultsState and update any media that has changed based on the new MediaState
-                // If is deleted, remove it from results
-                // If is updated, update it in results
-                val updatedResults = resultsState.results.media.mapNotNull { mediaItem ->
-                    newMediaState.media.find { it.id == mediaItem.id }
-                }
-                if (updatedResults.isNotEmpty()) {
-                    _searchResultsState.tryEmit(
-                        resultsState.copy(
-                            results = MediaState(
-                                media = updatedResults,
-                                isLoading = false,
-                                error = resultsState.results.error
-                            )
-                        )
-                    )
-                }
-            }
+    private suspend fun updateQueriedMedia(newMediaState: MediaState<Media.UriMedia>) {
+        if (newMediaState.isLoading || newMediaState.error.isNotEmpty()) return
+        val resultsState = _searchResultsState.value
+        if (!resultsState.hasSearched || resultsState.isSearching) return
+        withContext(ioDispatcher) {
+            val mediaById = newMediaState.media.associateBy { media -> media.id }
+            val updatedResults = resultsState.results.media.mapNotNull { media -> mediaById[media.id] }
+            val mappedResults = mapMediaToItem(
+                data = updatedResults,
+                error = "",
+                albumId = -1L,
+                defaultDateFormat = dateFormats.value.first,
+                extendedDateFormat = dateFormats.value.second,
+                weeklyDateFormat = dateFormats.value.third,
+            )
+            // Lose to any search that published while we were mapping.
+            _searchResultsState.compareAndSet(
+                expect = resultsState,
+                update = resultsState.copy(results = mappedResults),
+            )
         }
     }
 
@@ -884,7 +881,7 @@ class SearchViewModel @Inject internal constructor(
         return results.sortedByDescending { (_, score) -> score }
     }
 
-    private suspend fun <T> List<T>.parseFuzzySearch(query: String): List<Pair<Float, T>> {
+    private suspend fun List<Media.UriMedia>.parseFuzzySearch(query: String): List<Pair<Float, Media.UriMedia>> {
         return withContext(ioDispatcher) {
             if (query.isEmpty())
                 return@withContext emptyList()
@@ -892,15 +889,17 @@ class SearchViewModel @Inject internal constructor(
             val matches = FuzzySearch.extractSorted(
                 query = query,
                 choices = this@parseFuzzySearch,
-                toStringFunction = object : ToStringFunction<T> {
-                    override fun apply(item: T): String {
-                        return item.toString()
+                toStringFunction = object : ToStringFunction<Media.UriMedia> {
+                    override fun apply(item: Media.UriMedia): String {
+                        return item.label
                     }
                 },
                 cutoff = 60
             )
-            return@withContext matches.map { (it.score.toFloat() / 100f) to it.referent }
-                .ifEmpty { emptyList() }
+            val exactMatches = filter { media -> media.label.contains(query, ignoreCase = true) }
+            return@withContext (exactMatches.map { media -> 1f to media } +
+                matches.map { match -> (match.score.toFloat() / 100f) to match.referent })
+                .distinctBy { (_, media) -> media.id }
         }
     }
 
