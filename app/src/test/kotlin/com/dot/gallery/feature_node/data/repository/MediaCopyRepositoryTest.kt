@@ -3,8 +3,10 @@ package com.dot.gallery.feature_node.data.repository
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.res.AssetFileDescriptor
+import android.database.MatrixCursor
 import android.net.Uri
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk
@@ -69,6 +71,8 @@ class MediaCopyRepositoryTest {
             }
 
             assertEquals(destinationUri, result)
+            assertEquals("original-café 日本語.jpg",
+                pendingValues.captured.getAsString(MediaStore.MediaColumns.DISPLAY_NAME))
             assertArrayEquals(sourceBytes, outputStream.toByteArray())
             assertEquals(sourceBytes.size, copiedByteCounts.sum())
             assertEquals(
@@ -326,6 +330,11 @@ class MediaCopyRepositoryTest {
         runTest {
             val contentResolver = mockk<ContentResolver>()
             every { contentResolver.getType(sourceUri) } returns "image/jpeg"
+        every { contentResolver.query(sourceUri, any(), null, null, null) } answers {
+            MatrixCursor(arrayOf(OpenableColumns.DISPLAY_NAME)).apply {
+                addRow(arrayOf("original-café 日本語.jpg"))
+            }
+        }
             every {
                 contentResolver.insert(
                     MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
@@ -357,6 +366,7 @@ class MediaCopyRepositoryTest {
                 Uri.parse("content://media/71f8-2c0a/video/media/2")
             val contentResolver = mockk<ContentResolver>()
             every { contentResolver.getType(sourceUri) } returns "video/mp4"
+            every { contentResolver.query(sourceUri, any(), null, null, null) } returns null
             every {
                 contentResolver.insert(
                     MediaStore.Video.Media.getContentUri("71f8-2c0a"),
@@ -469,6 +479,11 @@ class MediaCopyRepositoryTest {
         pendingValues: CapturingSlot<ContentValues>? = null,
     ) {
         every { contentResolver.getType(sourceUri) } returns "image/jpeg"
+        every { contentResolver.query(sourceUri, any(), null, null, null) } answers {
+            MatrixCursor(arrayOf(OpenableColumns.DISPLAY_NAME)).apply {
+                addRow(arrayOf("original-café 日本語.jpg"))
+            }
+        }
         every {
             contentResolver.insert(
                 MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),

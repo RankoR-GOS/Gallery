@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.net.Uri
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import android.util.Log
 import com.dot.gallery.feature_node.data.util.resolveMediaStoreVolume
 import com.dot.gallery.injection.qualifier.IoDispatcher
@@ -146,7 +147,19 @@ internal class MediaCopyRepositoryImpl @Inject constructor(
         mimeType: String,
     ): ContentValues {
         return ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, sourceUri.lastPathSegment)
+            val displayName = contentResolver.query(
+                sourceUri,
+                arrayOf(OpenableColumns.DISPLAY_NAME),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                when {
+                    cursor.moveToFirst() && !cursor.isNull(0) -> cursor.getString(0)
+                    else -> null
+                }
+            } ?: sourceUri.lastPathSegment
+            put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
             put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
             put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
             put(MediaStore.MediaColumns.IS_PENDING, 1)

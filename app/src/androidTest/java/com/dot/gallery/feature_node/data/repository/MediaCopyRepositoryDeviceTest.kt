@@ -23,6 +23,7 @@ class MediaCopyRepositoryDeviceTest {
         val contentResolver = InstrumentationRegistry.getInstrumentation()
             .targetContext
             .contentResolver
+        val sourceName = "media-copy-café 日本語-${System.nanoTime()}.jpg"
         val sourceBytes = byteArrayOf(1, 3, 5, 7, 9)
         var sourceUri: Uri? = null
         var destinationUri: Uri? = null
@@ -30,7 +31,7 @@ class MediaCopyRepositoryDeviceTest {
         try {
             val insertedSourceUri = insertTestMedia(
                 contentResolver = contentResolver,
-                displayName = "media-copy-source-${System.nanoTime()}.jpg",
+                displayName = sourceName,
                 bytes = sourceBytes,
             )
             sourceUri = insertedSourceUri
@@ -43,7 +44,7 @@ class MediaCopyRepositoryDeviceTest {
                 runBlocking {
                     repository.copyMedia(
                         sourceUri = insertedSourceUri,
-                        destinationPath = testRelativePath,
+                        destinationPath = "$testRelativePath/Copies",
                         onBytesCopied = {},
                     )
                 },
@@ -57,6 +58,16 @@ class MediaCopyRepositoryDeviceTest {
                     uri = publishedDestinationUri,
                 ),
             )
+            contentResolver.query(
+                publishedDestinationUri,
+                arrayOf(MediaStore.MediaColumns.DISPLAY_NAME),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                check(cursor.moveToFirst())
+                assertEquals(sourceName, cursor.getString(0))
+            } ?: error("Copied row is missing")
             assertArrayEquals(
                 sourceBytes,
                 readBytes(
